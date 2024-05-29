@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Geowerkstatt.Interlis.Tools</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="**\*.g4" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <Antlr4 Include="**\*.g4" >
+		  <Listener>false</Listener>
+		  <Visitor>true</Visitor>
+		  <Package>Compiler</Package>
+	  </Antlr4>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="Antlr4BuildTasks" Version="12.8.0" />
+  </ItemGroup>
+
+</Project>
