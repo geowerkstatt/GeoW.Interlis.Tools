@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compiler", "src\Geowerkstatt.Interlis.Compiler\Compiler.csproj", "{53950582-9CBF-4FD7-B19C-683AF175D3EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Compiler.Test", "tests\Geowerkstatt.Interlis.Compiler.Test\Compiler.Test.csproj", "{933BA7DA-D6F7-48BB-959B-72543F768DDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{53950582-9CBF-4FD7-B19C-683AF175D3EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53950582-9CBF-4FD7-B19C-683AF175D3EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53950582-9CBF-4FD7-B19C-683AF175D3EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{933BA7DA-D6F7-48BB-959B-72543F768DDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{933BA7DA-D6F7-48BB-959B-72543F768DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{933BA7DA-D6F7-48BB-959B-72543F768DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{933BA7DA-D6F7-48BB-959B-72543F768DDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

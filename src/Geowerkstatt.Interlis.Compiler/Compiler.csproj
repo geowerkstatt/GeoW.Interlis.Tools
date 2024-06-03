@@ -12,10 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <Antlr4 Include="**\*.g4" >
+	  <Antlr4 Include="**\*.g4">
 		  <Listener>false</Listener>
 		  <Visitor>true</Visitor>
-		  <Package>Compiler</Package>
+		  <Package>Geowerkstatt.Interlis.Tools</Package>
 	  </Antlr4>
   </ItemGroup>
 

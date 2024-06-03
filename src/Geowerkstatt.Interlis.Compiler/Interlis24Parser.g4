@@ -1,22 +1,28 @@
+// $antlr-format alignTrailingComments true, columnLimit 150, minEmptyLines 1, maxEmptyLinesToKeep 1, reflowComments false, useTab false
+// $antlr-format allowShortRulesOnASingleLine false, allowShortBlocksOnASingleLine true, alignSemicolons hanging, alignColons hanging
+
 parser grammar Interlis24Parser;
 
 options {
     tokenVocab=Interlis24Lexer;
 }
 
-interlis: INTERLIS numeric SEMICOLON modelDef* EOF;
+interlis
+    : INTERLIS numeric SEMICOLON modelDef* EOF
+    ;
 
-modelDef:
-    metaAttributes* CONTRACTED? (TYPE | REFSYSTEM | SYMBOLOGY)? MODEL name=IDENTIFIER (
+modelDef
+    : (metaAttributes | DOC_COMMENT)* CONTRACTED? (TYPE | REFSYSTEM | SYMBOLOGY)? MODEL name=IDENTIFIER (
         '(' language=IDENTIFIER ')'
     )? NOINCREMENTALTRANSFER? AT uri=string VERSION modelVersion=string EXPLANATION? (
         TRANSLATION OF translationOf=IDENTIFIER '[' translationOfVersion=string ']'
-    )? EQUAL_SIGN (CHARSET charsetName=string SEMICOLON)? (
-        XMLNS xmlns=string SEMICOLON
-    )? (IMPORTS UNQUALIFIED? IDENTIFIER ( ',' UNQUALIFIED? IDENTIFIER)*)* modelContents* END endName=IDENTIFIER '.';
+    )? EQUAL_SIGN (CHARSET charsetName=string SEMICOLON)? (XMLNS xmlns=string SEMICOLON)? (
+        IMPORTS UNQUALIFIED? IDENTIFIER (',' UNQUALIFIED? IDENTIFIER)* SEMICOLON
+    )* modelContents* END endName=IDENTIFIER '.'
+    ;
 
-modelContents:
-    metaDataBasketDef
+modelContents
+    : metaDataBasketDef
     | unitDef
     | functionDef
     | lineFormTypeDef
@@ -25,18 +31,19 @@ modelContents:
     | runTimeParameterDef
     | classDef
     | structureDef
-    | topicDef;
+    | topicDef
+    ;
 
-topicDef:
-    metaAttributes* VIEW? TOPIC name=IDENTIFIER properties? (EXTENDS topicRef)? EQUAL_SIGN (
+topicDef
+    : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? (EXTENDS topicRef)? EQUAL_SIGN (
         BASKET OID AS basketOid=definitionRef SEMICOLON
-    )? (OID AS oid=definitionRef SEMICOLON)? (
-        DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON
-    )* (DEFERRED GENERICS definitionRef ( ',' definitionRef)* SEMICOLON)? topicContents* END endName=IDENTIFIER
-      SEMICOLON;
+    )? (OID AS oid=definitionRef SEMICOLON)? (DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON)* (
+        DEFERRED GENERICS definitionRef ( ',' definitionRef)* SEMICOLON
+    )? topicContents* END endName=IDENTIFIER SEMICOLON
+    ;
 
-topicContents:
-    metaDataBasketDef
+topicContents
+    : metaDataBasketDef
     | unitDef
     | functionDef
     | domainDef
@@ -45,73 +52,91 @@ topicContents:
     | associationDef
     | constraintsDef
     | viewDef
-    | graphicDef;
+    | graphicDef
+    ;
 
-topicRef: (model=IDENTIFIER '.')? topic=IDENTIFIER;
+topicRef
+    : (model=IDENTIFIER '.')? topic=IDENTIFIER
+    ;
 
-definitionRef: (model=IDENTIFIER '.' ( topic=IDENTIFIER '.')?)? name=IDENTIFIER;
+definitionRef
+    : (model=(IDENTIFIER | INTERLIS) '.' ( topic=IDENTIFIER '.')?)? name=IDENTIFIER
+    ;
 
-classDef:
-    metaAttributes* CLASS name=IDENTIFIER properties? (
+classDef
+    : (metaAttributes | DOC_COMMENT)* CLASS name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
     )? EQUAL_SIGN (( OID AS oid=definitionRef | NO OID) SEMICOLON)? classOrStructureDef END endName=IDENTIFIER SEMICOLON
-      ;
+    ;
 
-structureDef:
-    metaAttributes* STRUCTURE name=IDENTIFIER properties? (
+structureDef
+    : (metaAttributes | DOC_COMMENT)* STRUCTURE name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS definitionRef
-    )? EQUAL_SIGN classOrStructureDef END endName=IDENTIFIER SEMICOLON;
+    )? EQUAL_SIGN classOrStructureDef END endName= IDENTIFIER SEMICOLON
+    ;
 
-classOrStructureDef:
-    ATTRIBUTE? attributeDef* constraintDef* (PARAMETER parameterDef)?;
+classOrStructureDef
+    : ATTRIBUTE? attributeDef* constraintDef* (PARAMETER parameterDef)?
+    ;
 
-attributeDef:
-    metaAttributes* (CONTINUOUS? SUBDIVISION)? name=IDENTIFIER properties? ':' attrTypeDef (
-        ':=' factor ( ',' factor)*
-    )? SEMICOLON;
+attributeDef
+    : (metaAttributes | DOC_COMMENT)* (CONTINUOUS? SUBDIVISION)? name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':'
+      attrTypeDef (':=' factor ( ',' factor)*)? SEMICOLON
+    ;
 
-attrTypeDef: ( MANDATORY? | (BAG | LIST) cardinality? OF) attrType;
+attrTypeDef
+    : (MANDATORY? | (BAG | LIST) cardinality? OF) attrType
+    ;
 
-attrType: type | definitionRef | referenceAttr | restrictedStructureRef;
+attrType
+    : type
+    | referenceAttr
+    | restrictedDefinitionRef /* RestrictedStructureRef */ /* DomainRef */
+    ;
 
-referenceAttr: REFERENCE TO properties? restrictedClassOrAssRef;
+referenceAttr
+    : REFERENCE TO properties? /* EXTERNAL */ restrictedDefinitionRef /* RestrictedClassOrAssRef */
+    ;
 
-restrictedClassOrAssRef: (definitionRef | ANYCLASS) (
-        RESTRICTION '(' definitionRef (SEMICOLON definitionRef)* ')'
-    )?;
+restrictedDefinitionRef
+    : (ref=definitionRef | ANYCLASS | ANYSTRUCTURE) (
+        RESTRICTION '(' restrictions+=definitionRef (SEMICOLON restrictions+=definitionRef)* ')'
+    )?
+    ;
 
-restrictedStructureRef: (definitionRef | ANYSTRUCTURE) (
-        RESTRICTION '(' definitionRef (SEMICOLON definitionRef)* ')'
-    )?;
+associationDef
+    : ASSOCIATION name=IDENTIFIER? properties? /* ABSTRACT, EXTENDED, FINAL, HIDING, ORDERED, EXTERNAL */ (
+        EXTENDS extends=definitionRef
+    )? (DERIVED FROM renamedViewableRef)? EQUAL_SIGN (
+        ( OID AS oid=definitionRef | NO OID) SEMICOLON
+    )? roleDef* ATTRIBUTE? attributeDef* (CARDINALITY EQUAL_SIGN cardinality SEMICOLON)? constraintDef* END endName=IDENTIFIER? SEMICOLON
+    ;
 
-associationDef:
-    ASSOCIATION name=IDENTIFIER properties? (EXTENDS definitionRef)? (
-        DERIVED FROM renamedViewableRef
-    )? EQUAL_SIGN (( OID AS oid=definitionRef | NO OID) SEMICOLON)? roleDef* ATTRIBUTE? attributeDef* (
-        CARDINALITY EQUAL_SIGN cardinality SEMICOLON
-    )? constraintDef* END endName=IDENTIFIER SEMICOLON;
+roleDef
+    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? referenceType=('--' | '-<>' | '-<#>') cardinality? restrictedDefinitionRef (
+        OR restrictedDefinitionRef
+    )* (':=' role=factor)? SEMICOLON
+    ;
 
-roleDef:
-    metaAttributes* name=IDENTIFIER properties? ('--' | '-<>' | '-<#>') cardinality? restrictedClassOrAssRef (
-        OR restrictedClassOrAssRef
-    )* (':=' role=factor)? SEMICOLON;
+cardinality
+    : '{' from=('*' | POS_NUMBER) ('..' to=( POS_NUMBER | '*'))? '}'
+    ;
 
-cardinality:
-    '{' (from=( '*' | POS_NUMBER) ( '..' to=( POS_NUMBER | '*'))?) '}';
-
-domainDef:
-    DOMAIN (
-        metaAttributes* name=IDENTIFIER properties? (EXTENDS definitionRef)? EQUAL_SIGN MANDATORY? type (
-            CONSTRAINTS IDENTIFIER ':' expression (
-                ',' IDENTIFIER ':' expression
-            )*
+domainDef
+    : DOMAIN (
+        (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? (EXTENDS definitionRef)? EQUAL_SIGN MANDATORY? type (
+            CONSTRAINTS IDENTIFIER ':' expression (',' IDENTIFIER ':' expression)*
         )? SEMICOLON
-    )*;
+    )*
+    ;
 
-type: baseType | lineType;
+type
+    : baseType
+    | lineType
+    ;
 
-baseType:
-    textType
+baseType
+    : textType
     | enumerationType
     | enumTreeValueType
     | alignmentType
@@ -123,315 +148,424 @@ baseType:
     | oidType
     | blackboxType
     | classType
-    | attributePathType;
+    | attributePathType
+    ;
 
-constant:
-    UNDEFINED
+constant
+    : UNDEFINED
     | numericConst
     | string
     | enumerationConst
     | classConst
-    | attributePathConst;
+    | attributePathConst
+    ;
 
-textType: (MTEXT | TEXT) ('*' maxLength=POS_NUMBER)? | NAME | URI;
+textType
+    : (MTEXT | TEXT) ('*' maxLength=POS_NUMBER)?
+    | NAME
+    | URI
+    ;
 
-enumerationType: enumeration (ORDERED | CIRCULAR)?;
+enumerationType
+    : enumeration (ORDERED | CIRCULAR)?
+    ;
 
-enumTreeValueType: ALL OF definitionRef;
+enumTreeValueType
+    : ALL OF definitionRef
+    ;
 
-enumeration: '(' (enumElement ( ',' enumElement)* ( ':' FINAL)? | FINAL) ')';
+enumeration
+    : '(' (enumElement ( ',' enumElement)* ( ':' FINAL)? | FINAL) ')'
+    ;
 
-enumElement: metaAttributes* IDENTIFIER ('.' IDENTIFIER)* enumeration?;
+enumElement
+    : (metaAttributes | DOC_COMMENT)* IDENTIFIER ('.' IDENTIFIER)* enumeration?
+    ;
 
-enumerationConst: '#' (IDENTIFIER ( '.' IDENTIFIER)* ( '.' OTHERS)? | OTHERS);
+enumerationConst
+    : '#' (IDENTIFIER ( '.' IDENTIFIER)* ( '.' OTHERS)? | OTHERS)
+    ;
 
-alignmentType: HALIGNMENT | VALIGNMENT;
+alignmentType
+    : HALIGNMENT
+    | VALIGNMENT
+    ;
 
-booleanType: BOOLEAN;
+booleanType
+    : BOOLEAN
+    ;
 
-numericType: (numeric '..' numeric | NUMERIC) CIRCULAR? ('[' definitionRef ']')? (
+numericType
+    : (numeric '..' numeric | NUMERIC) CIRCULAR? ('[' definitionRef ']')? (
         CLOCKWISE
         | COUNTERCLOCKWISE
         | refSys
-    )?;
+    )?
+    ;
 
-refSys:
-    '{' metaObjectRef ('[' axis=POS_NUMBER ']')? '}'
-    | '<' coord=definitionRef ('[' axis=POS_NUMBER ']')? '>';
+refSys
+    : '{' metaObjectRef ('[' axis=POS_NUMBER ']')? '}'
+    | '<' coord=definitionRef ('[' axis=POS_NUMBER ']')? '>'
+    ;
 
-decConst: numeric | PI | LNBASE;
+decConst
+    : numeric
+    | PI
+    | LNBASE
+    ;
 
-numericConst: decConst ('[' definitionRef ']')?;
+numericConst
+    : decConst ('[' definitionRef ']')?
+    ;
 
-formattedType:
-    FORMAT (
+formattedType
+    : FORMAT (
         BASED ON definitionRef formatDef (min=string '..' max=string)?
         | definitionRef min=string '..' max=string
     )
-    | min=string '..' max=string;
+    | min=string '..' max=string
+    ;
 
-formatDef:
-    '(' INHERITANCE? nonNum=string? (baseAttrRef nonNum=string)* baseAttrRef nonNum=string? ')';
+formatDef
+    : '(' INHERITANCE? nonNum=string? (baseAttrRef nonNum=string)* baseAttrRef nonNum=string? ')'
+    ;
 
-baseAttrRef:
-    numericAttribute=IDENTIFIER ('/' intPos=POS_NUMBER)?
-    | structureAttribute=IDENTIFIER '/' formatted=definitionRef;
+baseAttrRef
+    : numericAttribute=IDENTIFIER ('/' intPos=POS_NUMBER)?
+    | structureAttribute=IDENTIFIER '/' formatted=definitionRef
+    ;
 
-dateTimeType: DATE | TIMEOFDAY | DATETIME;
+dateTimeType
+    : DATE
+    | TIMEOFDAY
+    | DATETIME
+    ;
 
-coordinateType: (COORD | MULTICOORD) numericType (
-        ',' numericType (',' numericType)? (',' rotationDef)? (
-            REFSYS name=string
-        )?
-    )?;
+coordinateType
+    : (COORD | MULTICOORD) numericType (
+        ',' numericType (',' numericType)? (',' rotationDef)? (REFSYS name=string)?
+    )?
+    ;
 
-rotationDef: ROTATION nullAxis=POS_NUMBER '->' piHalfAxis=POS_NUMBER;
+rotationDef
+    : ROTATION nullAxis=POS_NUMBER '->' piHalfAxis=POS_NUMBER
+    ;
 
-contextDef:
-    CONTEXT (
+contextDef
+    : CONTEXT (
         name=IDENTIFIER EQUAL_SIGN (
             genericCoordDef=definitionRef EQUAL_SIGN concrete=definitionRef (
                 OR concrete=definitionRef
             )* SEMICOLON
         )*
-    )*;
+    )*
+    ;
 
-oidType: OID (ANY | numericType | textType);
+oidType
+    : OID (ANY | numericType | textType)
+    ;
 
-blackboxType: BLACKBOX (XML | BINARY);
+blackboxType
+    : BLACKBOX (XML | BINARY)
+    ;
 
-classType:
-    (CLASS | STRUCTURE) (
-        RESTRICTION '(' definitionRef (SEMICOLON definitionRef)* ')'
-    )?;
+classType
+    : (CLASS | STRUCTURE) (RESTRICTION '(' definitionRef (SEMICOLON definitionRef)* ')')?
+    ;
 
-attributePathType:
-    ATTRIBUTE OF (objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
+attributePathType
+    : ATTRIBUTE OF (objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
         RESTRICTION '(' attrTypeDef (SEMICOLON attrTypeDef)* ')'
-    )?;
+    )?
+    ;
 
-classConst: '>' definitionRef;
+classConst
+    : '>' definitionRef
+    ;
 
-attributePathConst: '>>' (definitionRef '->')? attribute=IDENTIFIER;
+attributePathConst
+    : '>>' (definitionRef '->')? attribute=IDENTIFIER
+    ;
 
-lineType: (
-        DIRECTED? POLYLINE
-        | SURFACE
-        | AREA
-        | DIRECTED? MULTIPOLYLINE
-        | MULTISURFACE
-        | MULTIAREA
-    ) lineForm? controlPoints? intersectionDef?;
+lineType
+    : (DIRECTED? POLYLINE | SURFACE | AREA | DIRECTED? MULTIPOLYLINE | MULTISURFACE | MULTIAREA) lineForm? controlPoints? intersectionDef?
+    ;
 
-lineForm: WITH '(' lineFormType (',' lineFormType)* ')';
+lineForm
+    : WITH '(' lineFormType (',' lineFormType)* ')'
+    ;
 
-lineFormType: STRAIGHTS | ARCS | (model=IDENTIFIER '.')? name=IDENTIFIER;
+lineFormType
+    : STRAIGHTS
+    | ARCS
+    | (model=IDENTIFIER '.')? name=IDENTIFIER
+    ;
 
-controlPoints: VERTEX coordType=definitionRef;
+controlPoints
+    : VERTEX coordType=definitionRef
+    ;
 
-intersectionDef: WITHOUT OVERLAPS ('>' numeric)?;
+intersectionDef
+    : WITHOUT OVERLAPS ('>' numeric)?
+    ;
 
-lineFormTypeDef:
-    LINE FORM (
-        metaAttributes* lineFormTypeName=IDENTIFIER ':' lineStructureName=IDENTIFIER SEMICOLON
-    )*;
+lineFormTypeDef
+    : LINE FORM (
+        (metaAttributes | DOC_COMMENT)* lineFormTypeName=IDENTIFIER ':' lineStructureName=IDENTIFIER SEMICOLON
+    )*
+    ;
 
-unitDef:
-    UNIT (
-        metaAttributes* unitName=IDENTIFIER (
+unitDef
+    : UNIT (
+        (metaAttributes | DOC_COMMENT)* unitName=IDENTIFIER (
             '(' ABSTRACT ')'
             | '[' unitShortName=IDENTIFIER ']'
-        )? (EXTENDS abstractUnitRef=definitionRef)? (
-            EQUAL_SIGN ( derivedUnit | composedUnit)
-        )? SEMICOLON
-    )*;
+        )? (EXTENDS abstractUnitRef=definitionRef)? (EQUAL_SIGN ( derivedUnit | composedUnit))? SEMICOLON
+    )*
+    ;
 
-derivedUnit: (decConst ( ( '*' | '/') decConst)* | FUNCTION EXPLANATION)? '[' definitionRef ']';
+derivedUnit
+    : (decConst ( ( '*' | '/') decConst)* | FUNCTION EXPLANATION)? '[' definitionRef ']'
+    ;
 
-composedUnit: '(' definitionRef (( '*' | '/') definitionRef)* ')';
+composedUnit
+    : '(' definitionRef (( '*' | '/') definitionRef)* ')'
+    ;
 
-metaDataBasketDef:
-    metaAttributes* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? (
+metaDataBasketDef
+    : (metaAttributes | DOC_COMMENT)* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? (
         EXTENDS definitionRef
     )? '~' topicRef (
-        OBJECTS OF className=IDENTIFIER ':' metaAttributes* metaObjectName=IDENTIFIER (
-            ',' metaAttributes* metaObjectName=IDENTIFIER
+        OBJECTS OF className=IDENTIFIER ':' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER (
+            ',' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER
         )*
-    )* SEMICOLON;
+    )* SEMICOLON
+    ;
 
-metaObjectRef: (definitionRef '.')? metaObjectName=IDENTIFIER;
+metaObjectRef
+    : (definitionRef '.')? metaObjectName=IDENTIFIER
+    ;
 
-parameterDef:
-    metaAttributes* arameter=IDENTIFIER properties? ':' (
+parameterDef
+    : (metaAttributes | DOC_COMMENT)* arameter=IDENTIFIER properties? ':' (
         attrTypeDef
         | METAOBJECT (OF metaObject=definitionRef)?
-    ) SEMICOLON;
+    ) SEMICOLON
+    ;
 
-runTimeParameterDef:
-    PARAMETER (
-        metaAttributes* runTimeParameterName=IDENTIFIER ':' attrTypeDef SEMICOLON
-    )*;
+runTimeParameterDef
+    : PARAMETER (
+        (metaAttributes | DOC_COMMENT)* runTimeParameterName=IDENTIFIER ':' attrTypeDef SEMICOLON
+    )*
+    ;
 
-constraintDef:
-    metaAttributes* (
+constraintDef
+    : (metaAttributes | DOC_COMMENT)* (
         mandatoryConstraint
         | plausibilityConstraint
         | existenceConstraint
         | uniquenessConstraint
         | setConstraint
-    );
+    )
+    ;
 
-mandatoryConstraint:
-    MANDATORY CONSTRAINT (name=IDENTIFIER ':')? logical=expression SEMICOLON;
+mandatoryConstraint
+    : MANDATORY CONSTRAINT (name=IDENTIFIER ':')? logical=expression SEMICOLON
+    ;
 
-plausibilityConstraint:
-    CONSTRAINT (name=IDENTIFIER ':')? ('<=' | '>=') percentage=numeric '%' logical=expression SEMICOLON;
+plausibilityConstraint
+    : CONSTRAINT (name=IDENTIFIER ':')? ('<=' | '>=') percentage=numeric '%' logical=expression SEMICOLON
+    ;
 
-existenceConstraint:
-    EXISTENCE CONSTRAINT (name=IDENTIFIER ':')? objectOrAttributePath REQUIRED IN definitionRef ':'
-      objectOrAttributePath (OR definitionRef ':' objectOrAttributePath)* SEMICOLON;
+existenceConstraint
+    : EXISTENCE CONSTRAINT (name=IDENTIFIER ':')? objectOrAttributePath REQUIRED IN definitionRef ':' objectOrAttributePath (
+        OR definitionRef ':' objectOrAttributePath
+    )* SEMICOLON
+    ;
 
-uniquenessConstraint:
-    UNIQUE ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression)? (
+uniquenessConstraint
+    : UNIQUE ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression)? (
         globalUniqueness
         | localUniqueness
-    ) SEMICOLON;
+    ) SEMICOLON
+    ;
 
-globalUniqueness: uniqueEl;
+globalUniqueness
+    : uniqueEl
+    ;
 
-uniqueEl: objectOrAttributePath (',' objectOrAttributePath)*;
+uniqueEl
+    : objectOrAttributePath (',' objectOrAttributePath)*
+    ;
 
-localUniqueness:
-    '(' LOCAL ')' structureAttribute=IDENTIFIER (
-        '->' structureAttribute=IDENTIFIER
-    )* ':' attributeName=IDENTIFIER (',' attributeName=IDENTIFIER);
+localUniqueness
+    : '(' LOCAL ')' structureAttribute=IDENTIFIER ('->' structureAttribute=IDENTIFIER)* ':' attributeName=IDENTIFIER (
+        ',' attributeName=IDENTIFIER
+    )
+    ;
 
-setConstraint:
-    SET CONSTRAINT ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression)? expression SEMICOLON;
+setConstraint
+    : SET CONSTRAINT ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression)? expression SEMICOLON
+    ;
 
-constraintsDef:
-    CONSTRAINTS OF definitionRef EQUAL_SIGN (constraintDef)* END SEMICOLON;
+constraintsDef
+    : CONSTRAINTS OF definitionRef EQUAL_SIGN (constraintDef)* END SEMICOLON
+    ;
 
-expression:
-    expression ('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression
+expression
+    : expression ('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression
     | expression (OR | '*' | '/') expression
     | expression (AND | '+' | '-') expression
     | expression '=>' expression
     | factor
     | NOT '(' expression ')'
-    | (DEFINED '(' factor ')');
+    | (DEFINED '(' factor ')')
+    ;
 
-factor:
-    objectOrAttributePath
+factor
+    : objectOrAttributePath
     | (inspection | INSPECTION definitionRef) (OF objectOrAttributePath)?
     | functionCall
     | PARAMETER (model=IDENTIFIER '.') runTimeParameter=IDENTIFIER?
-    | constant;
+    | constant
+    ;
 
-objectOrAttributePath: pathEl ('->' pathEl)*;
+objectOrAttributePath
+    : pathEl ('->' pathEl)*
+    ;
 
-pathEl:
-    THIS
+pathEl
+    : THIS
     | THISAREA
     | THATAREA
     | PARENT
     | IDENTIFIER ('[' IDENTIFIER ']')?
     | associationPath
-    | attributeRef;
+    | attributeRef
+    ;
 
-associationPath: BACKSLASH? IDENTIFIER;
+associationPath
+    : BACKSLASH? IDENTIFIER
+    ;
 
-attributeRef:
-    attribute=IDENTIFIER ('[' ( FIRST | LAST | axisListIndex=POS_NUMBER) ']')?
-    | AGGREGATES;
+attributeRef
+    : attribute=IDENTIFIER ('[' ( FIRST | LAST | axisListIndex=POS_NUMBER) ']')?
+    | AGGREGATES
+    ;
 
-functionCall: definitionRef '(' (argument ( ',' argument)*)? ')';
+functionCall
+    : definitionRef '(' (argument ( ',' argument)*)? ')'
+    ;
 
-argument:
-    expression
-    | ALL ('(' (restrictedClassOrAssRef | definitionRef) ')')?;
+argument
+    : expression
+    | ALL ('(' restrictedDefinitionRef ')')?
+    ;
 
-functionDef:
-    metaAttributes* FUNCTION name=IDENTIFIER '(' (
+functionDef
+    : (metaAttributes | DOC_COMMENT)* FUNCTION name=IDENTIFIER '(' (
         argumentName=IDENTIFIER ':' argumentType (
             SEMICOLON argumentName=IDENTIFIER ':' IDENTIFIER
         )*
-    )? ')' ':' argumentType EXPLANATION? SEMICOLON;
+    )? ')' ':' argumentType EXPLANATION? SEMICOLON
+    ;
 
-argumentType:
-    attrTypeDef
-    | (OBJECT | OBJECTS) OF (restrictedClassOrAssRef | definitionRef)
+argumentType
+    : attrTypeDef
+    | (OBJECT | OBJECTS) OF (restrictedDefinitionRef | definitionRef)
     | ENUMVAL
-    | ENUMTREEVAL;
+    | ENUMTREEVAL
+    ;
 
-viewDef:
-    metaAttributes* VIEW name=IDENTIFIER properties? (
+viewDef
+    : (metaAttributes | DOC_COMMENT)* VIEW name=IDENTIFIER properties? (
         formationDef
         | EXTENDS definitionRef
-    )? (baseExtensionDef)* (selection)* EQUAL_SIGN (viewAttributes)? (
-        constraintDef
-    )* END endName=IDENTIFIER SEMICOLON;
+    )? (baseExtensionDef)* (selection)* EQUAL_SIGN (viewAttributes)? (constraintDef)* END endName=IDENTIFIER SEMICOLON
+    ;
 
-formationDef: (projection | join | union | aggregation | inspection) SEMICOLON;
+formationDef
+    : (projection | join | union | aggregation | inspection) SEMICOLON
+    ;
 
-projection: PROJECTION OF renamedViewableRef;
+projection
+    : PROJECTION OF renamedViewableRef
+    ;
 
-join: JOIN OF renamedViewableRef (',' renamedViewableRef ( '(' OR NULL ')')?)+;
+join
+    : JOIN OF renamedViewableRef (',' renamedViewableRef ( '(' OR NULL ')')?)+
+    ;
 
-union: UNION OF renamedViewableRef (',' renamedViewableRef)+;
+union
+    : UNION OF renamedViewableRef (',' renamedViewableRef)+
+    ;
 
-aggregation: AGGREGATION OF renamedViewableRef (ALL | EQUAL '(' uniqueEl ')');
+aggregation
+    : AGGREGATION OF renamedViewableRef (ALL | EQUAL '(' uniqueEl ')')
+    ;
 
-inspection:
-    AREA? INSPECTION OF renamedViewableRef '->' IDENTIFIER ('->' IDENTIFIER)*;
+inspection
+    : AREA? INSPECTION OF renamedViewableRef '->' IDENTIFIER ('->' IDENTIFIER)*
+    ;
 
-renamedViewableRef: (base=IDENTIFIER '~')? definitionRef;
+renamedViewableRef
+    : (base=IDENTIFIER '~')? definitionRef
+    ;
 
-baseExtensionDef:
-    BASE base=IDENTIFIER EXTENDED BY renamedViewableRef (
-        ',' renamedViewableRef
-    )*;
+baseExtensionDef
+    : BASE base=IDENTIFIER EXTENDED BY renamedViewableRef (',' renamedViewableRef)*
+    ;
 
-selection: WHERE expression SEMICOLON;
+selection
+    : WHERE expression SEMICOLON
+    ;
 
-viewAttributes:
-    ATTRIBUTE? (
+viewAttributes
+    : ATTRIBUTE? (
         ALL OF base=IDENTIFIER SEMICOLON
         | attributeDef
         | attribute=IDENTIFIER properties? ':=' factor SEMICOLON
-    )+;
+    )+
+    ;
 
-graphicDef:
-    metaAttributes* GRAPHIC name=IDENTIFIER (EXTENDS definitionRef)? (
+graphicDef
+    : (metaAttributes | DOC_COMMENT)* GRAPHIC name=IDENTIFIER (EXTENDS definitionRef)? (
         BASED ON definitionRef
-    )? EQUAL_SIGN (drawingRule)* END endName=IDENTIFIER SEMICOLON;
+    )? EQUAL_SIGN (drawingRule)* END endName=IDENTIFIER SEMICOLON
+    ;
 
-drawingRule:
-    name=IDENTIFIER properties? (OF sign=definitionRef)? ':' condSignParamAssignment (
+drawingRule
+    : name=IDENTIFIER properties? (OF sign=definitionRef)? ':' condSignParamAssignment (
         ',' condSignParamAssignment
-    )* SEMICOLON;
+    )* SEMICOLON
+    ;
 
-condSignParamAssignment: (WHERE expression)? '(' signParamAssignment (
-        SEMICOLON signParamAssignment
-    )* ')';
+condSignParamAssignment
+    : (WHERE expression)? '(' signParamAssignment (SEMICOLON signParamAssignment)* ')'
+    ;
 
-signParamAssignment:
-    IDENTIFIER ':=' (
+signParamAssignment
+    : IDENTIFIER ':=' (
         '{' metaObjectRef '}'
         | factor
-        | ACCORDING objectOrAttributePath '(' enumAssignment (
-            ',' enumAssignment
-        )* ')'
-    );
+        | ACCORDING objectOrAttributePath '(' enumAssignment (',' enumAssignment)* ')'
+    )
+    ;
 
-enumAssignment: ('{' metaObjectRef '}' | constant) WHEN IN enumRange;
+enumAssignment
+    : ('{' metaObjectRef '}' | constant) WHEN IN enumRange
+    ;
 
-enumRange: enumerationConst ('..' enumerationConst)?;
+enumRange
+    : enumerationConst ('..' enumerationConst)?
+    ;
 
-properties: '(' property (',' property)* ')';
+properties
+    : '(' property (',' property)* ')'
+    ;
 
-property:
-    ABSTRACT
+property
+    : ABSTRACT
     | EXTENDED
     | GENERIC
     | FINAL
@@ -439,14 +573,24 @@ property:
     | EXTERNAL
     | OID
     | HIDING
-    | ORDERED;
+    | ORDERED
+    ;
 
-numeric: EXP_NUMBER | DECIMAL_NUMBER | SIGNED_NUMBER | POS_NUMBER;
+numeric
+    : EXP_NUMBER
+    | DECIMAL_NUMBER
+    | SIGNED_NUMBER
+    | POS_NUMBER
+    ;
 
-string:
-    DOUBLE_QUOTE_OPEN (LITERAL_TEXT | BACKSLASH | DOUBLE_QUOTE | UNICODE)* DOUBLE_QUOTE_CLOSE;
+string
+    : DOUBLE_QUOTE_OPEN (LITERAL_TEXT | BACKSLASH | DOUBLE_QUOTE | UNICODE)* DOUBLE_QUOTE_CLOSE
+    ;
 
-metaAttributes:
-    META_COMMENT_OPEN metaAttribute (SEMICOLON metaAttribute)* META_COMMENT_CLOSE;
+metaAttributes
+    : META_COMMENT_OPEN metaAttribute (SEMICOLON metaAttribute)* META_COMMENT_CLOSE
+    ;
 
-metaAttribute: META_ATTR_NAME EQUAL_SIGN (META_ATTR_NAME | string);
+metaAttribute
+    : META_ATTR_NAME EQUAL_SIGN (META_ATTR_NAME | string)
+    ;

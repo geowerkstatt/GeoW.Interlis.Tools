@@ -1,0 +1,18 @@
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Geowerkstatt.Interlis.Tools.AST;
+
+public interface IInterlis24AstVisitor<TResult>
+{
+    TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile);
+
+    TResult? VisitModelDef([NotNull] ModelDef modelDef);
+
+    TResult? VisitTopicDef([NotNull] TopicDef topicDef);
+
+    TResult? VisitClassDef([NotNull] ClassDef classDef);
+
+    TResult? VisitAssociationDef([NotNull] AssociationDef associationDef);
+
+    TResult? VisitAttributeDef([NotNull] AttributeDef attributeDef);
+}
