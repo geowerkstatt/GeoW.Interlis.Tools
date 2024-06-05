@@ -1,0 +1,16 @@
+<Project>
+
+  <PropertyGroup>
+    <VersionPrefix>1.0</VersionPrefix>
+    <Product>geowerkstatt Interlis-Tools</Product>
+    <Authors>geowerkstatt GmbH</Authors>
+    <Company>geowerkstatt GmbH</Company>
+    <Copyright>© geowerkstatt GmbH</Copyright>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)/artifacts</PackageOutputPath>
+    <PackageProjectUrl>https://github.com/GeoWerkstatt/GeoW.Interlis.Tools</PackageProjectUrl>
+    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryCommit>$(BUILD_VCS_NUMBER)</RepositoryCommit>
+  </PropertyGroup>
+
+</Project>
