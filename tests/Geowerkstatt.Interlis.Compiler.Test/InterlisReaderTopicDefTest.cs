@@ -19,7 +19,7 @@ public class InterlisReaderTopicDefTest
                 TOPIC Test =
                 END Test;
                 """,
-                new TopicDef { FullyQualifiedName = new Identifier { Topic = "Test" } });
+                new TopicDef { Name = "Test" });
     }
 
     [TestMethod]
@@ -37,15 +37,12 @@ public class InterlisReaderTopicDefTest
                 """,
                 new TopicDef
                 {
-                    FullyQualifiedName = new Identifier { Topic = "Test_A" },
+                    Name = "Test_A",
                     DocComments = { "/** Doc-Comment */" },
                     MetaAttributes = { { "key", "value" } }
                 });
     }
 
     private void AssertReadRule(string input, object? expected)
-    {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), (p, v) => v.VisitTopicDef(p.topicDef()));
-        expected.ShouldDeepEqual(actual);
-    }
+        => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitTopicDef(p.topicDef()));
 }

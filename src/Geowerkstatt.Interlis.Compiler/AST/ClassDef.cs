@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 
 namespace Geowerkstatt.Interlis.Tools.AST;
 
-public sealed class ClassDef : IAstElement, IInterlisDefinition, IDocumentation
+public sealed class ClassDef : IAstElement, IInterlisDefinition, IDocumentation, IContainer<IInterlisDefinition>
 {
-    public required Identifier FullyQualifiedName { get; init; }
+    public required string Name { get; init; }
+    public IInterlisDefinition? Parent { get; set; } = null;
+
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
+
+    public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

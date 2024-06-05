@@ -18,7 +18,7 @@ public class InterlisReaderClassDefTest
             CLASS Test =
             END Test;
             """,
-            new ClassDef { FullyQualifiedName = new Identifier { Class = "Test" } });
+            new ClassDef { Name = "Test" });
     }
 
     [TestMethod]
@@ -33,15 +33,12 @@ public class InterlisReaderClassDefTest
             """,
             new ClassDef
             {
-                FullyQualifiedName = new Identifier { Class = "Test_A" },
+                Name = "Test_A",
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } }
             });
     }
 
     private void AssertReadRule(string input, object? expected)
-    {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), (p, v) => v.VisitClassDef(p.classDef()));
-        expected.ShouldDeepEqual(actual);
-    }
+        => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitClassDef(p.classDef()));
 }

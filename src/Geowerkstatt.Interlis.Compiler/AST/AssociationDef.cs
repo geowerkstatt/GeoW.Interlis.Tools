@@ -8,7 +8,9 @@ namespace Geowerkstatt.Interlis.Tools.AST;
 
 public class AssociationDef : IAstElement, IInterlisDefinition
 {
-    public required Identifier FullyQualifiedName { get; init; }
+    public required string Name { get; init; }
+    public IInterlisDefinition? Parent { get; set; } = null;
+
     public IList<AttributeDef> RoleDefs { get; } = new List<AttributeDef>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)

@@ -8,7 +8,10 @@ namespace Geowerkstatt.Interlis.Tools.AST;
 
 public sealed class AttributeDef : IAstElement, IInterlisDefinition, IDocumentation
 {
-    public required Identifier FullyQualifiedName { get; init; }
+    public required string Name { get; init; }
+    public string FullyQualifiedName => Parent != null ? $"{Parent.FullyQualifiedName} -> {Name}" : Name;
+    public IInterlisDefinition? Parent { get; set; } = null;
+
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
     public required ITypeDef TypeDef { get; init; }

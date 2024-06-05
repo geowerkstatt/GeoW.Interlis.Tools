@@ -2,117 +2,17 @@
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Geowerkstatt.Interlis.Tools.AST;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Geowerkstatt.Interlis.Tools.CreateAST;
 
 public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<object>
 {
-    private List<ReferenceToResolve> ReferencestoResolve = new List<ReferenceToResolve>();
+    private List<UnresolvedReference> ReferencestoResolve = new List<UnresolvedReference>();
+    private Scope<IInterlisDefinition> CurrentScope = new Scope<IInterlisDefinition>();
 
     private IAntlrErrorListener<IToken> errorListener;
-
-    /// <summary>
-    /// The surrounding scope of the current element.
-    /// </summary>
-    private Identifier CurrentScope { get; set; } = new Identifier();
-
-    private record ReferenceToResolve
-    {
-        public required Action<IInterlisDefinition> SetSource;
-        public required Identifier Target;
-        public IList<Identifier> Restrictions = new List<Identifier>();
-    };
-
-    private void ResolveReferences(IContainer<ModelDef> file, ReferenceToResolve reference)
-    {
-        if (reference.Target.Model != null)
-        {
-            ResolveModel(file, reference);
-        }
-    }
-
-    private void ResolveModel(IContainer<ModelDef> file, ReferenceToResolve reference)
-    {
-        foreach (var item in file.Children)
-        {
-            if (string.Equals(item.FullyQualifiedName.Model, reference.Target.Model))
-            {
-                ResolveTopic(item, reference);
-                break;
-            }
-        }
-    }
-
-    private void ResolveTopic(IContainer<IInterlisDefinition> model, ReferenceToResolve reference)
-    {
-        foreach (var item in model.Children)
-        {
-            if (reference.Target.Topic == null || string.Equals(item.FullyQualifiedName.Topic, reference.Target.Topic))
-            {
-                if (item is IContainer<IInterlisDefinition> container)
-                {
-                    if (ResolveClass(container, reference))
-                    {
-                        return;
-                    }
-                }
-                else if (string.Equals(item.FullyQualifiedName.Class, reference.Target.Class))
-                {
-                    reference.SetSource(item);
-                }
-            }
-        }
-    }
-
-    private bool ResolveClass(IContainer<IInterlisDefinition> topic, ReferenceToResolve reference)
-    {
-        foreach (var item in topic.Children)
-        {
-            if (string.Equals(item.FullyQualifiedName.Class, reference.Target.Class))
-            {
-                reference.SetSource(item);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Sets the CurrentScope of the <see cref="Interlis24Visitor"/> to the specified new scope 
-    /// and resets the value when disposed.
-    /// </summary>
-    private sealed class ScopeFrame : IDisposable
-    {
-        private Identifier previousScope;
-        private Interlis24Visitor visitor;
-        private bool isDisposed;
-
-        public ScopeFrame(Interlis24Visitor visitor, Identifier newScope)
-        {
-            this.visitor = visitor;
-
-            previousScope = visitor.CurrentScope;
-            visitor.CurrentScope = newScope;
-        }
-
-        public void Dispose()
-        {
-            if (!isDisposed)
-            {
-                visitor.CurrentScope = previousScope;
-                isDisposed = true;
-            }
-        }
-    }
 
     internal Interlis24Visitor(IAntlrErrorListener<IToken> errorListener)
     {
@@ -158,16 +58,28 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
     }
 
+    private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinition? parent, IToken token, IEnumerable<T> elements) where T : IInterlisDefinition
+    {
+        foreach (var element in elements)
+        {
+            element.Parent = parent;
+            if (!container.Content.TryAdd(element.Name, element))
+            {
+                ReportError(token, $"An element with name {element.Name} already exists in the {(element.Parent == null ? "root scope" : "scope " + element.Parent.FullyQualifiedName)}");
+            }
+        }
+    }
+
     public override InterlisFile VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
     {
-        var interlisFile = new InterlisFile
-        {
-            Children = { context.modelDef().Select(VisitModelDef) }
-        };
+        var interlisFile = new InterlisFile();
+        SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef).Cast<IInterlisDefinition>());
 
         foreach (var reference in ReferencestoResolve)
         {
-            ResolveReferences(interlisFile, reference);
+            if (!reference.TryResolve(interlisFile)) {
+                ReportError(context.Start, $"Could not resolve {reference}");
+            }
         }
 
         return interlisFile;
@@ -175,20 +87,21 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override ModelDef VisitModelDef([NotNull] Interlis24Parser.ModelDefContext context)
     {
-        using var scopeFrame = new ScopeFrame(this, CurrentScope with { Model = context.name.Text });
-
         CheckStartAndEndName(context.endName, context.name.Text, context.endName.Text);
 
-        return new ModelDef
+        var modelDef = new ModelDef
         {
-            FullyQualifiedName = CurrentScope,
+            Name = context.name.Text,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
             Language = context.language?.Text,
             URI = VisitString(context.uri),
             Version = VisitString(context.modelVersion),
-            Children = { context.modelContents().Select(Visit).Cast<IInterlisDefinition>() },
         };
+
+        using var scopeFrame = CurrentScope.NewFrame(modelDef);
+        SetContentDictionary(modelDef, modelDef, context.name, context.modelContents().Select(Visit).Cast<IInterlisDefinition>());
+        return modelDef;
     }
 
     public override object VisitModelContents([NotNull] Interlis24Parser.ModelContentsContext context)
@@ -198,17 +111,18 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override TopicDef VisitTopicDef([NotNull] Interlis24Parser.TopicDefContext context)
     {
-        using var scopeFrame = new ScopeFrame(this, CurrentScope with { Topic = context.name.Text });
-
         CheckStartAndEndName(context.endName, context.name.Text, context.endName.Text);
 
-        return new TopicDef
+        var topicDef =  new TopicDef
         {
-            FullyQualifiedName = CurrentScope,
+            Name = context.name.Text,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
-            Children = { context.topicContents().Select(Visit).Cast<IInterlisDefinition>() },
         };
+
+        using var scopeFrame = CurrentScope.NewFrame(topicDef);
+        SetContentDictionary(topicDef, topicDef, context.name, context.topicContents().Select(Visit).Cast<IInterlisDefinition>());
+        return topicDef;
     }
 
     public override object VisitTopicContents([NotNull] Interlis24Parser.TopicContentsContext context)
@@ -218,15 +132,12 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override ClassDef VisitClassDef([NotNull] Interlis24Parser.ClassDefContext context)
     {
-        using var scopeFrame = new ScopeFrame(this, CurrentScope with { Class = context.name.Text });
-
         CheckStartAndEndName(context.endName, context.name.Text, context.endName.Text);
-
-        //Visit(context.classOrStructureDef());
 
         return new ClassDef
         {
-            FullyQualifiedName = CurrentScope,
+            Name = context.name.Text,
+            //Content = { ToContentDictionary(context.name, Visit(context.classOrStructureDef())) },
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
@@ -234,23 +145,20 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override AssociationDef VisitAssociationDef([NotNull] Interlis24Parser.AssociationDefContext context)
     {
-        using var scopeFrame = new ScopeFrame(this, CurrentScope with { Class = context.name.Text });
-
         CheckStartAndEndName(context.endName ?? context.Start, context.name?.Text ?? string.Empty, context.endName?.Text ?? string.Empty);
 
         List<AttributeDef> attributeDefs = context.roleDef().Select(VisitRoleDef).ToList();
 
         return new AssociationDef
         {
-            FullyQualifiedName = CurrentScope,
+            Name = context.name?.Text ?? "<Default>",
             RoleDefs = { attributeDefs },
         };
     }
 
     public override AttributeDef VisitRoleDef([NotNull] Interlis24Parser.RoleDefContext context)
     {
-        using var scopeFrame = new ScopeFrame(this, CurrentScope with { LeafElementName = context.name.Text });
-
+        // Read Cardinality
         Cardinality cardinality;
         var cardinalityContext = context.cardinality();
         var type = (Cardinality.RelationshipType)context.referenceType.Type;
@@ -274,19 +182,40 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             ReportError(context.referenceType, "Composition roles cannot have a maximum cardinality greater than 1");
         }
 
-        var target = new ReferenceType { Cardinality = cardinality };
-        ReferencestoResolve.Add(new ReferenceToResolve { SetSource = e => target.Target = e, Target = VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()[0]).Item1 });
+        // Read References
+        var target = new RoleType { Cardinality = cardinality };
+        foreach (var restrictedRef in context.restrictedDefinitionRef().Select(VisitRestrictedDefinitionRef))
+        {
+            var references = new RestrictedRef();
+
+            var referenceTarget = restrictedRef.Item1;
+            referenceTarget.SetSource = (e =>
+            {
+                references.Target = e;
+            });
+            referenceTarget.Source = CurrentScope.Value;
+            ReferencestoResolve.Add(referenceTarget);
+
+            foreach (var item in restrictedRef.Item2)
+            {
+                item.SetSource = (e => references.Restrictions.Add(e));
+                item.Source = CurrentScope.Value;
+                ReferencestoResolve.Add(referenceTarget);
+            }
+
+            target.Targets.Add(references);
+        }
 
         return new AttributeDef
         {
-            FullyQualifiedName = CurrentScope,
+            Name = context.name.Text,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
             TypeDef = target,
         };
     }
 
-    public override Tuple<Identifier, List<Identifier>> VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
+    public override Tuple<UnresolvedReference, List<UnresolvedReference>> VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
     {
         var target = VisitDefinitionRef(context.@ref);
         var restrictions = context._restrictions.Select(VisitDefinitionRef).ToList();
@@ -294,23 +223,20 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return Tuple.Create(target, restrictions);
     }
 
-    public override Identifier VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
+    public override UnresolvedReference VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
     {
-        return new Identifier
+        return new UnresolvedReference
         {
-            Model = context.model?.Text ?? CurrentScope.Model,
-            Topic = context.topic?.Text,
-            Class = context.name?.Text,
+            Target = { new[] { context.model?.Text, context.topic?.Text, context.name.Text }.WhereNotNull() },
+            IsRelative = context.model == null,
         };
     }
 
     public override AttributeDef VisitAttributeDef([NotNull] Interlis24Parser.AttributeDefContext context)
     {
-        using var scopeFrame = new ScopeFrame(this, CurrentScope with { LeafElementName = context.name.Text });
-
         return new AttributeDef
         {
-            FullyQualifiedName = CurrentScope,
+            Name = context.name.Text,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
             TypeDef = VisitAttrTypeDef(context.attrTypeDef()),
@@ -320,9 +246,13 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     public override TypeDef VisitAttrTypeDef([NotNull] Interlis24Parser.AttrTypeDefContext context)
     {
         Cardinality cardinality;
-        if (context.MANDATORY == null)
+        if (context.MANDATORY() != null)
         {
-            if (context.OF == null)
+            cardinality = new Cardinality { Min = 1, Max = 1 };
+        }
+        else
+        {
+            if (context.OF() == null)
             {
                 cardinality = new Cardinality { Min = 0, Max = 1 };
             }
@@ -340,14 +270,10 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
                 }
             }
         }
-        else
-        {
-            cardinality = new Cardinality { Min = 1, Max = 1 };
-        }
 
         return new TypeDef
         {
-            FullyQualifiedName = new Identifier(),
+            Name = string.Empty, // Types defined directly on the attribute have no name
             Definition = context.attrType().GetText(),
             Cardinality = cardinality,
         };

@@ -65,8 +65,5 @@ public class InterlisReaderCardinalityTest
     }
 
     private void AssertReadRule(string input, object? expected)
-    {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), (p, v) => v.VisitCardinality(p.cardinality()));
-        expected.ShouldDeepEqual(actual);
-    }
+        => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitCardinality(p.cardinality()));
 }

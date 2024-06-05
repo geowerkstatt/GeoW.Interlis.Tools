@@ -35,9 +35,11 @@ modelContents
     ;
 
 topicDef
-    : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? (EXTENDS topicRef)? EQUAL_SIGN (
-        BASKET OID AS basketOid=definitionRef SEMICOLON
-    )? (OID AS oid=definitionRef SEMICOLON)? (DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON)* (
+    : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (
+        EXTENDS topicRef
+    )? EQUAL_SIGN (BASKET OID AS basketOid=definitionRef SEMICOLON)? (
+        OID AS oid=definitionRef SEMICOLON
+    )? (DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON)* (
         DEFERRED GENERICS definitionRef ( ',' definitionRef)* SEMICOLON
     )? topicContents* END endName=IDENTIFIER SEMICOLON
     ;
@@ -105,7 +107,7 @@ restrictedDefinitionRef
     ;
 
 associationDef
-    : ASSOCIATION name=IDENTIFIER? properties? /* ABSTRACT, EXTENDED, FINAL, HIDING, ORDERED, EXTERNAL */ (
+    : ASSOCIATION name=IDENTIFIER? properties? /* ABSTRACT, EXTENDED, FINAL, OID */ (
         EXTENDS extends=definitionRef
     )? (DERIVED FROM renamedViewableRef)? EQUAL_SIGN (
         ( OID AS oid=definitionRef | NO OID) SEMICOLON
@@ -113,9 +115,11 @@ associationDef
     ;
 
 roleDef
-    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? referenceType=('--' | '-<>' | '-<#>') cardinality? restrictedDefinitionRef (
-        OR restrictedDefinitionRef
-    )* (':=' role=factor)? SEMICOLON
+    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, HIDING, ORDERED, EXTERNAL */ referenceType=(
+        '--'
+        | '-<>'
+        | '-<#>'
+    ) cardinality? restrictedDefinitionRef (OR restrictedDefinitionRef)* (':=' role=factor)? SEMICOLON
     ;
 
 cardinality
@@ -124,7 +128,9 @@ cardinality
 
 domainDef
     : DOMAIN (
-        (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? (EXTENDS definitionRef)? EQUAL_SIGN MANDATORY? type (
+        (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
+            EXTENDS definitionRef
+        )? EQUAL_SIGN MANDATORY? type (
             CONSTRAINTS IDENTIFIER ':' expression (',' IDENTIFIER ':' expression)*
         )? SEMICOLON
     )*
@@ -333,7 +339,7 @@ composedUnit
     ;
 
 metaDataBasketDef
-    : (metaAttributes | DOC_COMMENT)* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? (
+    : (metaAttributes | DOC_COMMENT)* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? /* FINAL */ (
         EXTENDS definitionRef
     )? '~' topicRef (
         OBJECTS OF className=IDENTIFIER ':' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER (
@@ -347,7 +353,7 @@ metaObjectRef
     ;
 
 parameterDef
-    : (metaAttributes | DOC_COMMENT)* arameter=IDENTIFIER properties? ':' (
+    : (metaAttributes | DOC_COMMENT)* arameter=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ ':' (
         attrTypeDef
         | METAOBJECT (OF metaObject=definitionRef)?
     ) SEMICOLON
@@ -478,7 +484,7 @@ argumentType
     ;
 
 viewDef
-    : (metaAttributes | DOC_COMMENT)* VIEW name=IDENTIFIER properties? (
+    : (metaAttributes | DOC_COMMENT)* VIEW name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ (
         formationDef
         | EXTENDS definitionRef
     )? (baseExtensionDef)* (selection)* EQUAL_SIGN (viewAttributes)? (constraintDef)* END endName=IDENTIFIER SEMICOLON
@@ -524,7 +530,7 @@ viewAttributes
     : ATTRIBUTE? (
         ALL OF base=IDENTIFIER SEMICOLON
         | attributeDef
-        | attribute=IDENTIFIER properties? ':=' factor SEMICOLON
+        | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON
     )+
     ;
 
@@ -535,7 +541,7 @@ graphicDef
     ;
 
 drawingRule
-    : name=IDENTIFIER properties? (OF sign=definitionRef)? ':' condSignParamAssignment (
+    : name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ (OF sign=definitionRef)? ':' condSignParamAssignment (
         ',' condSignParamAssignment
     )* SEMICOLON
     ;

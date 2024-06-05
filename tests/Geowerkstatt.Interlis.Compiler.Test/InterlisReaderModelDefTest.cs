@@ -13,7 +13,7 @@ public class InterlisReaderModelDefTest
         AssertReadRule("""
             MODEL Test AT "foo.test" VERSION "123" =
             END Test.
-            """, new ModelDef { FullyQualifiedName = new Identifier { Model = "Test" }, URI = "foo.test", Version = "123" });
+            """, new ModelDef { Name = "Test", URI = "foo.test", Version = "123" });
     }
 
     [TestMethod]
@@ -31,7 +31,7 @@ public class InterlisReaderModelDefTest
             """,
             new ModelDef
             {
-                FullyQualifiedName = new Identifier { Model = "Test_A" },
+                Name = "Test_A",
                 DocComments = { "/** A model with all optional fields set */" },
                 MetaAttributes = { { "EPSG", "2056" } },
                 Language = "en",
@@ -52,7 +52,7 @@ public class InterlisReaderModelDefTest
             """,
             new ModelDef
             {
-                FullyQualifiedName = new Identifier { Model = "Test" },
+                Name = "Test",
                 DocComments = { string.Join(Environment.NewLine, "/**", " * Documentation String", " */") },
                 URI = "foo.test",
                 Version = "123",
@@ -69,7 +69,7 @@ public class InterlisReaderModelDefTest
             """,
             new ModelDef
             {
-                FullyQualifiedName = new Identifier { Model = "Test" },
+                Name = "Test",
                 MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ ø \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
                 URI = "foo.test",
                 Version = "123",
@@ -94,8 +94,5 @@ public class InterlisReaderModelDefTest
     }
 
     private void AssertReadRule(string input, object? expected)
-    {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), (p, v) => v.VisitModelDef(p.modelDef()));
-        expected.ShouldDeepEqual(actual);
-    }
+        => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitModelDef(p.modelDef()));
 }

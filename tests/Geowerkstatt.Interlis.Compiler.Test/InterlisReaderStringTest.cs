@@ -28,8 +28,5 @@ public class InterlisReaderStringTest
     }
 
     private void AssertReadRule(string input, object? expected)
-    {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), (p, v) => v.VisitString(p.@string()));
-        expected.ShouldDeepEqual(actual);
-    }
+        => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitString(p.@string()));
 }

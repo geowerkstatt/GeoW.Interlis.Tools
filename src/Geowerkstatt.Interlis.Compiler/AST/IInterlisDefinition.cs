@@ -11,5 +11,18 @@ namespace Geowerkstatt.Interlis.Tools.AST;
 /// </summary>
 public interface IInterlisDefinition
 {
-    public Identifier FullyQualifiedName { get; }
+    /// <summary>
+    /// The name of this element.
+    /// </summary>
+    public string Name { get; init; }
+
+    /// <summary>
+    /// The parent <see cref="IInterlisDefinition"/> or <c>null</c> if this definition has no parent.
+    /// </summary>
+    public IInterlisDefinition? Parent { get; set; }
+
+    /// <summary>
+    /// The fully qualified name
+    /// </summary>
+    public string FullyQualifiedName => Parent != null ? $"{Parent.FullyQualifiedName}.{Name}" : Name;
 }

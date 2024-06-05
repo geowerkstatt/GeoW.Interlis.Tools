@@ -12,7 +12,7 @@ public class InterlisReaderAssociationDefTest
         AssertReadRule("""
             ASSOCIATION Test =
             END Test;
-            """, new AssociationDef { FullyQualifiedName = new Identifier { Class = "Test" } });
+            """, new AssociationDef { Name = "Test" });
     }
 
     [TestMethod]
@@ -27,13 +27,10 @@ public class InterlisReaderAssociationDefTest
             """,
             new AssociationDef
             {
-                FullyQualifiedName = new Identifier { Class = "Test_A" },
+                Name = "Test_A",
             });
     }
 
     private void AssertReadRule(string input, object? expected)
-    {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), (p, v) => v.VisitAssociationDef(p.associationDef()));
-        expected.ShouldDeepEqual(actual);
-    }
+        => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitAssociationDef(p.associationDef()));
 }

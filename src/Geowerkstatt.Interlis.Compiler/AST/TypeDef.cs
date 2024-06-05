@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Geowerkstatt.Interlis.Tools.AST;
 
-namespace Geowerkstatt.Interlis.Tools.AST;
-
-public class TypeDef : ITypeDef
+public class TypeDef : ITypeDef, IInterlisDefinition
 {
-    public Identifier? FullyQualifiedName { get; init; }
+    public required string Name { get; init; }
+    public IInterlisDefinition? Parent { get; set; } = null;
 
     /// <summary>
     /// Interlis-syntax string for now

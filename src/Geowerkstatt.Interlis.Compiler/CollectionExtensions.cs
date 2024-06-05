@@ -19,4 +19,12 @@ internal static class CollectionExtensions
             collection.Add(item);
         }
     }
+
+    /// <summary>
+    /// Filters out null values in a way that makes the C# compiler happy.
+    /// </summary>
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> collection) where T : class
+    {
+        return collection.Where(e => e != null)!;
+    }
 }
