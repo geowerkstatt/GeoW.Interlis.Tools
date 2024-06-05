@@ -5,7 +5,7 @@
 ## GitHub NuGet Feed
 NuGet package: https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.Tools.Compiler
 
-To authenticate to the geowerkstatt GitHub Packages registry you must use a personal access token (classic) with at least `read:packages` scope to install packages associated with other private repositories.
+To authenticate to the geowerkstatt GitHub Packages registry you must use a [personal access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with at least `read:packages` scope to install packages associated with other private repositories.
 Then create a _nuget.config_ file in your project directory specifying GitHub Packages as a source (see example below).
 You must replace:
 
@@ -28,4 +28,4 @@ You must replace:
 </configuration>
 ```
 
-The sample file above is a minimal configuration and also also located in the root of this repository.
+The sample file above is a minimal configuration and also located in the root of this repository.
