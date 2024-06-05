@@ -39,6 +39,26 @@ public class InterlisReaderClassDefTest
             });
     }
 
+    [TestMethod]
+    public void ReadClassWithAttributes()
+    {
+        AssertReadRule("""
+            CLASS Test =
+                Attr : MANDATORY TEXT*12;
+                Other : 0 .. 100;
+            END Test;
+            """,
+            new ClassDef
+            {
+                Name = "Test",
+                Content =
+                {
+                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TypeDef { Name = "", Definition = "TEXT*12", Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
+                    { "Other", new AttributeDef { Name = "Other", TypeDef = new TypeDef { Name = "", Definition = "0..100", Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                }
+            });
+    }
+
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitClassDef(p.classDef()));
 }

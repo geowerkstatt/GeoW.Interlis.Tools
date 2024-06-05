@@ -146,26 +146,46 @@ public class InterlisReaderInterlisFileTest
                                             new AssociationDef
                                             {
                                                 Name = "C",
-                                                RoleDefs =
+                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                Content =
                                                 {
-                                                    new AttributeDef
                                                     {
-                                                        Name = "roleA",
-                                                        TypeDef = new RoleType
+                                                        "roleA",
+                                                        new AttributeDef
                                                         {
-                                                            Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
-                                                            Targets = { new RestrictedRef { Target = classA } },
+                                                            Name = "roleA",
+                                                            TypeDef = new RoleType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                                Targets = { new RestrictedRef { Target = classA } },
+                                                            }
                                                         }
                                                     },
-                                                    new AttributeDef
                                                     {
-                                                        Name = "roleB",
-                                                        TypeDef = new RoleType
+                                                        "roleB",
+                                                        new AttributeDef
                                                         {
-                                                            Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
-                                                            Targets = { new RestrictedRef { Target = classB } },
+                                                            Name = "roleB",
+                                                            TypeDef = new RoleType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                                Targets = { new RestrictedRef { Target = classB } },
+                                                            }
                                                         }
                                                     },
+                                                    {
+                                                        "attr",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "attr",
+                                                            TypeDef = new TypeDef
+                                                            {
+                                                                Name = "",
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Definition = "TEXT*12",
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         },
@@ -183,36 +203,38 @@ public class InterlisReaderInterlisFileTest
             MODEL Model AT "foo.test" VERSION "123" =
                 TOPIC Topic =
                     CLASS A =
-                        Attr : TEXT*12;
                     END A;
                     CLASS B =
                     END B;
                     ASSOCIATION C =
                         roleA -- A;
                         roleB -- B;
-                        !!ATTRIBUTE
-                        !!Attr_Association : TEXT*13
+                    ATTRIBUTE
+                        attr : TEXT*12;
                     END C;
                 END Topic;
             END Model.
             """, expected);
-
-
     }
 
     private static void AssertReadFile(string input, InterlisFile expected)
     {
         var actual = new InterlisReader().ReadFile(new StringReader(input));
-
-        expected.WithDeepEqual(actual)
-            .IgnoreProperty<IInterlisDefinition>(d => d.Parent) // Ignore parent property to break circular references
-            .Assert();
+        AssertDeepEqual(expected, actual);
     }
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
     {
         var actual = new InterlisReader().ReadRule(new StringReader(input), parseRule);
         Assert.IsInstanceOfType(actual, expected?.GetType());
-        expected.ShouldDeepEqual(actual);
+        AssertDeepEqual(expected, actual);
+    }
+
+    private static void AssertDeepEqual(object expected, object actual)
+    {
+        expected.WithDeepEqual(actual)
+            .IgnoreProperty<IInterlisDefinition>(d => d.Parent) // Ignore parent property to break circular references
+            .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
+            .Assert();
     }
 }

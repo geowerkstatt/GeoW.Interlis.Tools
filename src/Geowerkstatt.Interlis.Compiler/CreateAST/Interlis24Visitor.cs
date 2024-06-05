@@ -134,26 +134,46 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     {
         CheckStartAndEndName(context.endName, context.name.Text, context.endName.Text);
 
-        return new ClassDef
+        var classDef = new ClassDef
         {
             Name = context.name.Text,
-            //Content = { ToContentDictionary(context.name, Visit(context.classOrStructureDef())) },
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
+
+        SetContentDictionary(classDef, classDef, context.name, VisitClassOrStructureDef(context.classOrStructureDef()));
+
+        return classDef;
+    }
+
+    public override List<IInterlisDefinition> VisitClassOrStructureDef([NotNull] Interlis24Parser.ClassOrStructureDefContext context)
+    {
+        var constraints = context.constraintDef().Select(VisitConstraintDef).Cast<IInterlisDefinition>();
+        var attributes = context.attributeDef().Select(VisitAttributeDef).Cast<IInterlisDefinition>();
+        var parameters = context.parameterDef() == null ? null : VisitParameterDef(context.parameterDef());
+
+        return attributes.Concat(constraints).ToList();
     }
 
     public override AssociationDef VisitAssociationDef([NotNull] Interlis24Parser.AssociationDefContext context)
     {
         CheckStartAndEndName(context.endName ?? context.Start, context.name?.Text ?? string.Empty, context.endName?.Text ?? string.Empty);
 
-        List<AttributeDef> attributeDefs = context.roleDef().Select(VisitRoleDef).ToList();
+        var roleDefs = context.roleDef().Select(VisitRoleDef).Cast<IInterlisDefinition>();
+        var attributeDefs = context.attributeDef().Select(VisitAttributeDef).Cast<IInterlisDefinition>();
+        var constraintDefs = context.constraintDef().Select(VisitConstraintDef).Cast<IInterlisDefinition>();
 
-        return new AssociationDef
+        var name = context.name?.Text ?? string.Concat(roleDefs.Select(r => r.Name));
+
+        var associationDef = new AssociationDef
         {
-            Name = context.name?.Text ?? "<Default>",
-            RoleDefs = { attributeDefs },
+            Name = name,
+            Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
         };
+
+        SetContentDictionary(associationDef, associationDef, context.Start, roleDefs.Concat(attributeDefs).Concat(constraintDefs));
+
+        return associationDef;
     }
 
     public override AttributeDef VisitRoleDef([NotNull] Interlis24Parser.RoleDefContext context)

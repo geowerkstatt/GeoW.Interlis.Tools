@@ -12,7 +12,7 @@ public class InterlisReaderAssociationDefTest
         AssertReadRule("""
             ASSOCIATION Test =
             END Test;
-            """, new AssociationDef { Name = "Test" });
+            """, new AssociationDef { Name = "Test", Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND } });
     }
 
     [TestMethod]
@@ -22,12 +22,13 @@ public class InterlisReaderAssociationDefTest
             ASSOCIATION Test_A (ABSTRACT, EXTENDED) EXTENDS Test_B DERIVED FROM Test_C =
                 OID AS oidType;
                 ATTRIBUTE
-                CARDINALITY = {0 .. *} ;
+                CARDINALITY = {5 .. 42} ;
             END Test_A;
             """,
             new AssociationDef
             {
                 Name = "Test_A",
+                Cardinality = new Cardinality { Min = 5, Max = 42 },
             });
     }
 

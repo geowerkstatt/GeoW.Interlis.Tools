@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Geowerkstatt.Interlis.Tools.AST;
 
-namespace Geowerkstatt.Interlis.Tools.AST;
-
-public class AssociationDef : IAstElement, IInterlisDefinition
+public class AssociationDef : IAstElement, IInterlisDefinition, IContainer<IInterlisDefinition>
 {
     public required string Name { get; init; }
     public IInterlisDefinition? Parent { get; set; } = null;
 
-    public IList<AttributeDef> RoleDefs { get; } = new List<AttributeDef>();
+    public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
+
+    public required Cardinality Cardinality { get; init; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {
