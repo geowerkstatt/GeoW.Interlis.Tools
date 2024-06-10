@@ -28,7 +28,7 @@ public class InterlisReaderInterlisFileTest
                 {
                     {
                         "ModelName",
-                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Xmlns = "http://www.interlis.ch/xtf/2.4/ModelName" }
+                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123" }
                     },
                 }
             });
@@ -54,7 +54,6 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Xmlns = "http://www.interlis.ch/xtf/2.4/ModelName",
                             DocComments = { "/** I am a doc comment */" }
                         }
                     }
@@ -87,7 +86,6 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Xmlns = "http://www.interlis.ch/xtf/2.4/ModelName",
                             Content =
                             {
                                 { "ClassName", new ClassDef { Name = "ClassName" } },
@@ -133,7 +131,6 @@ public class InterlisReaderInterlisFileTest
                         Name = "Model",
                         URI = "foo.test",
                         Version = "123",
-                        Xmlns = "http://www.interlis.ch/xtf/2.4/Model",
                         Content =
                         {
                             {
