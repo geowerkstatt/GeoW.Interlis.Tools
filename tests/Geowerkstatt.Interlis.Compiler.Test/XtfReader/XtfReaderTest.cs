@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Geowerkstatt.Interlis.Tools.NTS;
 
 namespace Geowerkstatt.Interlis.Tools.XtfReader;
 
@@ -35,5 +31,68 @@ public class XtfReaderTest
             .ToList();
 
         Assert.AreEqual(6, obj.Count);
+    }
+
+    [TestMethod]
+    public void ReadXtfWithArc()
+    {
+        var input = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <ili:transfer xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS"
+            xmlns:geom="http://www.interlis.ch/geometry/1.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:ModelA="http://www.interlis.ch/xtf/2.4/ModelA">
+            <ili:headersection>
+                <ili:models>
+                    <ili:model>ModelA</ili:model>
+                </ili:models>
+                <ili:sender>ili2gpkg-5.0.1-447c03f22b8f346a44ada86c553d10110872fd40</ili:sender>
+            </ili:headersection>
+            <ili:datasection>
+                <ModelA:TopicA ili:bid="_a1194f35-8028-4249-91bc-211da300a8e2">
+                    <ModelA:ClassA ili:tid="_5be9e257-75f5-4ccb-a79b-9bf1ea5bd343">
+                        <ModelA:Geometry>
+                            <geom:surface>
+                                <geom:exterior>
+                                    <geom:polyline>
+                                        <geom:coord>
+                                            <geom:c1>0</geom:c1>
+                                            <geom:c2>0</geom:c2>
+                                        </geom:coord>
+                                        <geom:coord>
+                                            <geom:c1>0</geom:c1>
+                                            <geom:c2>-100</geom:c2>
+                                        </geom:coord>
+                                        <geom:arc>
+                                            <geom:c1>0</geom:c1>
+                                            <geom:c2>100</geom:c2>
+                                            <geom:a1>100</geom:a1>
+                                            <geom:a2>0</geom:a2>
+                                        </geom:arc>
+                                        <geom:coord>
+                                            <geom:c1>0</geom:c1>
+                                            <geom:c2>0</geom:c2>
+                                        </geom:coord>
+                                    </geom:polyline>
+                                </geom:exterior>
+                            </geom:surface>
+                        </ModelA:Geometry>
+                    </ModelA:ClassA>
+                </ModelA:TopicA>
+            </ili:datasection>
+        </ili:transfer>
+        """;
+
+        var reader = new XtfReader();
+        var obj = reader
+            .ReadXtf(new StringReader(input))
+            .Select(o => ((CurvePolygon)o.Attributes.Values.Single()).ConvertToPolygon(0.1))
+            .ToList();
+
+        Assert.AreEqual(1, obj.Count);
+        var polygon = obj[0];
+        Assert.IsTrue(polygon.IsValid);
+        Assert.AreEqual(39, polygon.Boundary.Coordinates.Length);
+
     }
 }

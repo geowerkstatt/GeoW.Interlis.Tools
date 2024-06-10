@@ -22,6 +22,11 @@ public class CompoundCurveRing : CompoundCurve
 
     public static explicit operator LinearRing(CompoundCurveRing compoundCurveRing)
     {
-        return new LinearRing(DerivePoints(compoundCurveRing.Segments, compoundCurveRing.Factory), compoundCurveRing.Factory);
+        return compoundCurveRing.ConvertToLinearRing(0.01);
+    }
+
+    public LinearRing ConvertToLinearRing(double maxError)
+    {
+        return new LinearRing(DerivePoints(Segments, Factory, maxError), Factory);
     }
 }

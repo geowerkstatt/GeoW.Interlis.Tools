@@ -16,6 +16,11 @@ public class CurveMultiPolygon
 
     public static explicit operator MultiPolygon(CurveMultiPolygon curvePolygon)
     {
-        return new MultiPolygon(curvePolygon.Polygons.Select(p => (Polygon)p).ToArray(), curvePolygon.Factory);
+        return curvePolygon.ConvertToMultiPolygon(0.01);
+    }
+
+    public MultiPolygon ConvertToMultiPolygon(double maxError)
+    {
+        return new MultiPolygon(Polygons.Select(p => p.ConvertToPolygon(maxError)).ToArray(), Factory);
     }
 }

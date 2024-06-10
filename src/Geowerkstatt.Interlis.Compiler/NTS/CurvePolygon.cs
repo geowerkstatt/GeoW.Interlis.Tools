@@ -24,6 +24,11 @@ public class CurvePolygon
 
     public static explicit operator Polygon(CurvePolygon curvePolygon)
     {
-        return new Polygon((LinearRing)curvePolygon.Shell, curvePolygon.Holes.Select(h => (LinearRing)h).ToArray(), curvePolygon.Factory);
+        return curvePolygon.ConvertToPolygon(0.01);
+    }
+
+    public Polygon ConvertToPolygon(double maxError)
+    {
+        return new Polygon(Shell.ConvertToLinearRing(maxError), Holes.Select(h => h.ConvertToLinearRing(maxError)).ToArray(), Factory);
     }
 }
