@@ -97,6 +97,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             Language = context.language?.Text,
             URI = VisitString(context.uri),
             Version = VisitString(context.modelVersion),
+            Xmlns = context.xmlns == null ? null : VisitString(context.xmlns),
         };
 
         using var scopeFrame = CurrentScope.NewFrame(modelDef);

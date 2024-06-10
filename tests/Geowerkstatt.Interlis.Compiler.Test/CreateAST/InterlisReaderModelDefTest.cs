@@ -13,7 +13,7 @@ public class InterlisReaderModelDefTest
         AssertReadRule("""
             MODEL Test AT "foo.test" VERSION "123" =
             END Test.
-            """, new ModelDef { Name = "Test", URI = "foo.test", Version = "123" });
+            """, new ModelDef { Name = "Test", URI = "foo.test", Version = "123", Xmlns = "http://www.interlis.ch/xtf/2.4/Test" });
     }
 
     [TestMethod]
@@ -37,6 +37,7 @@ public class InterlisReaderModelDefTest
                 Language = "en",
                 URI = "foo.test",
                 Version = "123",
+                Xmlns = "http://www.interlis.test",
             });
     }
 
@@ -56,6 +57,7 @@ public class InterlisReaderModelDefTest
                 DocComments = { string.Join(Environment.NewLine, "/**", " * Documentation String", " */") },
                 URI = "foo.test",
                 Version = "123",
+                Xmlns = "http://www.interlis.ch/xtf/2.4/Test",
             });
     }
 

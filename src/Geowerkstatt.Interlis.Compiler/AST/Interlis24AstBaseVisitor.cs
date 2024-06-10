@@ -13,25 +13,31 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitAssociationDef([NotNull] AssociationDef associationDef)
     {
-        return DefaultResult;    }
+        return DefaultResult;
+    }
 
     public virtual TResult? VisitAttributeDef([NotNull] AttributeDef attributeDef)
     {
-        return DefaultResult;    }
+        return DefaultResult;
+    }
 
     public virtual TResult? VisitClassDef([NotNull] ClassDef classDef)
     {
-        return DefaultResult;    }
+        return DefaultResult;
+    }
 
     public virtual TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile)
     {
-        return DefaultResult;    }
+        return DefaultResult;
+    }
 
     public virtual TResult? VisitModelDef([NotNull] ModelDef modelDef)
     {
-        return DefaultResult;    }
+        return DefaultResult;
+    }
 
     public virtual TResult? VisitTopicDef([NotNull] TopicDef topicDef)
     {
-        return DefaultResult;    }
+        return DefaultResult;
+    }
 }

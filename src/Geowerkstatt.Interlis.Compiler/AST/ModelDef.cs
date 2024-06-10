@@ -13,6 +13,7 @@ public sealed class ModelDef : IAstElement, IInterlisDefinition, IDocumentation,
     public string? Language { get; set; }
     public string? URI { get; set; }
     public string? Version { get; set; }
+    public string? Xmlns { get; set; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {
