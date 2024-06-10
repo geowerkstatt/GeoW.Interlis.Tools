@@ -13,7 +13,7 @@ public class StraightSegment : LineSegment, ICurveSegment
     {
     }
 
-    public Coordinate[] Coordinates => [P0, P1];
+    public Coordinate[] GetCoordinates(double maxError) => [P0, P1];
 
     public Envelope ExpandEnvelope(Envelope envelope)
     {

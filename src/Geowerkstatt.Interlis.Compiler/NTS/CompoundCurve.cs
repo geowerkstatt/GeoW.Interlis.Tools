@@ -32,12 +32,12 @@ public class CompoundCurve
         return envelope;
     }
 
-    protected static CoordinateSequence DerivePoints(List<ICurveSegment> segments, GeometryFactory factory)
+    protected static CoordinateSequence DerivePoints(List<ICurveSegment> segments, GeometryFactory factory, double maxError)
     {
         CoordinateList result = new CoordinateList();
         foreach (var segment in segments)
         {
-            result.Add(segment.Coordinates, allowRepeated: false);
+            result.Add(segment.GetCoordinates(maxError), allowRepeated: false);
         }
 
         return factory.CoordinateSequenceFactory.Create(result.ToArray());
@@ -45,6 +45,11 @@ public class CompoundCurve
 
     public static explicit operator LineString(CompoundCurve compoundCurve)
     {
-        return new LineString(DerivePoints(compoundCurve.Segments, compoundCurve.Factory), compoundCurve.Factory);
+        return compoundCurve.ConvertToLineString(0.01);
+    }
+
+    public LineString ConvertToLineString(double maxError)
+    {
+        return new LineString(DerivePoints(Segments, Factory, maxError), Factory);
     }
 }

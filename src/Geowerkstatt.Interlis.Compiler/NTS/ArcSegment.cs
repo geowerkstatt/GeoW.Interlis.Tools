@@ -23,17 +23,14 @@ public class ArcSegment : ICurveSegment
 
     private Coordinate[]? coordinates;
 
-    public Coordinate[] Coordinates
+    public Coordinate[] GetCoordinates(double maxError)
     {
-        get
+        if (coordinates == null)
         {
-            if (coordinates == null)
-            {
-                coordinates = StrokeArc(0.001);
-            }
-
-            return coordinates;
+            coordinates = StrokeArc(maxError);
         }
+
+        return coordinates;
     }
 
     /// <summary>

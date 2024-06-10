@@ -12,7 +12,7 @@ public interface ICurveSegment
     /// <summary>
     /// A list of <see cref="Coordinate"/>s that, when connected by straight lines represent or approximate this segment.
     /// </summary>
-    public Coordinate[] Coordinates { get; }
+    public Coordinate[] GetCoordinates(double maxError = 0.01);
 
     public Coordinate Start { get; }
 
