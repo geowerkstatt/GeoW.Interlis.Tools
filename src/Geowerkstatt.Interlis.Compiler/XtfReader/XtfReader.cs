@@ -150,8 +150,8 @@ public class XtfReader
         var hasC1 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "c1").SingleOrDefault()?.Value, out double c1);
         var hasC2 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "c2").SingleOrDefault()?.Value, out double c2);
         var hasC3 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "c3").SingleOrDefault()?.Value, out double c3);
-        var hasA1 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "c3").SingleOrDefault()?.Value, out double a1);
-        var hasA2 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "c3").SingleOrDefault()?.Value, out double a2);
+        var hasA1 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "a1").SingleOrDefault()?.Value, out double a1);
+        var hasA2 = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "a2").SingleOrDefault()?.Value, out double a2);
         var hasR = double.TryParse(arc.Elements().WhereName(GeometryNamespace, "r").SingleOrDefault()?.Value, out double r);
 
         if (hasR) throw new ArgumentException("R not supported");
