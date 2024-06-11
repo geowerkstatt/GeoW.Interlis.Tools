@@ -179,7 +179,6 @@ public class ArcSegment : ICurveSegment
         return envelope;
     }
 
-
     /// <summary>
     /// Returns the Well-Known Text (WKT) representation of this <see cref="ArcSegment"/>.
     /// </summary>
