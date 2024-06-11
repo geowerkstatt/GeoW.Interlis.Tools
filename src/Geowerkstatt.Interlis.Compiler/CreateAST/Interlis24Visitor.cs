@@ -142,6 +142,14 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
 
+        if (context.extends != null)
+        {
+            var extendsRef = VisitDefinitionRef(context.extends);
+            extendsRef.SetSource = e => classDef.Extends = (ClassDef)e;
+            extendsRef.Source = classDef;
+            ReferencestoResolve.Add(extendsRef);
+        }
+
         SetContentDictionary(classDef, classDef, context.name, VisitClassOrStructureDef(context.classOrStructureDef()));
 
         return classDef;
