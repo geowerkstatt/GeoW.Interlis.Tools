@@ -52,4 +52,13 @@ public class CompoundCurve
     {
         return new LineString(DerivePoints(Segments, Factory, maxError), Factory);
     }
+
+    /// <summary>
+    /// Returns the Well-Known Text (WKT) representation of this <see cref="CompoundCurve"/>.
+    /// </summary>
+    public override string ToString()
+    {
+        var segmentsWkt = string.Join(",", Segments.Select(s => s.ToString()));
+        return $"COMPOUNDCURVE({segmentsWkt})";
+    }
 }
