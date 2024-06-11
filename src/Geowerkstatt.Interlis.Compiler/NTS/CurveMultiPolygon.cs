@@ -23,4 +23,14 @@ public class CurveMultiPolygon
     {
         return new MultiPolygon(Polygons.Select(p => p.ConvertToPolygon(maxError)).ToArray(), Factory);
     }
+
+    /// <summary>
+    /// Returns the Well-Known Text (WKT) representation of this <see cref="CurveMultiPolygon"/>.
+    /// </summary>
+    public override string ToString()
+    {
+        var curvePolyWkt = string.Join(",", Polygons.Select(s => s.ToString()));
+        return $"GEOMETRYCOLLECTION({curvePolyWkt})";
+    
+    }
 }

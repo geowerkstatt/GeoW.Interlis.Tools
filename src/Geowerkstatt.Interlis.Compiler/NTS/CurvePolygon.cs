@@ -1,9 +1,4 @@
 ﻿using NetTopologySuite.Geometries;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Geowerkstatt.Interlis.Tools.NTS;
 
@@ -30,5 +25,21 @@ public class CurvePolygon
     public Polygon ConvertToPolygon(double maxError)
     {
         return new Polygon(Shell.ConvertToLinearRing(maxError), Holes.Select(h => h.ConvertToLinearRing(maxError)).ToArray(), Factory);
+    }
+
+    /// <summary>
+    /// Returns the Well-Known Text (WKT) representation of this <see cref="CurvePolygon"/>.
+    /// </summary>
+    public override string ToString()
+    {
+        if (Holes.Any())
+        {
+            var holesWkt = string.Join(",", Holes.Select(s => s.ToString()));
+            return $"CURVEPOLYGON({Shell}, {holesWkt})";
+        }
+        else
+        {
+            return $"CURVEPOLYGON({Shell})";
+        }
     }
 }
