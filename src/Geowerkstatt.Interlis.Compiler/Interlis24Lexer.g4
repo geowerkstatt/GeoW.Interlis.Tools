@@ -230,7 +230,7 @@ META_COMMENT_OPEN : '!!@'                    -> pushMode(MetaComment);
 LINE_COMMENT      : '!!' (~[@] .*?)? NEWLINE -> channel(HIDDEN);
 DOC_COMMENT       : '/**' .*? '*/';
 BLOCK_COMMENT     : '/*' .*? '*/'          -> channel(HIDDEN);
-WHITESPACE        : (' ' | '\t' | NEWLINE) -> skip;
+WHITESPACE        : (' ' | '\t' | NEWLINE) -> channel(HIDDEN);
 UNEXPECTED        : .;
 
 // Parsing string literal
