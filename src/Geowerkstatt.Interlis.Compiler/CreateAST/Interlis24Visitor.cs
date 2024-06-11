@@ -142,12 +142,11 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
 
-        using var scopeFrame = CurrentScope.NewFrame(classDef);
         if (context.extends != null)
         {
             var extendsRef = VisitDefinitionRef(context.extends);
             extendsRef.SetSource = e => classDef.Extends = (ClassDef)e;
-            extendsRef.Source = CurrentScope.Value;
+            extendsRef.Source = classDef;
             ReferencestoResolve.Add(extendsRef);
         }
 
