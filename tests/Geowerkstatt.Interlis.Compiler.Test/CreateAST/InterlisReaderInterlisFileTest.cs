@@ -35,7 +35,7 @@ public class InterlisReaderInterlisFileTest
     }
 
     [TestMethod]
-    public void ReadFileWithModeWithDocComment()
+    public void ReadFileWithModelWithDocComment()
     {
         AssertReadFile("""
             INTERLIS 2.4;
@@ -62,7 +62,7 @@ public class InterlisReaderInterlisFileTest
     }
 
     [TestMethod]
-    public void ReadFileWithModeTopicAndClass()
+    public void ReadFileWithModelTopicAndClass()
     {
         AssertReadFile("""
             INTERLIS 2.4;
@@ -118,6 +118,7 @@ public class InterlisReaderInterlisFileTest
         var classB = new ClassDef
         {
             Name = "B",
+            Extends = classA,
         };
 
         var expected = new InterlisFile
@@ -205,7 +206,8 @@ public class InterlisReaderInterlisFileTest
                 TOPIC Topic =
                     CLASS A =
                     END A;
-                    CLASS B =
+                    CLASS B 
+                    EXTENDS A =
                     END B;
                     ASSOCIATION C =
                         roleA -- A;
