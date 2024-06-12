@@ -8,6 +8,8 @@ public class CurveMultiPolygon
 
     public GeometryFactory Factory { get; }
 
+    public object? UserData { get; set; }
+
     public CurveMultiPolygon(CurvePolygon[] polygons, GeometryFactory factory)
     {
         Polygons = polygons;
