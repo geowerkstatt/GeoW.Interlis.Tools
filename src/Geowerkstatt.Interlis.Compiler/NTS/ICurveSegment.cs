@@ -2,7 +2,7 @@
 
 namespace Geowerkstatt.Interlis.Tools.NTS;
 
-public interface ICurveSegment
+public interface ICurveSegment : IEquatable<ICurveSegment>
 {
     /// <summary>
     /// Expand the given <paramref name="envelope"/> to include this segment.
