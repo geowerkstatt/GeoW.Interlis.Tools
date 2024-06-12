@@ -183,4 +183,9 @@ public class ArcSegment : ICurveSegment
     /// Returns the Well-Known Text (WKT) representation of this <see cref="ArcSegment"/>.
     /// </summary>
     public override string ToString() => $"CIRCULARSTRING({Start.X} {Start.Y}, {Mid.X} {Mid.Y}, {End.X} {End.Y})";
+
+    public bool Equals(ICurveSegment? other)
+    {
+        throw new NotImplementedException();
+    }
 }
