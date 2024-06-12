@@ -7,7 +7,7 @@ public class CompoundCurve
     public List<ICurveSegment> Segments { get; }
     public GeometryFactory Factory { get; }
 
-    public object UserData { get; set; }
+    public object? UserData { get; set; }
 
     public CompoundCurve(List<ICurveSegment> segments, GeometryFactory factory)
     {

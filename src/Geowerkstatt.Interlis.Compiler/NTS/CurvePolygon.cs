@@ -10,7 +10,7 @@ public class CurvePolygon
 
     public GeometryFactory Factory { get; }
 
-    public object UserData { get; set; }
+    public object? UserData { get; set; }
 
     public CurvePolygon(CompoundCurveRing shell, CompoundCurveRing[] holes, GeometryFactory factory)
     {
