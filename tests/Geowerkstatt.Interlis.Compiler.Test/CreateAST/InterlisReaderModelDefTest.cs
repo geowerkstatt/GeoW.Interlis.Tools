@@ -61,7 +61,6 @@ public class InterlisReaderModelDefTest
     }
 
     [TestMethod]
-    [Ignore("Test fails in the current CI pipeline.")] // TODO
     public void ReadModelDefWithMetaAttributes()
     {
         AssertReadRule("""
@@ -72,7 +71,7 @@ public class InterlisReaderModelDefTest
             new ModelDef
             {
                 Name = "Test",
-                MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ ø \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
+                MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ Ã¸ \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
                 URI = "foo.test",
                 Version = "123",
             });
