@@ -121,6 +121,14 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
 
+        if (context.extends != null)
+        {
+            var extendsRef = VisitTopicRef(context.extends);
+            extendsRef.SetSource = e => topicDef.Extends = (TopicDef)e;
+            extendsRef.Source = topicDef;
+            ReferencestoResolve.Add(extendsRef);
+        }
+
         using var scopeFrame = CurrentScope.NewFrame(topicDef);
         SetContentDictionary(topicDef, topicDef, context.name, context.topicContents().Select(Visit).Cast<IInterlisDefinition>());
         return topicDef;
@@ -250,6 +258,15 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var restrictions = context._restrictions.Select(VisitDefinitionRef).ToList();
 
         return Tuple.Create(target, restrictions);
+    }
+
+    public override UnresolvedReference VisitTopicRef([NotNull] Interlis24Parser.TopicRefContext context)
+    {
+        return new UnresolvedReference
+        {
+            Target = { new[] { context.model?.Text, context.topic.Text }.WhereNotNull() },
+            IsRelative = context.model == null,
+        };
     }
 
     public override UnresolvedReference VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)

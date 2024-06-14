@@ -36,7 +36,7 @@ modelContents
 
 topicDef
     : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (
-        EXTENDS topicRef
+        EXTENDS extends=topicRef
     )? EQUAL_SIGN (BASKET OID AS basketOid=definitionRef SEMICOLON)? (
         OID AS oid=definitionRef SEMICOLON
     )? (DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON)* (

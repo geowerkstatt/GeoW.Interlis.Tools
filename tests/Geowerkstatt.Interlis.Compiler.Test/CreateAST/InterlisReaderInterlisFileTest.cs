@@ -121,6 +121,11 @@ public class InterlisReaderInterlisFileTest
             Extends = classA,
         };
 
+        var baseTopic = new TopicDef
+        {
+            Name = "BaseTopic",
+        };
+
         var expected = new InterlisFile
         {
             Content =
@@ -134,11 +139,21 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Content =
                         {
+                            { "BaseTopic", baseTopic },
+                            {
+                                "OtherTopic",
+                                new TopicDef
+                                {
+                                    Name = "OtherTopic",
+                                    Extends = baseTopic,
+                                }
+                            },
                             {
                                 "Topic",
                                 new TopicDef
                                 {
                                     Name = "Topic",
+                                    Extends = baseTopic,
                                     Content =
                                     {
                                         { "A", classA },
@@ -203,12 +218,13 @@ public class InterlisReaderInterlisFileTest
         AssertReadFile("""
             INTERLIS 2.4;
             MODEL Model AT "foo.test" VERSION "123" =
-                TOPIC Topic =
+                TOPIC Topic EXTENDS BaseTopic =
                     CLASS A =
                     END A;
-                    CLASS B 
-                    EXTENDS A =
+
+                    CLASS B EXTENDS A =
                     END B;
+
                     ASSOCIATION C =
                         roleA -- A;
                         roleB -- B;
@@ -216,6 +232,12 @@ public class InterlisReaderInterlisFileTest
                         attr : TEXT*12;
                     END C;
                 END Topic;
+
+                TOPIC BaseTopic = 
+                END BaseTopic;
+
+                TOPIC OtherTopic EXTENDS Model.BaseTopic =
+                END OtherTopic;
             END Model.
             """, expected);
     }

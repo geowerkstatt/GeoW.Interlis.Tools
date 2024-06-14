@@ -1,6 +1,6 @@
 ﻿namespace Geowerkstatt.Interlis.Tools.AST;
 
-public sealed class ClassDef : IAstElement, IInterlisDefinition, IDocumentation, IContainer<IInterlisDefinition>
+public sealed class ClassDef : IAstElement, IInterlisDefinition, IDocumentation, IContainer<IInterlisDefinition>, IExtendable<ClassDef>
 {
     public required string Name { get; init; }
     public IInterlisDefinition? Parent { get; set; }
