@@ -195,11 +195,10 @@ public class InterlisReaderInterlisFileTest
                                                         new AttributeDef
                                                         {
                                                             Name = "attr",
-                                                            TypeDef = new TypeDef
+                                                            TypeDef = new TextTypeDef
                                                             {
-                                                                Name = "",
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Definition = "TEXT*12",
+                                                                Length = 12,
                                                             }
                                                         }
                                                     }

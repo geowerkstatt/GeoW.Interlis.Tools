@@ -53,8 +53,8 @@ public class InterlisReaderClassDefTest
                 Name = "Test",
                 Content =
                 {
-                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TypeDef { Name = "", Definition = "TEXT*12", Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
-                    { "Other", new AttributeDef { Name = "Other", TypeDef = new TypeDef { Name = "", Definition = "0..100", Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
+                    { "Other", new AttributeDef { Name = "Other", TypeDef = new TypeDef { Definition = "0..100", Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
                 }
             });
     }

@@ -289,7 +289,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
-    public override TypeDef VisitAttrTypeDef([NotNull] Interlis24Parser.AttrTypeDefContext context)
+    public override ITypeDef VisitAttrTypeDef([NotNull] Interlis24Parser.AttrTypeDefContext context)
     {
         Cardinality cardinality;
         if (context.MANDATORY() != null)
@@ -317,11 +317,32 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             }
         }
 
-        return new TypeDef
+        var type = (ITypeDef)VisitAttrType(context.attrType());
+        type.Cardinality = cardinality;
+
+        return type;
+    }
+
+    public override object VisitAttrType([NotNull] Interlis24Parser.AttrTypeContext context)
+    {
+        return VisitChildren(context);
+    }
+
+    public override object VisitType([NotNull] Interlis24Parser.TypeContext context)
+    {
+        return VisitChildren(context);
+    }
+
+    public override object VisitBaseType([NotNull] Interlis24Parser.BaseTypeContext context)
+    {
+        return VisitChildren(context);
+    }
+
+    public override TextTypeDef VisitTextType([NotNull] Interlis24Parser.TextTypeContext context)
+    {
+        return new TextTypeDef
         {
-            Name = string.Empty, // Types defined directly on the attribute have no name
-            Definition = context.attrType().GetText(),
-            Cardinality = cardinality,
+            Length = int.Parse(context.maxLength.Text),
         };
     }
 
