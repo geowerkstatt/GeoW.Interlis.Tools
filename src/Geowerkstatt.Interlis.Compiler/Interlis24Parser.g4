@@ -202,7 +202,7 @@ booleanType
     ;
 
 numericType
-    : (numeric '..' numeric | NUMERIC) CIRCULAR? ('[' definitionRef ']')? (
+    : (min=numeric '..' max=numeric | NUMERIC) CIRCULAR? ('[' unit=definitionRef ']')? (
         CLOCKWISE
         | COUNTERCLOCKWISE
         | refSys
@@ -583,10 +583,10 @@ property
     ;
 
 numeric
-    : EXP_NUMBER
-    | DECIMAL_NUMBER
-    | SIGNED_NUMBER
-    | POS_NUMBER
+    : EXP_NUMBER     # expNumber
+    | DECIMAL_NUMBER # decimalNumber
+    | SIGNED_NUMBER  # signedNumber
+    | POS_NUMBER     # posNumber
     ;
 
 string

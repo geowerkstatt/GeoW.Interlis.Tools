@@ -12,13 +12,24 @@ namespace Geowerkstatt.Interlis.Tools;
 public class InterlisReaderAttributeDef
 {
     [TestMethod]
-    public void ReadAttributeDef()
+    public void ReadTextAttributeDef()
     {
         AssertReadRule("Attr : TEXT*12;",
             new AttributeDef
             {
                 Name = "Attr",
                 TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
+    public void ReadNumericAttributeDef()
+    {
+        AssertReadRule("Attr : 000..999;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new NumericTypeDef { Min = 0, Max = 999, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 
@@ -35,7 +46,7 @@ public class InterlisReaderAttributeDef
                 Name = "Attr",
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
-                TypeDef = new TypeDef { Definition = "0.00..100.00", Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new NumericTypeDef { Min = 0, Max = 100, Precision = -2, Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 

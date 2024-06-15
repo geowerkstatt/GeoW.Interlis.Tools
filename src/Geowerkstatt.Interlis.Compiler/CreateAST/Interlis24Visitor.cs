@@ -77,7 +77,8 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
         foreach (var reference in ReferencestoResolve)
         {
-            if (!reference.TryResolve(interlisFile)) {
+            if (!reference.TryResolve(interlisFile))
+            {
                 ReportError(context.Start, $"Could not resolve {reference}");
             }
         }
@@ -114,7 +115,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     {
         CheckStartAndEndName(context.endName, context.name.Text, context.endName.Text);
 
-        var topicDef =  new TopicDef
+        var topicDef = new TopicDef
         {
             Name = context.name.Text,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
@@ -344,6 +345,80 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         {
             Length = int.Parse(context.maxLength.Text),
         };
+    }
+
+    public override NumericTypeDef VisitNumericType([NotNull] Interlis24Parser.NumericTypeContext context)
+    {
+        var numericTypeDef = new NumericTypeDef()
+        {
+            Circular = context.CIRCULAR() != null,
+        };
+
+        if (context.min != null)
+        {
+            var (minValue, minPrecision) = (Tuple<double, int>)Visit(context.min);
+            var (maxValue, maxPrecision) = (Tuple<double, int>)Visit(context.max);
+
+            if (minPrecision != maxPrecision)
+            {
+                ReportError(context.Start, $"Number minimum and maximum must have the same precision but minimum has precision <{Math.Pow(10, minPrecision)}> and maximum has precision <{Math.Pow(10, maxPrecision)}>");
+            }
+
+            if (minValue > maxValue )
+            {
+                ReportError(context.Start, $"Number minimum <{minValue}> must be smaller than maximum <{maxValue}>");
+                (minValue, maxValue) = (maxValue, minValue);
+            }
+
+            // Check if it might be ok to represent the values as a double
+            var delta = Math.Pow(10, minPrecision);
+            if ((maxValue - Math.BitDecrement(maxValue)) >= delta || (Math.BitIncrement(minValue) - minValue) >= delta)
+            {
+                ReportError(context.Start, $"The given range <{minValue} .. {maxValue}> with a precision of <{delta}> cannot be represented by a double precision floating point number");
+            }
+
+            numericTypeDef.Min = minValue;
+            numericTypeDef.Max = maxValue;
+            numericTypeDef.Precision = minPrecision;
+        }
+
+        return numericTypeDef;
+    }
+
+    public override Tuple<double, int> VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
+    {
+        var number = context.EXP_NUMBER().Symbol.Text;
+        var decPointIndex = number.IndexOf('.');
+        var expIndex = number.IndexOfAny(['e', 'E']);
+
+        var decimalPrecision = expIndex - decPointIndex - 1;
+        var exp = int.Parse(number.Substring(expIndex + 1));
+
+        var value = double.Parse(number);
+        var precision = exp - decimalPrecision;
+
+        return Tuple.Create(value, precision);
+    }
+
+    public override Tuple<double, int> VisitDecimalNumber([NotNull] Interlis24Parser.DecimalNumberContext context)
+    {
+        var number = context.DECIMAL_NUMBER().Symbol.Text;
+        var decPointIndex = number.IndexOf('.');
+
+        var value = double.Parse(number);
+        var precision = decPointIndex - number.Length + 1;
+
+        return Tuple.Create(value, precision);
+    }
+
+    public override Tuple<double, int> VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
+    {
+        return Tuple.Create(double.Parse(context.SIGNED_NUMBER().Symbol.Text), 0);
+    }
+
+    public override Tuple<double, int> VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
+    {
+        return Tuple.Create(double.Parse(context.POS_NUMBER().Symbol.Text), 0);
     }
 
     public override List<Tuple<string, string>> VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)

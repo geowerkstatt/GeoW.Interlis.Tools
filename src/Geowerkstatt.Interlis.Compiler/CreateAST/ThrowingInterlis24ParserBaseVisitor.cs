@@ -364,11 +364,6 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
         return ThrowNotImplementedException(context);
     }
 
-    public virtual TResult VisitNumeric([NotNull] Interlis24Parser.NumericContext context)
-    {
-        return ThrowNotImplementedException(context);
-    }
-
     public virtual TResult VisitNumericConst([NotNull] Interlis24Parser.NumericConstContext context)
     {
         return ThrowNotImplementedException(context);
@@ -530,6 +525,26 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
     }
 
     public virtual TResult VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
+    {
+        return ThrowNotImplementedException(context);
+    }
+
+    public virtual TResult VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
+    {
+        return ThrowNotImplementedException(context);
+    }
+
+    public virtual TResult VisitDecimalNumber([NotNull] Interlis24Parser.DecimalNumberContext context)
+    {
+        return ThrowNotImplementedException(context);
+    }
+
+    public virtual TResult VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
+    {
+        return ThrowNotImplementedException(context);
+    }
+
+    public virtual TResult VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
     {
         return ThrowNotImplementedException(context);
     }
