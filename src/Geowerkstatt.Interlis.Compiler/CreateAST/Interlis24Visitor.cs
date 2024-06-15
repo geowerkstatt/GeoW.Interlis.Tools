@@ -426,6 +426,25 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return new BooleanTypeDef();
     }
 
+    public override object VisitCoordinateType([NotNull] Interlis24Parser.CoordinateTypeContext context)
+    {
+        if (context.rotationDef() != null)
+        {
+            Visit(context.rotationDef());
+        }
+
+        if (context.refsys != null)
+        {
+            throw new NotImplementedException();
+        }
+
+        return new CoordTypeDef
+        {
+            IsMultiGeometry = context.MULTICOORD() != null,
+            Axis = { context._axis.Select(VisitNumericType) },
+        };
+    }
+
     public override List<Tuple<string, string>> VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)
     {
         return context.metaAttribute().Select(VisitMetaAttribute).ToList();

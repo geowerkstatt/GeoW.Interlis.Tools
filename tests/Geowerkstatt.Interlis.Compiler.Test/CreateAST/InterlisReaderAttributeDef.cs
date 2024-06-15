@@ -45,6 +45,25 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadCoordAttributeDef()
+    {
+        AssertReadRule("Attr : COORD 0..100, 0..100;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new CoordTypeDef
+                {
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                    Axis =
+                    {
+                        new NumericTypeDef { Min = 0, Max = 100, Precision = 0 },
+                        new NumericTypeDef { Min = 0, Max = 100, Precision = 0 },
+                    },
+                },
+            });
+    }
+
+    [TestMethod]
     public void ReadAttributeDefComplete()
     {
         AssertReadRule("""

@@ -248,8 +248,8 @@ dateTimeType
     ;
 
 coordinateType
-    : (COORD | MULTICOORD) numericType (
-        ',' numericType (',' numericType)? (',' rotationDef)? (REFSYS name=string)?
+    : (COORD | MULTICOORD) axis+=numericType (
+        ',' axis+=numericType (',' axis+=numericType)? (',' rotationDef)? (REFSYS refsys=string)?
     )?
     ;
 
