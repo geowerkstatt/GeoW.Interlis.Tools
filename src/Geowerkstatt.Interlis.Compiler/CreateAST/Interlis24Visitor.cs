@@ -421,6 +421,11 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return Tuple.Create(double.Parse(context.POS_NUMBER().Symbol.Text), 0);
     }
 
+    public override object VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)
+    {
+        return new BooleanTypeDef();
+    }
+
     public override List<Tuple<string, string>> VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)
     {
         return context.metaAttribute().Select(VisitMetaAttribute).ToList();

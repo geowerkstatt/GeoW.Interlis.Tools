@@ -34,6 +34,17 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadBooleanAttributeDef()
+    {
+        AssertReadRule("Attr : BOOLEAN;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new BooleanTypeDef { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
     public void ReadAttributeDefComplete()
     {
         AssertReadRule("""
