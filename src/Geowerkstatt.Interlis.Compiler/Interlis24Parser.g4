@@ -35,11 +35,11 @@ modelContents
 
 topicDef
     : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (
-        EXTENDS extends=topicRef
+        EXTENDS extends=definitionRef
     )? EQUAL_SIGN (BASKET OID AS basketOid=definitionRef SEMICOLON)? (
         OID AS oid=definitionRef SEMICOLON
-    )? (DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON)* (
-        DEFERRED GENERICS definitionRef ( ',' definitionRef)* SEMICOLON
+    )? (DEPENDS ON dependsOn+=definitionRef ( ',' dependsOn+=definitionRef)* SEMICOLON)* (
+        DEFERRED GENERICS generics+=definitionRef (',' generics+=definitionRef)* SEMICOLON
     )? topicContents* END endName=IDENTIFIER SEMICOLON
     ;
 
@@ -53,10 +53,6 @@ topicContents
     | constraintsDef
     | viewDef
     | graphicDef
-    ;
-
-topicRef
-    : (model=IDENTIFIER '.')? topic=IDENTIFIER
     ;
 
 definitionRef
@@ -298,7 +294,7 @@ lineForm
 lineFormType
     : STRAIGHTS
     | ARCS
-    | (model=IDENTIFIER '.')? name=IDENTIFIER
+    | definitionRef
     ;
 
 controlPoints
@@ -335,7 +331,7 @@ composedUnit
 metaDataBasketDef
     : (metaAttributes | DOC_COMMENT)* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? /* FINAL */ (
         EXTENDS definitionRef
-    )? '~' topicRef (
+    )? '~' topic=definitionRef (
         OBJECTS OF className=IDENTIFIER ':' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER (
             ',' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER
         )*
@@ -426,7 +422,7 @@ factor
     : objectOrAttributePath
     | (inspection | INSPECTION definitionRef) (OF objectOrAttributePath)?
     | functionCall
-    | PARAMETER (model=IDENTIFIER '.') runTimeParameter=IDENTIFIER?
+    | PARAMETER definitionRef
     | constant
     ;
 

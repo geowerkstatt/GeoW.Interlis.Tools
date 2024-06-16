@@ -30,7 +30,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     /// Add the <paramref name="referenceContext"/> to the references to resolve later.
     /// When the reference is resolved, the <paramref name="setSource"/> action is called with the result.
     /// </summary>
-    private void DefferedReference(Interlis24Parser.DefinitionRefContext referenceContext, Action<IInterlisDefinition>? setSource)
+    private void DeferredReference(Interlis24Parser.DefinitionRefContext referenceContext, Action<IInterlisDefinition>? setSource)
     {
         if (referenceContext != null)
         {
@@ -150,17 +150,9 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
         using var scopeFrame = CurrentScope.NewFrame(topicDef);
 
-
-        if (context.extends != null)
-        {
-            var extendsRef = VisitTopicRef(context.extends);
-            extendsRef.SetSource = e => topicDef.Extends = (TopicDef)e;
-            extendsRef.Source = CurrentScope.Value;
-            ReferencestoResolve.Add(extendsRef);
-        }
-
-        DefferedReference(context.oid, e => topicDef.OidType = ((DomainDef)e).TypeDef);
-        DefferedReference(context.basketOid, e => topicDef.BasketOidType = ((DomainDef)e).TypeDef);
+        DeferredReference(context.extends, e => topicDef.Extends = (TopicDef)e);
+        DeferredReference(context.oid, e => topicDef.OidType = ((DomainDef)e).TypeDef);
+        DeferredReference(context.basketOid, e => topicDef.BasketOidType = ((DomainDef)e).TypeDef);
 
         var elements = context
             .topicContents()
@@ -192,7 +184,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
 
-        DefferedReference(context.extends, e => classDef.Extends = (ClassDef)e);
+        DeferredReference(context.extends, e => classDef.Extends = (ClassDef)e);
 
         if (classDef.IsStructure && (context.oid != null || context.noOid != null))
         {
@@ -201,7 +193,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
         if (context.oid != null)
         {
-            DefferedReference(context.oid, e => classDef.OidType = ((DomainDef)e).TypeDef);
+            DeferredReference(context.oid, e => classDef.OidType = ((DomainDef)e).TypeDef);
         }
         else if (context.noOid != null)
         {
@@ -308,15 +300,6 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var restrictions = context._restrictions.Select(VisitDefinitionRef).ToList();
 
         return Tuple.Create(target, restrictions);
-    }
-
-    public override UnresolvedReference VisitTopicRef([NotNull] Interlis24Parser.TopicRefContext context)
-    {
-        return new UnresolvedReference
-        {
-            Target = { new[] { context.model?.Text, context.topic.Text }.WhereNotNull() },
-            IsRelative = context.model == null,
-        };
     }
 
     public override UnresolvedReference VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
@@ -538,7 +521,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             throw new NotImplementedException("Domain constraints not supported");
         }
 
-        DefferedReference(context.extends, e => type.Extends = ((DomainDef)e).TypeDef);
+        DeferredReference(context.extends, e => type.Extends = ((DomainDef)e).TypeDef);
 
         return new DomainDef
         {
