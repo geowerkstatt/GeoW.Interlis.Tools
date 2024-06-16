@@ -1,8 +1,9 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
 
 public class CoordTypeDef : ITypeDef
 {
     public Cardinality? Cardinality { get; set; }
+    public ITypeDef? Extends { get; set; }
 
     public bool IsMultiGeometry { get; set; }
 

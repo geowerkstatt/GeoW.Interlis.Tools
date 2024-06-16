@@ -119,7 +119,7 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
         return ThrowNotImplementedException(context);
     }
 
-    public virtual TResult VisitClassOrStructureDef([NotNull] Interlis24Parser.ClassOrStructureDefContext context)
+    public virtual TResult VisitClassContent([NotNull] Interlis24Parser.ClassContentContext context)
     {
         return ThrowNotImplementedException(context);
     }
@@ -464,11 +464,6 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
         return ThrowNotImplementedException(context);
     }
 
-    public virtual TResult VisitStructureDef([NotNull] Interlis24Parser.StructureDefContext context)
-    {
-        return ThrowNotImplementedException(context);
-    }
-
     public virtual TResult VisitTextType([NotNull] Interlis24Parser.TextTypeContext context)
     {
         return ThrowNotImplementedException(context);
@@ -545,6 +540,11 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
     }
 
     public virtual TResult VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
+    {
+        return ThrowNotImplementedException(context);
+    }
+
+    public virtual TResult VisitDomainTypeDef([NotNull] Interlis24Parser.DomainTypeDefContext context)
     {
         return ThrowNotImplementedException(context);
     }

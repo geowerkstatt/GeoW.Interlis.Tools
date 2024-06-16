@@ -28,7 +28,7 @@ public class InterlisReaderTopicDefTest
         AssertReadRule("""
                 /** Doc-Comment */
                 !!@ key=value
-                VIEW TOPIC Test_A (ABSTRACT, EXTENDED) EXTENDS Test_B =
+                VIEW TOPIC Test_A (ABSTRACT, FINAL) EXTENDS Test_B =
                     BASKET OID AS oidDomain;
                     OID AS INTERLIS.UUIDOID;
                     DEPENDS ON Test_C, Test_D;

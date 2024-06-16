@@ -1,10 +1,5 @@
-﻿using DeepEqual.Syntax;
-using Geowerkstatt.Interlis.Tools.AST;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Geowerkstatt.Interlis.Tools.AST;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools;
 

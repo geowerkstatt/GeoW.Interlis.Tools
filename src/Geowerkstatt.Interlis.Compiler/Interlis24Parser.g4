@@ -30,7 +30,6 @@ modelContents
     | contextDef
     | runTimeParameterDef
     | classDef
-    | structureDef
     | topicDef
     ;
 
@@ -50,7 +49,6 @@ topicContents
     | functionDef
     | domainDef
     | classDef
-    | structureDef
     | associationDef
     | constraintsDef
     | viewDef
@@ -66,18 +64,12 @@ definitionRef
     ;
 
 classDef
-    : (metaAttributes | DOC_COMMENT)* CLASS name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
+    : (metaAttributes | DOC_COMMENT)* (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
-    )? EQUAL_SIGN (( OID AS oid=definitionRef | NO OID) SEMICOLON)? classOrStructureDef END endName=IDENTIFIER SEMICOLON
+    )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? classContent END endName=IDENTIFIER SEMICOLON
     ;
 
-structureDef
-    : (metaAttributes | DOC_COMMENT)* STRUCTURE name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
-        EXTENDS definitionRef
-    )? EQUAL_SIGN classOrStructureDef END endName= IDENTIFIER SEMICOLON
-    ;
-
-classOrStructureDef
+classContent
     : ATTRIBUTE? attributeDef* constraintDef* (PARAMETER parameterDef)?
     ;
 
@@ -127,13 +119,15 @@ cardinality
     ;
 
 domainDef
-    : DOMAIN (
-        (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
-            EXTENDS definitionRef
-        )? EQUAL_SIGN MANDATORY? type (
-            CONSTRAINTS IDENTIFIER ':' expression (',' IDENTIFIER ':' expression)*
-        )? SEMICOLON
-    )*
+    : DOMAIN domainTypeDef*
+    ;
+
+domainTypeDef
+    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
+        EXTENDS extends=definitionRef
+    )? EQUAL_SIGN (MANDATORY type? | type) (
+        CONSTRAINTS IDENTIFIER ':' expression (',' IDENTIFIER ':' expression)*
+    )? SEMICOLON
     ;
 
 type

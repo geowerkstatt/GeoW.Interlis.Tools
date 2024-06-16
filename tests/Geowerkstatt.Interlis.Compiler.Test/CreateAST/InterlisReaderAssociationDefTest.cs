@@ -12,7 +12,7 @@ public class InterlisReaderAssociationDefTest
         AssertReadRule("""
             ASSOCIATION Test =
             END Test;
-            """, new AssociationDef { Name = "Test", Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND } });
+            """, new AssociationDef { Name = "Test", Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } });
     }
 
     [TestMethod]

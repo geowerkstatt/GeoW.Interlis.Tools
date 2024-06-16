@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Tools.AST;
 
 /// <summary>
 /// A reference to a <see cref="IInterlisDefinition"/> that is not yet resolved.
@@ -34,7 +28,7 @@ public class UnresolvedReference
 
     public override string ToString()
     {
-        return $"{(IsRelative ? "relative" : "absolute")} reference {string.Join(".", Target)}{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
+        return $"{(IsRelative ? "relative" : "absolute")} reference '{string.Join(".", Target)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
     }
 
     public bool TryResolve(IContainer<IInterlisDefinition> context)

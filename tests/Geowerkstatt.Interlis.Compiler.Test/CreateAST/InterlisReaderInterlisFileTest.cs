@@ -1,7 +1,7 @@
 ﻿using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools;
 using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Tools.CreateAST;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools;
 
@@ -163,7 +163,7 @@ public class InterlisReaderInterlisFileTest
                                             new AssociationDef
                                             {
                                                 Name = "C",
-                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                 Content =
                                                 {
                                                     {
@@ -173,7 +173,7 @@ public class InterlisReaderInterlisFileTest
                                                             Name = "roleA",
                                                             TypeDef = new RoleType
                                                             {
-                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                                 Targets = { new RestrictedRef { Target = classA } },
                                                             }
                                                         }
@@ -185,7 +185,7 @@ public class InterlisReaderInterlisFileTest
                                                             Name = "roleB",
                                                             TypeDef = new RoleType
                                                             {
-                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                                 Targets = { new RestrictedRef { Target = classB } },
                                                             }
                                                         }
@@ -238,6 +238,125 @@ public class InterlisReaderInterlisFileTest
                 TOPIC OtherTopic EXTENDS Model.BaseTopic =
                 END OtherTopic;
             END Model.
+            """, expected);
+    }
+
+    [TestMethod]
+    public void ReadFileWithDomains()
+    {
+        var textDomain = new DomainDef { Name = "text", TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var text2Domain = new DomainDef { Name = "text2", TypeDef = new TypeRef { Extends = textDomain.TypeDef, Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound } } };
+        var yoloOidDomain = new DomainDef { Name = "yoloOid", TypeDef = new OidType { TypeDef = new OidAnyType(), Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var itemIdDomain = new DomainDef { Name = "item_id", TypeDef = new OidType { TypeDef = new NumericTypeDef { Min = 100000, Max = 999999, Precision = 0 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var basketIdDomain = new DomainDef { Name = "basket_id", TypeDef = new OidType { Extends = yoloOidDomain.TypeDef, TypeDef = new TextTypeDef { Length = 6 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+
+        var point3dDomain = new DomainDef
+        {
+            Name = "point3d",
+            TypeDef = new CoordTypeDef
+            {
+                Axis = { new NumericTypeDef { Min = 0, Max = 99, Precision = 0 }, new NumericTypeDef { Min = 100, Max = 199, Precision = 0 }, new NumericTypeDef { Min = 200, Max = 299, Precision = 0 } },
+                Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound }
+            },
+        };
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            { "text", textDomain },
+                            { "text2", text2Domain },
+                            { "yoloOid", yoloOidDomain },
+                            { "item_id", itemIdDomain },
+                            { "basket_id", basketIdDomain },
+                            {
+                                "TopicName",
+                                new TopicDef
+                                {
+                                    Name = "TopicName",
+                                    BasketOidType = basketIdDomain.TypeDef,
+                                    OidType = itemIdDomain.TypeDef,
+                                    Content =
+                                    {
+                                        { "point3d", point3dDomain },
+                                        {
+                                            "ClassName",
+                                            new ClassDef
+                                            {
+                                                Name = "ClassName",
+                                                OidType = itemIdDomain.TypeDef,
+                                                Content =
+                                                {
+                                                    {
+                                                        "TextAttr",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "TextAttr",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = text2Domain },
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "Points",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Points",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = point3dDomain },
+                                                            }
+                                                        }
+                                                    },
+                                                },
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                DOMAIN
+                    text = TEXT*12;
+                    text2 EXTENDS text = MANDATORY;
+                    yoloOid = OID ANY;
+                    item_id = OID 100000 .. 999999;
+                    basket_id EXTENDS yoloOid = OID TEXT*6;
+
+                TOPIC TopicName =
+                    BASKET OID AS basket_id;
+                    OID AS item_id;
+
+                    DOMAIN
+                        point3d = MANDATORY COORD 0 .. 99, 100 .. 199, 200 .. 299;
+
+                    CLASS ClassName =
+                        OID AS item_id;
+
+                        TextAttr : text2;
+                        Points : point3d;
+                    END ClassName;
+                END TopicName;
+            END ModelName.
             """, expected);
     }
 
