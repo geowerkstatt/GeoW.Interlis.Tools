@@ -284,7 +284,9 @@ attributePathConst
     ;
 
 lineType
-    : (DIRECTED? POLYLINE | SURFACE | AREA | DIRECTED? MULTIPOLYLINE | MULTISURFACE | MULTIAREA) lineForm? controlPoints? intersectionDef?
+    : ((SURFACE | AREA | MULTISURFACE | MULTIAREA) | (DIRECTED? (POLYLINE | MULTIPOLYLINE))) lineForm? (
+        VERTEX vertexType=definitionRef
+    )? (WITHOUT OVERLAPS ('>' numeric)?)?
     ;
 
 lineForm
@@ -295,14 +297,6 @@ lineFormType
     : STRAIGHTS
     | ARCS
     | definitionRef
-    ;
-
-controlPoints
-    : VERTEX coordType=definitionRef
-    ;
-
-intersectionDef
-    : WITHOUT OVERLAPS ('>' numeric)?
     ;
 
 lineFormTypeDef

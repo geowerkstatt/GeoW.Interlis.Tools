@@ -159,11 +159,6 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
         return ThrowNotImplementedException(context);
     }
 
-    public virtual TResult VisitControlPoints([NotNull] Interlis24Parser.ControlPointsContext context)
-    {
-        return ThrowNotImplementedException(context);
-    }
-
     public virtual TResult VisitCoordinateType([NotNull] Interlis24Parser.CoordinateTypeContext context)
     {
         return ThrowNotImplementedException(context);
@@ -290,11 +285,6 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
     }
 
     public virtual TResult VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
-    {
-        return ThrowNotImplementedException(context);
-    }
-
-    public virtual TResult VisitIntersectionDef([NotNull] Interlis24Parser.IntersectionDefContext context)
     {
         return ThrowNotImplementedException(context);
     }

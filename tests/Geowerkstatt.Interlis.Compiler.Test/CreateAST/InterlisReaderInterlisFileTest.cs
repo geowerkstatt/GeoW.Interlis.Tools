@@ -259,6 +259,17 @@ public class InterlisReaderInterlisFileTest
                 Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound }
             },
         };
+        var surfaceDomain = new DomainDef
+        {
+            Name = "surface",
+            TypeDef = new SurfaceType
+            {
+                VertexType = point3dDomain.TypeDef,
+                OverlapTolerance = 0.0,
+                LineForm = { "STRAIGHTS" },
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
+            }
+        };
 
         var expected = new InterlisFile
         {
@@ -288,6 +299,7 @@ public class InterlisReaderInterlisFileTest
                                     Content =
                                     {
                                         { "point3d", point3dDomain },
+                                        { "surface", surfaceDomain },
                                         {
                                             "ClassName",
                                             new ClassDef
@@ -320,6 +332,34 @@ public class InterlisReaderInterlisFileTest
                                                             }
                                                         }
                                                     },
+                                                    {
+                                                        "Lines",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Lines",
+                                                            TypeDef = new PolyLineType
+                                                            {
+                                                                IsMultiGeometry = true,
+                                                                IsDirected = true,
+                                                                VertexType = point3dDomain.TypeDef,
+                                                                OverlapTolerance = 0.01,
+                                                                LineForm = { "STRAIGHTS", "ARCS" },
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "Surface",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Surface",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = surfaceDomain },
+                                                            }
+                                                        }
+                                                    },
                                                 },
                                             }
                                         }
@@ -348,12 +388,15 @@ public class InterlisReaderInterlisFileTest
 
                     DOMAIN
                         point3d = MANDATORY COORD 0 .. 99, 100 .. 199, 200 .. 299;
+                        surface = SURFACE WITH (STRAIGHTS) VERTEX point3d;
 
                     CLASS ClassName =
                         OID AS item_id;
 
                         TextAttr : text2;
                         Points : point3d;
+                        Lines : DIRECTED MULTIPOLYLINE WITH (STRAIGHTS, ARCS) VERTEX point3d WITHOUT OVERLAPS >0.01;
+                        Surface : surface;
                     END ClassName;
                 END TopicName;
             END ModelName.

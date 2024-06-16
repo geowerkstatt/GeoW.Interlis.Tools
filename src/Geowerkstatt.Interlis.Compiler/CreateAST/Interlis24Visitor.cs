@@ -540,6 +540,51 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
+    public override ITypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
+    {
+        var lineForm = context.lineForm() != null ? VisitLineForm(context.lineForm()) : Enumerable.Empty<string>();
+        var overlap = context.numeric() != null ? ((Tuple<double, int>)Visit(context.numeric())).Item1 : 0.0;
+
+        if (context.POLYLINE() != null || context.MULTIPOLYLINE() != null)
+        {
+            var line = new PolyLineType
+            {
+                IsMultiGeometry = context.MULTIPOLYLINE() != null,
+                IsDirected = context.DIRECTED() != null,
+                OverlapTolerance = overlap,
+                LineForm = { lineForm },
+            };
+
+            DeferredReference(context.vertexType, e => line.VertexType = ((DomainDef)e).TypeDef);
+            return line;
+        }
+        else
+        {
+            var surface = new SurfaceType
+            {
+                IsMultiGeometry = context.MULTIAREA() != null || context.MULTISURFACE() != null,
+                IsCoverage = context.AREA() != null || context.MULTIAREA() != null,
+                OverlapTolerance = overlap,
+                LineForm = { lineForm },
+            };
+
+            DeferredReference(context.vertexType, e => surface.VertexType = ((DomainDef)e).TypeDef);
+            return surface;
+        }
+    }
+
+    public override HashSet<string> VisitLineForm([NotNull] Interlis24Parser.LineFormContext context)
+    {
+        // Duplicates are silently ignored!
+        return context.lineFormType().Select(VisitLineFormType).ToHashSet();
+    }
+
+    public override string VisitLineFormType([NotNull] Interlis24Parser.LineFormTypeContext context)
+    {
+        if (context.definitionRef() != null) throw new NotImplementedException("Custom LineFormType not implemented");
+        return context.Start.Text;
+    }
+
     public override List<Tuple<string, string>> VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)
     {
         return context.metaAttribute().Select(VisitMetaAttribute).ToList();
