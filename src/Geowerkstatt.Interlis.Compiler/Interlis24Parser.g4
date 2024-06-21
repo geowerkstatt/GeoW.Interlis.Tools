@@ -270,7 +270,7 @@ classType
     ;
 
 attributePathType
-    : ATTRIBUTE OF (objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
+    : ATTRIBUTE (OF objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
         RESTRICTION '(' attrTypeDef (SEMICOLON attrTypeDef)* ')'
     )?
     ;
