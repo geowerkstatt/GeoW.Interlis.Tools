@@ -3,6 +3,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Geowerkstatt.Interlis.Tools.AST;
 using Geowerkstatt.Interlis.Tools.AST.Types;
+using SharpCompress.Common;
 using System.Collections;
 using System.Globalization;
 using System.Text;
@@ -583,6 +584,55 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     {
         if (context.definitionRef() != null) throw new NotImplementedException("Custom LineFormType not implemented");
         return context.Start.Text;
+    }
+
+    public override EnumerationAllOfType VisitEnumTreeValueType([NotNull] Interlis24Parser.EnumTreeValueTypeContext context)
+    {
+        var enumerationAllOfType = new EnumerationAllOfType();
+        DeferredReference(context.definitionRef(), e => enumerationAllOfType.TargetEnumeration = (EnumerationType)((DomainDef)e).TypeDef);
+        return enumerationAllOfType;
+    }
+
+    public override EnumerationType VisitEnumerationType([NotNull] Interlis24Parser.EnumerationTypeContext context)
+    {
+        return new EnumerationType
+        {
+            Sequencing = (EnumerationType.Sequencings)(context.sequencing?.Type ?? 0),
+            Values = { VisitEnumeration(context.enumeration()) },
+        };
+    }
+
+    public override EnumerationValuesList VisitEnumeration([NotNull] Interlis24Parser.EnumerationContext context)
+    {
+        var values = new EnumerationValuesList { context.enumElement().Select(VisitEnumElement) };
+        values.IsFinal = context.FINAL() != null;
+        return values;
+    }
+
+    public override EnumerationTreeNode VisitEnumElement([NotNull] Interlis24Parser.EnumElementContext context)
+    {
+        var identifiers = context.IDENTIFIER();
+        if (identifiers.Length == 0)
+        {
+            throw new UnexpectedNodeException(context, $"{nameof(context.IDENTIFIER)} missing");
+        }
+
+        EnumerationTreeNode root, leaf = root = new EnumerationTreeNode { Name = identifiers.First().GetText() };
+        foreach (var value in identifiers.Skip(1))
+        {
+            var node = new EnumerationTreeNode { Name = value.GetText() };
+            leaf.SubValues.Add(node);
+            leaf = node;
+        }
+
+        leaf.DocComments.Add(context.DOC_COMMENT().Select(d => d.GetText()));
+        leaf.MetaAttributes.Add(ProcessMetaAttributes(context, context.metaAttributes()));
+        if (context.enumeration() != null)
+        {
+            leaf.SubValues.Add(VisitEnumeration(context.enumeration()));
+        }
+
+        return root;
     }
 
     public override List<Tuple<string, string>> VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)

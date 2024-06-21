@@ -3,6 +3,10 @@ using Antlr4.Runtime.Tree;
 
 namespace Geowerkstatt.Interlis.Tools.CreateAST;
 
+/// <summary>
+/// This exception indicates that an assumption about the grammar was wrong.
+/// Possibly because the grammar changed in unexpected ways.
+/// </summary>
 public class UnexpectedNodeException : Exception
 {
     public UnexpectedNodeException(IParseTree OffendingNode) : this(OffendingNode, string.Empty)

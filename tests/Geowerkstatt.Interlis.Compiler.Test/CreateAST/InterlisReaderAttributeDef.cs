@@ -59,6 +59,46 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadEnumerationAttributeDef()
+    {
+        AssertReadRule("Attr : MANDATORY (red (lightRed, darkRed), green, blue (lightBlue, darkBlue : FINAL)) ORDERED;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new EnumerationType
+                {
+                    Cardinality = new Cardinality { Min = 1, Max = 1 },
+                    Sequencing = EnumerationType.Sequencings.Ordered,
+                    Values =
+                    {
+                        new EnumerationTreeNode
+                        {
+                            Name = "red",
+                            SubValues =
+                            {
+                                new EnumerationTreeNode { Name = "lightRed" },
+                                new EnumerationTreeNode { Name = "darkRed" },
+                            }
+                        },
+                        new EnumerationTreeNode { Name = "green" },
+                        new EnumerationTreeNode
+                        {
+                            Name = "blue",
+                            SubValues =
+                            {
+                                new EnumerationValuesList(isFinal : true)
+                                {
+                                    new EnumerationTreeNode { Name = "lightBlue" },
+                                    new EnumerationTreeNode { Name = "darkBlue" },
+                                }
+                            }
+                        },
+                    },
+                },
+            });
+    }
+
+    [TestMethod]
     public void ReadAttributeDefComplete()
     {
         AssertReadRule("""

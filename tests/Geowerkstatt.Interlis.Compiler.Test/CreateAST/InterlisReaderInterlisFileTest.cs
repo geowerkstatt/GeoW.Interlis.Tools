@@ -244,12 +244,116 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithDomains()
     {
+        // Text domain
         var textDomain = new DomainDef { Name = "text", TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
         var text2Domain = new DomainDef { Name = "text2", TypeDef = new TypeRef { Extends = textDomain.TypeDef, Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound } } };
+
+        // Oid domain
         var yoloOidDomain = new DomainDef { Name = "yoloOid", TypeDef = new OidType { TypeDef = new OidAnyType(), Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
         var itemIdDomain = new DomainDef { Name = "item_id", TypeDef = new OidType { TypeDef = new NumericTypeDef { Min = 100000, Max = 999999, Precision = 0 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
         var basketIdDomain = new DomainDef { Name = "basket_id", TypeDef = new OidType { Extends = yoloOidDomain.TypeDef, TypeDef = new TextTypeDef { Length = 6 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
 
+        // Enumeration domain
+        var colorDomain = new DomainDef
+        {
+            Name = "color",
+            TypeDef = new EnumerationType
+            {
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Values =
+                {
+                    new EnumerationTreeNode { Name = "red" },
+                    new EnumerationTreeNode { Name = "green" },
+                    new EnumerationTreeNode { Name = "blue" },
+                }
+            }
+        };
+        var enhancedColorDomain = new DomainDef
+        {
+            Name = "enhancedColor",
+            TypeDef = new EnumerationType
+            {
+                Extends = colorDomain.TypeDef,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Values =
+                {
+                    new EnumerationTreeNode
+                    {
+                        Name = "red",
+                        SubValues =
+                        {
+                            new EnumerationTreeNode { Name = "yellow" },
+                            new EnumerationTreeNode { Name = "orange" },
+                        }
+                    },
+                    new EnumerationTreeNode
+                    {
+                        Name = "green",
+                        SubValues =
+                        {
+                            new EnumerationValuesList(isFinal: true)
+                            {
+                                new EnumerationTreeNode { Name = "lightGreen" },
+                                new EnumerationTreeNode { Name = "darkGreen" },
+                            }
+                        }
+                    },
+                }
+            }
+        };
+        var superEnhancedColorDomain = new DomainDef
+        {
+            Name = "superEnhancedColor",
+            TypeDef = new EnumerationType
+            {
+                Extends = enhancedColorDomain.TypeDef,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Values =
+                {
+                    new EnumerationValuesList(isFinal: true)
+                    {
+                        new EnumerationTreeNode
+                        {
+                            Name = "red",
+                            SubValues =
+                            {
+                                new EnumerationTreeNode
+                                {
+                                    Name = "yellow",
+                                    DocComments = { "/** wild */" },
+                                    SubValues =
+                                    {
+                                        new EnumerationTreeNode { Name = "lightYellow" },
+                                        new EnumerationTreeNode { Name = "darkYellow" },
+                                    }
+                                },
+                            }
+                        },
+                        new EnumerationTreeNode
+                        {
+                            Name = "transparent",
+                            DocComments = { "/** is that even a color? */" },
+                        },
+                        new EnumerationTreeNode
+                        {
+                            Name = "blue",
+                            SubValues = { new EnumerationValuesList(isFinal: true) }
+                        },
+                    }
+                }
+            }
+        };
+        var allColorDomain = new DomainDef
+        {
+            Name = "allColor",
+            TypeDef = new EnumerationAllOfType
+            {
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                TargetEnumeration = (EnumerationType)superEnhancedColorDomain.TypeDef,
+            }
+        };
+
+        // Geometry domain
         var point3dDomain = new DomainDef
         {
             Name = "point3d",
@@ -286,6 +390,12 @@ public class InterlisReaderInterlisFileTest
                         {
                             { "text", textDomain },
                             { "text2", text2Domain },
+
+                            { "color", colorDomain },
+                            { "enhancedColor", enhancedColorDomain },
+                            { "superEnhancedColor", superEnhancedColorDomain },
+                            { "allColor", allColorDomain },
+
                             { "yoloOid", yoloOidDomain },
                             { "item_id", itemIdDomain },
                             { "basket_id", basketIdDomain },
@@ -378,6 +488,16 @@ public class InterlisReaderInterlisFileTest
                 DOMAIN
                     text = TEXT*12;
                     text2 EXTENDS text = MANDATORY;
+
+                    color = (red, green, blue);
+                    enhancedColor EXTENDS color = (red (yellow, orange), green(lightGreen, darkGreen : FINAL));
+                    superEnhancedColor EXTENDS enhancedColor =
+                        (
+                            /** wild */ red.yellow (lightYellow, darkYellow),
+                            /** is that even a color? */ transparent, blue (FINAL)
+                        : FINAL);
+                    allColor = ALL OF superEnhancedColor;
+
                     yoloOid = OID ANY;
                     item_id = OID 100000 .. 999999;
                     basket_id EXTENDS yoloOid = OID TEXT*6;

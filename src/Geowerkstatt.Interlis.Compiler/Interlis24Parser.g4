@@ -163,7 +163,7 @@ textType
     ;
 
 enumerationType
-    : enumeration (ORDERED | CIRCULAR)?
+    : enumeration sequencing=(ORDERED | CIRCULAR)?
     ;
 
 enumTreeValueType
