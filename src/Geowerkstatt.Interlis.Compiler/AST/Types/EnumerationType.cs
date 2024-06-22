@@ -1,10 +1,7 @@
 ﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
 
-public class EnumerationType : ITypeDef
+public class EnumerationType : TypeDef
 {
-    public Cardinality? Cardinality { get; set; }
-    public ITypeDef? Extends { get; set; }
-
     public Sequencings Sequencing { get; set; }
 
     public EnumerationValuesList Values { get; } = new EnumerationValuesList();

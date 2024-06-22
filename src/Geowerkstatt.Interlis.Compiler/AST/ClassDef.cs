@@ -16,7 +16,7 @@ public sealed class ClassDef : IAstElement, IInterlisDefinition, IDocumentation,
 
     public bool IsStructure { get; init; }
 
-    public ITypeDef? OidType { get; set; }
+    public TypeDef? OidType { get; set; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

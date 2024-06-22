@@ -14,8 +14,8 @@ public sealed class TopicDef : IAstElement, IInterlisDefinition, IDocumentation,
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
-    public ITypeDef? BasketOidType { get; set; }
-    public ITypeDef? OidType { get; set; }
+    public TypeDef? BasketOidType { get; set; }
+    public TypeDef? OidType { get; set; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

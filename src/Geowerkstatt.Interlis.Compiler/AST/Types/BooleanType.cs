@@ -1,7 +1,5 @@
 ﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
 
-public class BooleanType : ITypeDef
+public class BooleanType : TypeDef
 {
-    public Cardinality? Cardinality { get; set; }
-    public ITypeDef? Extends { get; set; }
 }

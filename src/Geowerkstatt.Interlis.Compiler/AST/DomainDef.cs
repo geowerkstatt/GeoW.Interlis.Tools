@@ -10,7 +10,7 @@ public class DomainDef : IAstElement, IInterlisDefinition, IDocumentation
     public required string Name { get; init; }
     public IInterlisDefinition? Parent { get; set; }
 
-    public required ITypeDef TypeDef { get; init; }
+    public required TypeDef TypeDef { get; init; }
 
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();

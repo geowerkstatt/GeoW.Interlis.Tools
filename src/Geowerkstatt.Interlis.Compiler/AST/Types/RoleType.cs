@@ -1,10 +1,7 @@
 ﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
 
-public class RoleType : ITypeDef
+public class RoleType : TypeDef
 {
-    public Cardinality? Cardinality { get; set; }
-    public ITypeDef? Extends { get; set; }
-
     /// <summary>
     /// The accepted target classes with their respective restrictions.
     /// </summary>

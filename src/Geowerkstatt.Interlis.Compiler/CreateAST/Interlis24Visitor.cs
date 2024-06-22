@@ -325,7 +325,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
-    public override ITypeDef VisitAttrTypeDef([NotNull] Interlis24Parser.AttrTypeDefContext context)
+    public override TypeDef VisitAttrTypeDef([NotNull] Interlis24Parser.AttrTypeDefContext context)
     {
         Cardinality cardinality;
         if (context.MANDATORY() != null)
@@ -359,7 +359,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return type;
     }
 
-    public override ITypeDef VisitAttrType([NotNull] Interlis24Parser.AttrTypeContext context)
+    public override TypeDef VisitAttrType([NotNull] Interlis24Parser.AttrTypeContext context)
     {
         var result = VisitChildren(context);
         if (result is Tuple<UnresolvedReference, List<UnresolvedReference>> reference)
@@ -384,7 +384,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         }
         else
         {
-            return (ITypeDef)result;
+            return (TypeDef)result;
         }
     }
 
@@ -512,7 +512,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     public override DomainDef VisitDomainTypeDef([NotNull] Interlis24Parser.DomainTypeDefContext context)
     {
         var typeContext = context.type();
-        var type = typeContext != null ? (ITypeDef)VisitType(typeContext) : new TypeRef();
+        var type = typeContext != null ? (TypeDef)VisitType(typeContext) : new TypeRef();
         type.Cardinality = new Cardinality { Min = context.MANDATORY() == null ? 0 : 1, Max = Cardinality.Unbound };
 
         var properties = VisitProperties(context.properties(), [Interlis24Parser.ABSTRACT, Interlis24Parser.GENERIC, Interlis24Parser.FINAL]);
@@ -533,15 +533,15 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
-    public override ITypeDef VisitOidType([NotNull] Interlis24Parser.OidTypeContext context)
+    public override TypeDef VisitOidType([NotNull] Interlis24Parser.OidTypeContext context)
     {
         return new OidType
         {
-            TypeDef = context.ANY() != null ? new OidAnyType() : (ITypeDef)VisitChildren(context),
+            TypeDef = context.ANY() != null ? new OidAnyType() : (TypeDef)VisitChildren(context),
         };
     }
 
-    public override ITypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
+    public override TypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
     {
         var lineForm = context.lineForm() != null ? VisitLineForm(context.lineForm()) : Enumerable.Empty<string>();
         var overlap = context.numeric() != null ? ((Tuple<double, int>)Visit(context.numeric())).Item1 : 0.0;
