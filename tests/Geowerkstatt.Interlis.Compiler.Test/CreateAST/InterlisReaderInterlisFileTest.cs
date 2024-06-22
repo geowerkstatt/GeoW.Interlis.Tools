@@ -195,7 +195,7 @@ public class InterlisReaderInterlisFileTest
                                                         new AttributeDef
                                                         {
                                                             Name = "attr",
-                                                            TypeDef = new TextTypeDef
+                                                            TypeDef = new TextType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                                 Length = 12,
@@ -245,13 +245,13 @@ public class InterlisReaderInterlisFileTest
     public void ReadFileWithDomains()
     {
         // Text domain
-        var textDomain = new DomainDef { Name = "text", TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var textDomain = new DomainDef { Name = "text", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
         var text2Domain = new DomainDef { Name = "text2", TypeDef = new TypeRef { Extends = textDomain.TypeDef, Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound } } };
 
         // Oid domain
         var yoloOidDomain = new DomainDef { Name = "yoloOid", TypeDef = new OidType { TypeDef = new OidAnyType(), Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
-        var itemIdDomain = new DomainDef { Name = "item_id", TypeDef = new OidType { TypeDef = new NumericTypeDef { Min = 100000, Max = 999999, Precision = 0 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
-        var basketIdDomain = new DomainDef { Name = "basket_id", TypeDef = new OidType { Extends = yoloOidDomain.TypeDef, TypeDef = new TextTypeDef { Length = 6 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var itemIdDomain = new DomainDef { Name = "item_id", TypeDef = new OidType { TypeDef = new NumericType { Min = 100000, Max = 999999, Precision = 0 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var basketIdDomain = new DomainDef { Name = "basket_id", TypeDef = new OidType { Extends = yoloOidDomain.TypeDef, TypeDef = new TextType { Length = 6 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
 
         // Enumeration domain
         var colorDomain = new DomainDef
@@ -357,9 +357,9 @@ public class InterlisReaderInterlisFileTest
         var point3dDomain = new DomainDef
         {
             Name = "point3d",
-            TypeDef = new CoordTypeDef
+            TypeDef = new CoordType
             {
-                Axis = { new NumericTypeDef { Min = 0, Max = 99, Precision = 0 }, new NumericTypeDef { Min = 100, Max = 199, Precision = 0 }, new NumericTypeDef { Min = 200, Max = 299, Precision = 0 } },
+                Axis = { new NumericType { Min = 0, Max = 99, Precision = 0 }, new NumericType { Min = 100, Max = 199, Precision = 0 }, new NumericType { Min = 200, Max = 299, Precision = 0 } },
                 Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound }
             },
         };

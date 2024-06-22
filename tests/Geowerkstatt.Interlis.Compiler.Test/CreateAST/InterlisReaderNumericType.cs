@@ -9,14 +9,14 @@ public class InterlisReaderNumericType
     [TestMethod]
     public void ReadNumericAbstract()
     {
-        AssertReadRule("NUMERIC", new NumericTypeDef());
+        AssertReadRule("NUMERIC", new NumericType());
     }
 
     [TestMethod]
     public void ReadNumeric()
     {
         AssertReadRule("000..999",
-            new NumericTypeDef
+            new NumericType
             {
                 Min = 0,
                 Max = 999,
@@ -28,7 +28,7 @@ public class InterlisReaderNumericType
     public void ReadNumericCircular()
     {
         AssertReadRule("000..999 CIRCULAR",
-            new NumericTypeDef
+            new NumericType
             {
                 Min = 0,
                 Max = 999,
@@ -41,7 +41,7 @@ public class InterlisReaderNumericType
     public void ReadNumericExponential()
     {
         AssertReadRule("0.1e-2 .. 0.20e-1",
-            new NumericTypeDef
+            new NumericType
             {
                 Min = 0.001,
                 Max = 0.02,
@@ -53,7 +53,7 @@ public class InterlisReaderNumericType
     public void ReadNumericPrecision()
     {
         AssertReadRule("-1.50 .. 10.00",
-            new NumericTypeDef
+            new NumericType
             {
                 Min = -1.5,
                 Max = 10,
@@ -72,7 +72,7 @@ public class InterlisReaderNumericType
     public void ReadNumericMixedExponentialAndDecimal()
     {
         AssertReadRule("0.1e-2 .. 1.000",
-            new NumericTypeDef
+            new NumericType
             {
                 Min = 0.001,
                 Max = 1,
@@ -91,7 +91,7 @@ public class InterlisReaderNumericType
     public void ReadNumericDoubleAppropriate()
     {
         AssertReadRule("0.0 .. 100000000000000.0",
-            new NumericTypeDef
+            new NumericType
             {
                 Min = 0,
                 Max = 100000000000000,

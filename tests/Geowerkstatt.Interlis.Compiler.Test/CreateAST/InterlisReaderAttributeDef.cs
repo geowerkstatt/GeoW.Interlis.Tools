@@ -13,7 +13,7 @@ public class InterlisReaderAttributeDef
             new AttributeDef
             {
                 Name = "Attr",
-                TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 
@@ -24,7 +24,7 @@ public class InterlisReaderAttributeDef
             new AttributeDef
             {
                 Name = "Attr",
-                TypeDef = new NumericTypeDef { Min = 0, Max = 999, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new NumericType { Min = 0, Max = 999, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 
@@ -35,7 +35,7 @@ public class InterlisReaderAttributeDef
             new AttributeDef
             {
                 Name = "Attr",
-                TypeDef = new BooleanTypeDef { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new BooleanType { Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 
@@ -46,13 +46,13 @@ public class InterlisReaderAttributeDef
             new AttributeDef
             {
                 Name = "Attr",
-                TypeDef = new CoordTypeDef
+                TypeDef = new CoordType
                 {
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     Axis =
                     {
-                        new NumericTypeDef { Min = 0, Max = 100, Precision = 0 },
-                        new NumericTypeDef { Min = 0, Max = 100, Precision = 0 },
+                        new NumericType { Min = 0, Max = 100, Precision = 0 },
+                        new NumericType { Min = 0, Max = 100, Precision = 0 },
                     },
                 },
             });
@@ -111,7 +111,7 @@ public class InterlisReaderAttributeDef
                 Name = "Attr",
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
-                TypeDef = new NumericTypeDef { Min = 0, Max = 100, Precision = -2, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new NumericType { Min = 0, Max = 100, Precision = -2, Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 

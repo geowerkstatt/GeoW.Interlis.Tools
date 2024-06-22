@@ -49,8 +49,8 @@ public class InterlisReaderClassDefTest
                 Name = "Test",
                 Content =
                 {
-                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
-                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericTypeDef { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
+                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
                 }
             });
     }
@@ -70,8 +70,8 @@ public class InterlisReaderClassDefTest
                 IsStructure = true,
                 Content =
                 {
-                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextTypeDef { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
-                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericTypeDef { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
+                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
                 }
             });
     }

@@ -1,6 +1,6 @@
 ﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
 
-public class NumericTypeDef : ITypeDef
+public class NumericType : ITypeDef
 {
     public Cardinality? Cardinality { get; set; }
     public ITypeDef? Extends { get; set; }

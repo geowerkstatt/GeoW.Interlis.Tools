@@ -398,17 +398,17 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return VisitChildren(context);
     }
 
-    public override TextTypeDef VisitTextType([NotNull] Interlis24Parser.TextTypeContext context)
+    public override TextType VisitTextType([NotNull] Interlis24Parser.TextTypeContext context)
     {
-        return new TextTypeDef
+        return new TextType
         {
             Length = int.Parse(context.maxLength.Text),
         };
     }
 
-    public override NumericTypeDef VisitNumericType([NotNull] Interlis24Parser.NumericTypeContext context)
+    public override NumericType VisitNumericType([NotNull] Interlis24Parser.NumericTypeContext context)
     {
-        var numericTypeDef = new NumericTypeDef()
+        var numericTypeDef = new NumericType()
         {
             Circular = context.CIRCULAR() != null,
         };
@@ -480,12 +480,12 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return Tuple.Create(double.Parse(context.POS_NUMBER().Symbol.Text), 0);
     }
 
-    public override BooleanTypeDef VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)
+    public override BooleanType VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)
     {
-        return new BooleanTypeDef();
+        return new BooleanType();
     }
 
-    public override CoordTypeDef VisitCoordinateType([NotNull] Interlis24Parser.CoordinateTypeContext context)
+    public override CoordType VisitCoordinateType([NotNull] Interlis24Parser.CoordinateTypeContext context)
     {
         if (context.rotationDef() != null)
         {
@@ -497,7 +497,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             throw new NotImplementedException();
         }
 
-        return new CoordTypeDef
+        return new CoordType
         {
             IsMultiGeometry = context.MULTICOORD() != null,
             Axis = { context._axis.Select(VisitNumericType) },
