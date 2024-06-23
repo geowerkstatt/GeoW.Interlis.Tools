@@ -25,9 +25,9 @@ SLASH    : '/';
 
 DOUBLE_EQUAL  : '==';
 NOT_EQUAL     : '!=' | '<>';
-LOWER_EQUAL   : '<=';
+LESS_EQUAL    : '<=';
 GREATER_EQUAL : '>=';
-LOWER         : '<';
+LESSER        : '<';
 GREATER       : '>';
 
 ARROW       : '->';

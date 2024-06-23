@@ -2,6 +2,7 @@
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Geowerkstatt.Interlis.Tools.AST;
+using Geowerkstatt.Interlis.Tools.AST.Expression;
 using Geowerkstatt.Interlis.Tools.AST.Types;
 using SharpCompress.Common;
 using System.Collections;
@@ -514,13 +515,9 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var typeContext = context.type();
         var type = typeContext != null ? (TypeDef)VisitType(typeContext) : new TypeRef();
         type.Cardinality = new Cardinality { Min = context.MANDATORY() == null ? 0 : 1, Max = Cardinality.Unbound };
+        type.Constraints.Add(context.domainConstraint().Select(VisitDomainConstraint));
 
         var properties = VisitProperties(context.properties(), [Interlis24Parser.ABSTRACT, Interlis24Parser.GENERIC, Interlis24Parser.FINAL]);
-
-        if (context.expression().Length != 0)
-        {
-            throw new NotImplementedException("Domain constraints not supported");
-        }
 
         DeferredReference(context.extends, e => type.Extends = ((DomainDef)e).TypeDef);
 
@@ -530,6 +527,15 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             TypeDef = type,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+        };
+    }
+
+    public override DomainConstraint VisitDomainConstraint([NotNull] Interlis24Parser.DomainConstraintContext context)
+    {
+        return new DomainConstraint
+        {
+            Name = context.IDENTIFIER().GetText(),
+            Condition = (IExpression)Visit(context.expression()),
         };
     }
 
@@ -788,5 +794,97 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     public override IToken VisitProperty([NotNull] Interlis24Parser.PropertyContext context)
     {
         return context.Start;
+    }
+
+    public override IExpression VisitBinaryExpression([NotNull] Interlis24Parser.BinaryExpressionContext context)
+    {
+        var first = (IExpression)Visit(context.expression(0));
+        var second = (IExpression)Visit(context.expression(1));
+
+        return (context.binOp.Type) switch
+        {
+            Interlis24Parser.DOUBLE_EQUAL => new EqualExpression { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.NOT_EQUAL => new NotExpression { Operand = new EqualExpression { FirstOperand = first, SecondOperand = second } },
+            Interlis24Parser.GREATER => new GreaterThanExpression { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.LESSER => new GreaterThanExpression { FirstOperand = second, SecondOperand = first },
+            Interlis24Parser.GREATER_EQUAL => new NotExpression { Operand = new GreaterThanExpression { FirstOperand = second, SecondOperand = first } },
+            Interlis24Parser.LESS_EQUAL => new NotExpression { Operand = new GreaterThanExpression { FirstOperand = first, SecondOperand = second } },
+
+            Interlis24Parser.AND => new AndExpression { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.OR => new OrExpression { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.FAT_ARROW => new OrExpression { FirstOperand = new NotExpression { Operand = first }, SecondOperand = second },
+
+            Interlis24Parser.PLUS => new Addition { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.HYPHEN => new Subtraction { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.ASTERISK => new Multiplication { FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.SLASH => new Division { FirstOperand = first, SecondOperand = second },
+
+            _ => throw new NotImplementedException($"Operator {Interlis24Parser.DefaultVocabulary.GetDisplayName(context.binOp.Type)} not implemented"),
+        };
+    }
+
+    public override IExpression VisitFactorExpression([NotNull] Interlis24Parser.FactorExpressionContext context)
+    {
+        return VisitFactor(context.factor());
+    }
+
+    public override IExpression VisitNotExpression([NotNull] Interlis24Parser.NotExpressionContext context)
+    {
+        var expression = (IExpression)Visit(context.expression());
+        return context.NOT() == null ? expression : new NotExpression { Operand = expression };
+    }
+
+    public override IExpression VisitDefinedExpression([NotNull] Interlis24Parser.DefinedExpressionContext context)
+    {
+        return new DefinedExpression { Operand = VisitFactor(context.factor()) };
+    }
+
+    public override IExpression VisitFactor([NotNull] Interlis24Parser.FactorContext context)
+    {
+        return (IExpression)VisitChildren(context);
+    }
+
+    public override ConstantExpression VisitConstant([NotNull] Interlis24Parser.ConstantContext context)
+    {
+        if (context.@string() != null)
+        {
+            var value = VisitString(context.@string());
+            return new TextConstant { Value = value };
+        }
+        else if (context.UNDEFINED() != null)
+        {
+            return new UndefinedConstant();
+        }
+        else
+        {
+            return (ConstantExpression)VisitChildren(context);
+        }
+    }
+
+    public override NumericConstant VisitNumericConst([NotNull] Interlis24Parser.NumericConstContext context)
+    {
+        if (context.definitionRef() != null) throw new NotImplementedException("Unit not supported");
+
+        var (value, precision) = VisitDecConst(context.decConst());
+        return new NumericConstant { Value = value };
+    }
+
+    public override EnumerationConstant VisitEnumerationConst([NotNull] Interlis24Parser.EnumerationConstContext context)
+    {
+        var path = context.IDENTIFIER().Select(e => e.GetText()).ToList();
+        if (context.OTHERS() != null)
+        {
+            path.Add(EnumerationConstant.Others);
+        }
+
+        return new EnumerationConstant { Path = { path } };
+    }
+
+    public override Tuple<double, int> VisitDecConst([NotNull] Interlis24Parser.DecConstContext context)
+    {
+        if (context.PI() != null) return Tuple.Create(Math.PI, -16);
+        if (context.LNBASE() != null) return Tuple.Create(Math.E, -16);
+
+        return (Tuple<double, int>)Visit(context.numeric());
     }
 }

@@ -121,9 +121,11 @@ domainDef
 domainTypeDef
     : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
         EXTENDS extends=definitionRef
-    )? EQUAL_SIGN (MANDATORY type? | type) (
-        CONSTRAINTS IDENTIFIER ':' expression (',' IDENTIFIER ':' expression)*
-    )? SEMICOLON
+    )? EQUAL_SIGN (MANDATORY type? | type) (CONSTRAINTS domainConstraint (',' domainConstraint)*)? SEMICOLON
+    ;
+
+domainConstraint
+    : IDENTIFIER ':' expression
     ;
 
 type
@@ -403,13 +405,13 @@ constraintsDef
     ;
 
 expression
-    : expression ('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression
-    | expression (OR | '*' | '/') expression
-    | expression (AND | '+' | '-') expression
-    | expression '=>' expression
-    | factor
-    | NOT '(' expression ')'
-    | (DEFINED '(' factor ')')
+    : expression binOp=('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression # binaryExpression
+    | expression binOp=(OR | '*' | '/') expression                             # binaryExpression
+    | expression binOp=(AND | '+' | '-') expression                            # binaryExpression
+    | expression binOp='=>' expression                                         # binaryExpression
+    | factor                                                                   # factorExpression
+    | NOT? '(' expression ')'                                                  # notExpression
+    | (DEFINED '(' factor ')')                                                 # definedExpression
     ;
 
 factor
