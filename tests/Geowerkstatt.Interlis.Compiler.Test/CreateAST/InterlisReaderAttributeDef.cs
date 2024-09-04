@@ -1,10 +1,5 @@
-﻿using DeepEqual.Syntax;
-using Geowerkstatt.Interlis.Tools.AST;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Geowerkstatt.Interlis.Tools.AST;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools;
 
@@ -12,13 +7,94 @@ namespace Geowerkstatt.Interlis.Tools;
 public class InterlisReaderAttributeDef
 {
     [TestMethod]
-    public void ReadAttributeDef()
+    public void ReadTextAttributeDef()
     {
         AssertReadRule("Attr : TEXT*12;",
             new AttributeDef
             {
                 Name = "Attr",
-                TypeDef = new TypeDef { Name = string.Empty, Definition = "TEXT*12", Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
+    public void ReadNumericAttributeDef()
+    {
+        AssertReadRule("Attr : 000..999;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new NumericType { Min = 0, Max = 999, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
+    public void ReadBooleanAttributeDef()
+    {
+        AssertReadRule("Attr : BOOLEAN;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new BooleanType { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
+    public void ReadCoordAttributeDef()
+    {
+        AssertReadRule("Attr : COORD 0..100, 0..100;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new CoordType
+                {
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                    Axis =
+                    {
+                        new NumericType { Min = 0, Max = 100, Precision = 0 },
+                        new NumericType { Min = 0, Max = 100, Precision = 0 },
+                    },
+                },
+            });
+    }
+
+    [TestMethod]
+    public void ReadEnumerationAttributeDef()
+    {
+        AssertReadRule("Attr : MANDATORY (red (lightRed, darkRed), green, blue (lightBlue, darkBlue : FINAL)) ORDERED;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new EnumerationType
+                {
+                    Cardinality = new Cardinality { Min = 1, Max = 1 },
+                    Sequencing = EnumerationType.Sequencings.Ordered,
+                    Values =
+                    {
+                        new EnumerationTreeNode
+                        {
+                            Name = "red",
+                            SubValues =
+                            {
+                                new EnumerationTreeNode { Name = "lightRed" },
+                                new EnumerationTreeNode { Name = "darkRed" },
+                            }
+                        },
+                        new EnumerationTreeNode { Name = "green" },
+                        new EnumerationTreeNode
+                        {
+                            Name = "blue",
+                            SubValues =
+                            {
+                                new EnumerationValuesList(isFinal : true)
+                                {
+                                    new EnumerationTreeNode { Name = "lightBlue" },
+                                    new EnumerationTreeNode { Name = "darkBlue" },
+                                }
+                            }
+                        },
+                    },
+                },
             });
     }
 
@@ -35,7 +111,7 @@ public class InterlisReaderAttributeDef
                 Name = "Attr",
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
-                TypeDef = new TypeDef { Name = string.Empty, Definition = "0.00..100.00", Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                TypeDef = new NumericType { Min = 0, Max = 100, Precision = -2, Cardinality = new Cardinality { Min = 0, Max = 1 } },
             });
     }
 

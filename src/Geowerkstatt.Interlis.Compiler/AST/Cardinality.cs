@@ -11,10 +11,10 @@ namespace Geowerkstatt.Interlis.Tools.AST;
 /// </summary>
 public sealed record Cardinality
 {
-    public static readonly long? UNBOUND = null;
+    public static readonly long? Unbound = null;
 
-    public required long? Min { get; init; } = UNBOUND;
-    public required long? Max { get; init; } = UNBOUND;
+    public required long? Min { get; init; } = Unbound;
+    public required long? Max { get; init; } = Unbound;
     public bool Ordered { get; init; } = false;
     public RelationshipType Type { get; init; } = RelationshipType.Association;
 

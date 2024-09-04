@@ -30,17 +30,16 @@ modelContents
     | contextDef
     | runTimeParameterDef
     | classDef
-    | structureDef
     | topicDef
     ;
 
 topicDef
     : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (
-        EXTENDS topicRef
+        EXTENDS extends=definitionRef
     )? EQUAL_SIGN (BASKET OID AS basketOid=definitionRef SEMICOLON)? (
         OID AS oid=definitionRef SEMICOLON
-    )? (DEPENDS ON topicRef ( ',' topicRef)* SEMICOLON)* (
-        DEFERRED GENERICS definitionRef ( ',' definitionRef)* SEMICOLON
+    )? (DEPENDS ON dependsOn+=definitionRef ( ',' dependsOn+=definitionRef)* SEMICOLON)* (
+        DEFERRED GENERICS generics+=definitionRef (',' generics+=definitionRef)* SEMICOLON
     )? topicContents* END endName=IDENTIFIER SEMICOLON
     ;
 
@@ -50,15 +49,10 @@ topicContents
     | functionDef
     | domainDef
     | classDef
-    | structureDef
     | associationDef
     | constraintsDef
     | viewDef
     | graphicDef
-    ;
-
-topicRef
-    : (model=IDENTIFIER '.')? topic=IDENTIFIER
     ;
 
 definitionRef
@@ -66,18 +60,12 @@ definitionRef
     ;
 
 classDef
-    : (metaAttributes | DOC_COMMENT)* CLASS name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
+    : (metaAttributes | DOC_COMMENT)* (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
-    )? EQUAL_SIGN (( OID AS oid=definitionRef | NO OID) SEMICOLON)? classOrStructureDef END endName=IDENTIFIER SEMICOLON
+    )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? classContent END endName=IDENTIFIER SEMICOLON
     ;
 
-structureDef
-    : (metaAttributes | DOC_COMMENT)* STRUCTURE name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
-        EXTENDS definitionRef
-    )? EQUAL_SIGN classOrStructureDef END endName= IDENTIFIER SEMICOLON
-    ;
-
-classOrStructureDef
+classContent
     : ATTRIBUTE? attributeDef* constraintDef* (PARAMETER parameterDef)?
     ;
 
@@ -127,13 +115,17 @@ cardinality
     ;
 
 domainDef
-    : DOMAIN (
-        (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
-            EXTENDS definitionRef
-        )? EQUAL_SIGN MANDATORY? type (
-            CONSTRAINTS IDENTIFIER ':' expression (',' IDENTIFIER ':' expression)*
-        )? SEMICOLON
-    )*
+    : DOMAIN domainTypeDef*
+    ;
+
+domainTypeDef
+    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
+        EXTENDS extends=definitionRef
+    )? EQUAL_SIGN (MANDATORY type? | type) (CONSTRAINTS domainConstraint (',' domainConstraint)*)? SEMICOLON
+    ;
+
+domainConstraint
+    : IDENTIFIER ':' expression
     ;
 
 type
@@ -173,7 +165,7 @@ textType
     ;
 
 enumerationType
-    : enumeration (ORDERED | CIRCULAR)?
+    : enumeration sequencing=(ORDERED | CIRCULAR)?
     ;
 
 enumTreeValueType
@@ -202,7 +194,7 @@ booleanType
     ;
 
 numericType
-    : (numeric '..' numeric | NUMERIC) CIRCULAR? ('[' definitionRef ']')? (
+    : (min=numeric '..' max=numeric | NUMERIC) CIRCULAR? ('[' unit=definitionRef ']')? (
         CLOCKWISE
         | COUNTERCLOCKWISE
         | refSys
@@ -248,8 +240,8 @@ dateTimeType
     ;
 
 coordinateType
-    : (COORD | MULTICOORD) numericType (
-        ',' numericType (',' numericType)? (',' rotationDef)? (REFSYS name=string)?
+    : (COORD | MULTICOORD) axis+=numericType (
+        ',' axis+=numericType (',' axis+=numericType)? (',' rotationDef)? (REFSYS refsys=string)?
     )?
     ;
 
@@ -280,7 +272,7 @@ classType
     ;
 
 attributePathType
-    : ATTRIBUTE OF (objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
+    : ATTRIBUTE (OF objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
         RESTRICTION '(' attrTypeDef (SEMICOLON attrTypeDef)* ')'
     )?
     ;
@@ -294,7 +286,9 @@ attributePathConst
     ;
 
 lineType
-    : (DIRECTED? POLYLINE | SURFACE | AREA | DIRECTED? MULTIPOLYLINE | MULTISURFACE | MULTIAREA) lineForm? controlPoints? intersectionDef?
+    : ((SURFACE | AREA | MULTISURFACE | MULTIAREA) | (DIRECTED? (POLYLINE | MULTIPOLYLINE))) lineForm? (
+        VERTEX vertexType=definitionRef
+    )? (WITHOUT OVERLAPS ('>' numeric)?)?
     ;
 
 lineForm
@@ -304,15 +298,7 @@ lineForm
 lineFormType
     : STRAIGHTS
     | ARCS
-    | (model=IDENTIFIER '.')? name=IDENTIFIER
-    ;
-
-controlPoints
-    : VERTEX coordType=definitionRef
-    ;
-
-intersectionDef
-    : WITHOUT OVERLAPS ('>' numeric)?
+    | definitionRef
     ;
 
 lineFormTypeDef
@@ -341,7 +327,7 @@ composedUnit
 metaDataBasketDef
     : (metaAttributes | DOC_COMMENT)* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? /* FINAL */ (
         EXTENDS definitionRef
-    )? '~' topicRef (
+    )? '~' topic=definitionRef (
         OBJECTS OF className=IDENTIFIER ':' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER (
             ',' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER
         )*
@@ -419,20 +405,20 @@ constraintsDef
     ;
 
 expression
-    : expression ('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression
-    | expression (OR | '*' | '/') expression
-    | expression (AND | '+' | '-') expression
-    | expression '=>' expression
-    | factor
-    | NOT '(' expression ')'
-    | (DEFINED '(' factor ')')
+    : expression binOp=('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression # binaryExpression
+    | expression binOp=(OR | '*' | '/') expression                             # binaryExpression
+    | expression binOp=(AND | '+' | '-') expression                            # binaryExpression
+    | expression binOp='=>' expression                                         # binaryExpression
+    | factor                                                                   # factorExpression
+    | NOT? '(' expression ')'                                                  # notExpression
+    | (DEFINED '(' factor ')')                                                 # definedExpression
     ;
 
 factor
     : objectOrAttributePath
     | (inspection | INSPECTION definitionRef) (OF objectOrAttributePath)?
     | functionCall
-    | PARAMETER (model=IDENTIFIER '.') runTimeParameter=IDENTIFIER?
+    | PARAMETER definitionRef
     | constant
     ;
 
@@ -583,10 +569,10 @@ property
     ;
 
 numeric
-    : EXP_NUMBER
-    | DECIMAL_NUMBER
-    | SIGNED_NUMBER
-    | POS_NUMBER
+    : EXP_NUMBER     # expNumber
+    | DECIMAL_NUMBER # decimalNumber
+    | SIGNED_NUMBER  # signedNumber
+    | POS_NUMBER     # posNumber
     ;
 
 string

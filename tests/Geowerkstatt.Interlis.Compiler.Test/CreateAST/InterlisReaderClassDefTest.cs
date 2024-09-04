@@ -1,10 +1,6 @@
-﻿using DeepEqual.Syntax;
+﻿using Antlr4.Runtime.Misc;
 using Geowerkstatt.Interlis.Tools.AST;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools;
 
@@ -35,7 +31,7 @@ public class InterlisReaderClassDefTest
             {
                 Name = "Test_A",
                 DocComments = { "/** Doc-Comment */" },
-                MetaAttributes = { { "key", "value" } }
+                MetaAttributes = { { "key", "value" } },
             });
     }
 
@@ -53,10 +49,42 @@ public class InterlisReaderClassDefTest
                 Name = "Test",
                 Content =
                 {
-                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TypeDef { Name = "", Definition = "TEXT*12", Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
-                    { "Other", new AttributeDef { Name = "Other", TypeDef = new TypeDef { Name = "", Definition = "0..100", Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
+                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
                 }
             });
+    }
+
+    [TestMethod]
+    public void ReadStructure()
+    {
+        AssertReadRule("""
+            STRUCTURE Test =
+                Attr : MANDATORY TEXT*12;
+                Other : 0 .. 100;
+            END Test;
+            """,
+            new ClassDef
+            {
+                Name = "Test",
+                IsStructure = true,
+                Content =
+                {
+                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
+                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                }
+            });
+    }
+
+    [TestMethod]
+    public void ReadStructureWithOid()
+    {
+        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("""
+            STRUCTURE Test =
+                OID AS INTERLIS.UUIDOID;
+            END Test;
+            """, null));
+        Assert.AreEqual("Compile error at line 2:4 Structure 'Test' cannot have an OID definition.", ex.Message);
     }
 
     private void AssertReadRule(string input, object? expected)

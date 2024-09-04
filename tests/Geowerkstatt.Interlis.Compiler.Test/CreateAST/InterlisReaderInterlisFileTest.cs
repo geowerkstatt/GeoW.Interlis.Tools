@@ -1,7 +1,7 @@
 ﻿using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools;
 using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Tools.CreateAST;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools;
 
@@ -121,6 +121,11 @@ public class InterlisReaderInterlisFileTest
             Extends = classA,
         };
 
+        var baseTopic = new TopicDef
+        {
+            Name = "BaseTopic",
+        };
+
         var expected = new InterlisFile
         {
             Content =
@@ -134,11 +139,21 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Content =
                         {
+                            { "BaseTopic", baseTopic },
+                            {
+                                "OtherTopic",
+                                new TopicDef
+                                {
+                                    Name = "OtherTopic",
+                                    Extends = baseTopic,
+                                }
+                            },
                             {
                                 "Topic",
                                 new TopicDef
                                 {
                                     Name = "Topic",
+                                    Extends = baseTopic,
                                     Content =
                                     {
                                         { "A", classA },
@@ -148,7 +163,7 @@ public class InterlisReaderInterlisFileTest
                                             new AssociationDef
                                             {
                                                 Name = "C",
-                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                 Content =
                                                 {
                                                     {
@@ -158,7 +173,7 @@ public class InterlisReaderInterlisFileTest
                                                             Name = "roleA",
                                                             TypeDef = new RoleType
                                                             {
-                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                                 Targets = { new RestrictedRef { Target = classA } },
                                                             }
                                                         }
@@ -170,7 +185,7 @@ public class InterlisReaderInterlisFileTest
                                                             Name = "roleB",
                                                             TypeDef = new RoleType
                                                             {
-                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.UNBOUND },
+                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                                 Targets = { new RestrictedRef { Target = classB } },
                                                             }
                                                         }
@@ -180,11 +195,10 @@ public class InterlisReaderInterlisFileTest
                                                         new AttributeDef
                                                         {
                                                             Name = "attr",
-                                                            TypeDef = new TypeDef
+                                                            TypeDef = new TextType
                                                             {
-                                                                Name = "",
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Definition = "TEXT*12",
+                                                                Length = 12,
                                                             }
                                                         }
                                                     }
@@ -203,12 +217,13 @@ public class InterlisReaderInterlisFileTest
         AssertReadFile("""
             INTERLIS 2.4;
             MODEL Model AT "foo.test" VERSION "123" =
-                TOPIC Topic =
+                TOPIC Topic EXTENDS BaseTopic =
                     CLASS A =
                     END A;
-                    CLASS B 
-                    EXTENDS A =
+
+                    CLASS B EXTENDS A =
                     END B;
+
                     ASSOCIATION C =
                         roleA -- A;
                         roleB -- B;
@@ -216,7 +231,295 @@ public class InterlisReaderInterlisFileTest
                         attr : TEXT*12;
                     END C;
                 END Topic;
+
+                TOPIC BaseTopic = 
+                END BaseTopic;
+
+                TOPIC OtherTopic EXTENDS Model.BaseTopic =
+                END OtherTopic;
             END Model.
+            """, expected);
+    }
+
+    [TestMethod]
+    public void ReadFileWithDomains()
+    {
+        // Text domain
+        var textDomain = new DomainDef { Name = "text", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var text2Domain = new DomainDef { Name = "text2", TypeDef = new TypeRef { Extends = textDomain.TypeDef, Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound } } };
+
+        // Oid domain
+        var yoloOidDomain = new DomainDef { Name = "yoloOid", TypeDef = new OidType { TypeDef = new OidAnyType(), Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var itemIdDomain = new DomainDef { Name = "item_id", TypeDef = new OidType { TypeDef = new NumericType { Min = 100000, Max = 999999, Precision = 0 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var basketIdDomain = new DomainDef { Name = "basket_id", TypeDef = new OidType { Extends = yoloOidDomain.TypeDef, TypeDef = new TextType { Length = 6 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+
+        // Enumeration domain
+        var colorDomain = new DomainDef
+        {
+            Name = "color",
+            TypeDef = new EnumerationType
+            {
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Values =
+                {
+                    new EnumerationTreeNode { Name = "red" },
+                    new EnumerationTreeNode { Name = "green" },
+                    new EnumerationTreeNode { Name = "blue" },
+                }
+            }
+        };
+        var enhancedColorDomain = new DomainDef
+        {
+            Name = "enhancedColor",
+            TypeDef = new EnumerationType
+            {
+                Extends = colorDomain.TypeDef,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Values =
+                {
+                    new EnumerationTreeNode
+                    {
+                        Name = "red",
+                        SubValues =
+                        {
+                            new EnumerationTreeNode { Name = "yellow" },
+                            new EnumerationTreeNode { Name = "orange" },
+                        }
+                    },
+                    new EnumerationTreeNode
+                    {
+                        Name = "green",
+                        SubValues =
+                        {
+                            new EnumerationValuesList(isFinal: true)
+                            {
+                                new EnumerationTreeNode { Name = "lightGreen" },
+                                new EnumerationTreeNode { Name = "darkGreen" },
+                            }
+                        }
+                    },
+                }
+            }
+        };
+        var superEnhancedColorDomain = new DomainDef
+        {
+            Name = "superEnhancedColor",
+            TypeDef = new EnumerationType
+            {
+                Extends = enhancedColorDomain.TypeDef,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Values =
+                {
+                    new EnumerationValuesList(isFinal: true)
+                    {
+                        new EnumerationTreeNode
+                        {
+                            Name = "red",
+                            SubValues =
+                            {
+                                new EnumerationTreeNode
+                                {
+                                    Name = "yellow",
+                                    DocComments = { "/** wild */" },
+                                    SubValues =
+                                    {
+                                        new EnumerationTreeNode { Name = "lightYellow" },
+                                        new EnumerationTreeNode { Name = "darkYellow" },
+                                    }
+                                },
+                            }
+                        },
+                        new EnumerationTreeNode
+                        {
+                            Name = "transparent",
+                            DocComments = { "/** is that even a color? */" },
+                        },
+                        new EnumerationTreeNode
+                        {
+                            Name = "blue",
+                            SubValues = { new EnumerationValuesList(isFinal: true) }
+                        },
+                    }
+                }
+            }
+        };
+        var allColorDomain = new DomainDef
+        {
+            Name = "allColor",
+            TypeDef = new EnumerationAllOfType
+            {
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                TargetEnumeration = (EnumerationType)superEnhancedColorDomain.TypeDef,
+            }
+        };
+
+        // Geometry domain
+        var point3dDomain = new DomainDef
+        {
+            Name = "point3d",
+            TypeDef = new CoordType
+            {
+                Axis = { new NumericType { Min = 0, Max = 99, Precision = 0 }, new NumericType { Min = 100, Max = 199, Precision = 0 }, new NumericType { Min = 200, Max = 299, Precision = 0 } },
+                Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound }
+            },
+        };
+        var surfaceDomain = new DomainDef
+        {
+            Name = "surface",
+            TypeDef = new SurfaceType
+            {
+                VertexType = point3dDomain.TypeDef,
+                OverlapTolerance = 0.0,
+                LineForm = { "STRAIGHTS" },
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
+            }
+        };
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            { "text", textDomain },
+                            { "text2", text2Domain },
+
+                            { "color", colorDomain },
+                            { "enhancedColor", enhancedColorDomain },
+                            { "superEnhancedColor", superEnhancedColorDomain },
+                            { "allColor", allColorDomain },
+
+                            { "yoloOid", yoloOidDomain },
+                            { "item_id", itemIdDomain },
+                            { "basket_id", basketIdDomain },
+                            {
+                                "TopicName",
+                                new TopicDef
+                                {
+                                    Name = "TopicName",
+                                    BasketOidType = basketIdDomain.TypeDef,
+                                    OidType = itemIdDomain.TypeDef,
+                                    Content =
+                                    {
+                                        { "point3d", point3dDomain },
+                                        { "surface", surfaceDomain },
+                                        {
+                                            "ClassName",
+                                            new ClassDef
+                                            {
+                                                Name = "ClassName",
+                                                OidType = itemIdDomain.TypeDef,
+                                                Content =
+                                                {
+                                                    {
+                                                        "TextAttr",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "TextAttr",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = text2Domain },
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "Points",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Points",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = point3dDomain },
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "Lines",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Lines",
+                                                            TypeDef = new PolyLineType
+                                                            {
+                                                                IsMultiGeometry = true,
+                                                                IsDirected = true,
+                                                                VertexType = point3dDomain.TypeDef,
+                                                                OverlapTolerance = 0.01,
+                                                                LineForm = { "STRAIGHTS", "ARCS" },
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "Surface",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Surface",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = surfaceDomain },
+                                                            }
+                                                        }
+                                                    },
+                                                },
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                DOMAIN
+                    text = TEXT*12;
+                    text2 EXTENDS text = MANDATORY;
+
+                    color = (red, green, blue);
+                    enhancedColor EXTENDS color = (red (yellow, orange), green(lightGreen, darkGreen : FINAL));
+                    superEnhancedColor EXTENDS enhancedColor =
+                        (
+                            /** wild */ red.yellow (lightYellow, darkYellow),
+                            /** is that even a color? */ transparent, blue (FINAL)
+                        : FINAL);
+                    allColor = ALL OF superEnhancedColor;
+
+                    yoloOid = OID ANY;
+                    item_id = OID 100000 .. 999999;
+                    basket_id EXTENDS yoloOid = OID TEXT*6;
+
+                TOPIC TopicName =
+                    BASKET OID AS basket_id;
+                    OID AS item_id;
+
+                    DOMAIN
+                        point3d = MANDATORY COORD 0 .. 99, 100 .. 199, 200 .. 299;
+                        surface = SURFACE WITH (STRAIGHTS) VERTEX point3d;
+
+                    CLASS ClassName =
+                        OID AS item_id;
+
+                        TextAttr : text2;
+                        Points : point3d;
+                        Lines : DIRECTED MULTIPOLYLINE WITH (STRAIGHTS, ARCS) VERTEX point3d WITHOUT OVERLAPS >0.01;
+                        Surface : surface;
+                    END ClassName;
+                END TopicName;
+            END ModelName.
             """, expected);
     }
 

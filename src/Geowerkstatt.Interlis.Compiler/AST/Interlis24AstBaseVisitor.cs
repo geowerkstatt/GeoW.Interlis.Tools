@@ -26,6 +26,11 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
         return DefaultResult;
     }
 
+    public virtual TResult? VisitDomainDef([NotNull] DomainDef domainDef)
+    {
+        return DefaultResult;
+    }
+
     public virtual TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile)
     {
         return DefaultResult;

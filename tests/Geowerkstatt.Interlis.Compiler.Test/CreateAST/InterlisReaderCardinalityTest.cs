@@ -15,13 +15,13 @@ public class InterlisReaderCardinalityTest
     [TestMethod]
     public void ReadCardinality()
     {
-        AssertReadRule("{0..*}", new Cardinality { Min = 0, Max = Cardinality.UNBOUND });
+        AssertReadRule("{0..*}", new Cardinality { Min = 0, Max = Cardinality.Unbound });
     }
 
     [TestMethod]
     public void ReadCardinalityStar()
     {
-        AssertReadRule("{*}", new Cardinality { Min = 0, Max = Cardinality.UNBOUND });
+        AssertReadRule("{*}", new Cardinality { Min = 0, Max = Cardinality.Unbound });
     }
 
     [TestMethod]
