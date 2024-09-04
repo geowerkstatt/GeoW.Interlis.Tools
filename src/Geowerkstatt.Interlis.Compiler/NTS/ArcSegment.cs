@@ -153,11 +153,6 @@ public class ArcSegment : ICurveSegment
             // Vector from Start (a) to End (b)
             var ab = (x: End.X - Start.X, y: End.Y - Start.Y);
 
-            // Z-Part of cross-product `ab x (Mid - a)`.
-            // Also equal to sin(theta) where theta is the angle between vector `ab` and vector `(Mid - a)`.
-            // The sign of this expression tells on which side of `ab` `(Mid - a)` is.
-            var m = ab.x * (Start.Y - Mid.Y) - ab.y * (Start.X - Mid.X);
-
             // Include all circle bounding points that are on the same side of `ab` as the mid-point.
             var circlePoints = new[]
             {
@@ -168,8 +163,8 @@ public class ArcSegment : ICurveSegment
             };
             foreach (var point in circlePoints)
             {
-                var p = ab.x * (Start.Y - point.y) - ab.y * (Start.X - point.x);
-                if (p * m >= 0)
+                var p = ab.x * (point.y - Start.Y) - ab.y * (point.x - Start.X);
+                if (p * Sign >= 0)
                 {
                     envelope.ExpandToInclude(point.x, point.y);
                 }
