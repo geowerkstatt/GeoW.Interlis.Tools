@@ -489,6 +489,11 @@ public class ThrowingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVis
         return ThrowNotImplementedException(context);
     }
 
+    public virtual TResult VisitUnitTypeDef([NotNull] Interlis24Parser.UnitTypeDefContext context)
+    {
+        return ThrowNotImplementedException(context);
+    }
+
     public virtual TResult VisitViewAttributes([NotNull] Interlis24Parser.ViewAttributesContext context)
     {
         return ThrowNotImplementedException(context);

@@ -17,4 +17,6 @@ public interface IInterlis24AstVisitor<TResult>
     TResult? VisitAttributeDef([NotNull] AttributeDef attributeDef);
 
     TResult? VisitDomainDef([NotNull] DomainDef domainDef);
+
+    TResult? VisitUnitDef([NotNull] UnitDef unitDef);
 }
