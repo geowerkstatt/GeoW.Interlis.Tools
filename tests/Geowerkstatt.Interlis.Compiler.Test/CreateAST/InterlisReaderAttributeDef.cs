@@ -99,6 +99,36 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadBlackboxXmlAttributeDef()
+    {
+        AssertReadRule("Attr : BLACKBOX XML;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new BlackboxType
+                {
+                    Kind = BlackboxType.BlackboxTypeKind.Xml,
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                },
+            });
+    }
+
+    [TestMethod]
+    public void ReadBlackboxBinaryAttributeDef()
+    {
+        AssertReadRule("Attr : BLACKBOX BINARY;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new BlackboxType
+                {
+                    Kind = BlackboxType.BlackboxTypeKind.Binary,
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                },
+            });
+    }
+
+    [TestMethod]
     public void ReadAttributeDefComplete()
     {
         AssertReadRule("""
