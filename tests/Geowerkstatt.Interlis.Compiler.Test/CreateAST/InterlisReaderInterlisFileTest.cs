@@ -529,6 +529,18 @@ public class InterlisReaderInterlisFileTest
         var lengthUnit = new UnitDef { Name = "Length", Term = "Length" };
         var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = lengthUnit };
 
+        var heightDomain = new DomainDef
+        {
+            Name = "Height",
+            TypeDef = new NumericType {
+                Min = 0,
+                Max = 10,
+                Precision = -2,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Unit = meterUnit,
+            }
+        };
+
         var expected = new InterlisFile
         {
             Content =
@@ -544,6 +556,7 @@ public class InterlisReaderInterlisFileTest
                         {
                             { "Length", lengthUnit },
                             { "m", meterUnit },
+                            { "Height", heightDomain },
                         }
                     }
                 }
@@ -556,6 +569,9 @@ public class InterlisReaderInterlisFileTest
                 UNIT
                     Length (ABSTRACT);
                     Meter [m] EXTENDS Length;
+
+                DOMAIN
+                    Height = 0.00 .. 10.00 [m];
             END ModelName.
             """, expected);
     }

@@ -442,6 +442,8 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             numericTypeDef.Precision = minPrecision;
         }
 
+        DeferredReference(context.unit, e => numericTypeDef.Unit = (UnitDef)e);
+
         return numericTypeDef;
     }
 
