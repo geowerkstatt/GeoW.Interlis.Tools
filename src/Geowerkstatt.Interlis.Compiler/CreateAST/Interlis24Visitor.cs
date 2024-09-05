@@ -547,6 +547,14 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
+    public override TypeDef VisitBlackboxType([NotNull] Interlis24Parser.BlackboxTypeContext context)
+    {
+        return new BlackboxType
+        {
+            Kind = context.XML() != null ? BlackboxType.BlackboxTypeKind.Xml : BlackboxType.BlackboxTypeKind.Binary,
+        };
+    }
+
     public override TypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
     {
         var lineForm = context.lineForm() != null ? VisitLineForm(context.lineForm()) : Enumerable.Empty<string>();
