@@ -308,12 +308,13 @@ lineFormTypeDef
     ;
 
 unitDef
-    : UNIT (
-        (metaAttributes | DOC_COMMENT)* unitName=IDENTIFIER (
-            '(' ABSTRACT ')'
-            | '[' unitShortName=IDENTIFIER ']'
-        )? (EXTENDS abstractUnitRef=definitionRef)? (EQUAL_SIGN ( derivedUnit | composedUnit))? SEMICOLON
-    )*
+    : UNIT unitTypeDef*
+    ;
+
+unitTypeDef
+    : (metaAttributes | DOC_COMMENT)* unitTerm=IDENTIFIER (
+        '(' ABSTRACT ')' | '[' unitShortName=IDENTIFIER ']'
+    )? (EXTENDS extends=definitionRef)? (EQUAL_SIGN (derivedUnit | composedUnit))? SEMICOLON
     ;
 
 derivedUnit

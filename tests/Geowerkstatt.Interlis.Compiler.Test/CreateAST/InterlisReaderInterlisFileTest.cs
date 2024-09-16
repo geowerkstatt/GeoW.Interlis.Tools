@@ -523,6 +523,59 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
+    [TestMethod]
+    public void ReadFileWithUnits()
+    {
+        var lengthUnit = new UnitDef { Name = "Length", Term = "Length" };
+        var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = lengthUnit };
+
+        var heightDomain = new DomainDef
+        {
+            Name = "Height",
+            TypeDef = new NumericType {
+                Min = 0,
+                Max = 10,
+                Precision = -2,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                Unit = meterUnit,
+            }
+        };
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            { "Length", lengthUnit },
+                            { "m", meterUnit },
+                            { "Height", heightDomain },
+                        }
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                UNIT
+                    Length (ABSTRACT);
+                    Meter [m] EXTENDS Length;
+
+                DOMAIN
+                    Height = 0.00 .. 10.00 [m];
+            END ModelName.
+            """, expected);
+    }
+
     private static void AssertReadFile(string input, InterlisFile expected)
     {
         var actual = new InterlisReader().ReadFile(new StringReader(input));

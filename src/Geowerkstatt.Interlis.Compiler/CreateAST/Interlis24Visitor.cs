@@ -442,6 +442,8 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             numericTypeDef.Precision = minPrecision;
         }
 
+        DeferredReference(context.unit, e => numericTypeDef.Unit = (UnitDef)e);
+
         return numericTypeDef;
     }
 
@@ -503,6 +505,29 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             IsMultiGeometry = context.MULTICOORD() != null,
             Axis = { context._axis.Select(VisitNumericType) },
         };
+    }
+
+    public override List<UnitDef> VisitUnitDef([NotNull] Interlis24Parser.UnitDefContext context)
+    {
+        return context.unitTypeDef().Select(VisitUnitTypeDef).ToList();
+    }
+
+    public override UnitDef VisitUnitTypeDef([NotNull] Interlis24Parser.UnitTypeDefContext context)
+    {
+        var term = context.unitTerm.Text;
+        var shortName = context.unitShortName?.Text;
+
+        var unit = new UnitDef
+        {
+            Name = shortName ?? term,
+            Term = term,
+            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
+            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+        };
+
+        DeferredReference(context.extends, e => unit.Extends = (UnitDef)e);
+
+        return unit;
     }
 
     public override List<DomainDef> VisitDomainDef([NotNull] Interlis24Parser.DomainDefContext context)

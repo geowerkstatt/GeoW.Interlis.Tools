@@ -45,4 +45,9 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
     {
         return DefaultResult;
     }
+
+    public TResult? VisitUnitDef([NotNull] UnitDef unitDef)
+    {
+        return DefaultResult;
+    }
 }
