@@ -13,7 +13,7 @@ public class UnitDef : IAstElement, IInterlisDefinition, IDocumentation, IExtend
     /// This name is used to reference the unit.
     /// </summary>
     public required string Name { get; init; }
-    public IInterlisDefinition? Parent { get; set; }
+    public IInterlisDefinitionContainer? Parent { get; set; }
 
     public UnitDef? Extends { get; set; }
 

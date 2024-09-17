@@ -11,7 +11,7 @@ public sealed class AttributeDef : IAstElement, IInterlisDefinition, IDocumentat
 {
     public required string Name { get; init; }
     public string FullyQualifiedName => Parent != null ? $"{Parent.FullyQualifiedName} -> {Name}" : Name;
-    public IInterlisDefinition? Parent { get; set; } = null;
+    public IInterlisDefinitionContainer? Parent { get; set; } = null;
 
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();

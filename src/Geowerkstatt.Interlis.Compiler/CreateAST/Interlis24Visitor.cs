@@ -14,7 +14,7 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<object>
 {
     private List<UnresolvedReference> ReferencestoResolve = new List<UnresolvedReference>();
-    private Scope<IInterlisDefinition> CurrentScope = new Scope<IInterlisDefinition>();
+    private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
     private IAntlrErrorListener<IToken> errorListener;
 
@@ -77,7 +77,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
     }
 
-    private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinition? parent, IToken token, IEnumerable<T> elements) where T : IInterlisDefinition
+    private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinitionContainer? parent, IToken token, IEnumerable<T> elements) where T : IInterlisDefinition
     {
         foreach (var element in elements)
         {

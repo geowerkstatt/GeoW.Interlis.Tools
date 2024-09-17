@@ -8,7 +8,7 @@ namespace Geowerkstatt.Interlis.Tools.AST;
 public class DomainDef : IAstElement, IInterlisDefinition, IDocumentation
 {
     public required string Name { get; init; }
-    public IInterlisDefinition? Parent { get; set; }
+    public IInterlisDefinitionContainer? Parent { get; set; }
 
     public required TypeDef TypeDef { get; init; }
 
