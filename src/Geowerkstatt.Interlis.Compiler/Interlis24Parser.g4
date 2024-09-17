@@ -17,8 +17,12 @@ modelDef
     )? NOINCREMENTALTRANSFER? AT uri=string VERSION modelVersion=string EXPLANATION? (
         TRANSLATION OF translationOf=IDENTIFIER '[' translationOfVersion=string ']'
     )? EQUAL_SIGN (CHARSET charsetName=string SEMICOLON)? (XMLNS xmlns=string SEMICOLON)? (
-        IMPORTS UNQUALIFIED? IDENTIFIER (',' UNQUALIFIED? IDENTIFIER)* SEMICOLON
+        IMPORTS imports+=modelImport (',' imports+=modelImport)* SEMICOLON
     )* modelContents* END endName=IDENTIFIER '.'
+    ;
+
+modelImport
+    : UNQUALIFIED? name=(IDENTIFIER | INTERLIS)
     ;
 
 modelContents

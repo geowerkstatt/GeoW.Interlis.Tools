@@ -576,6 +576,71 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
+    [TestMethod]
+    public void ReadFileWithImports()
+    {
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "Model_A",
+                    new ModelDef
+                    {
+                        Name = "Model_A",
+                        URI = "foo:test",
+                        Version = "123",
+                        Imports = { { "INTERLIS", (true, null) } },
+                        Content = {}
+                    }
+                },
+                {
+                    "Model_B",
+                    new ModelDef
+                    {
+                        Name = "Model_B",
+                        URI = "foo:test",
+                        Version = "123",
+                        Imports = { { "INTERLIS", (false, null) } },
+                        Content = {}
+                    }
+                },
+                {
+                    "Model_C",
+                    new ModelDef
+                    {
+                        Name = "Model_C",
+                        URI = "foo:test",
+                        Version = "123",
+                        Imports = {
+                            { "INTERLIS", (false, null) },
+                            { "Model_A", (false, null) },
+                            { "Model_B", (true, null) },
+                            { "Unknown_Model", (false, null) },
+                        },
+                        Content = {}
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL Model_A AT "foo:test" VERSION "123" =
+                IMPORTS UNQUALIFIED INTERLIS;
+            END Model_A.
+
+            MODEL Model_B AT "foo:test" VERSION "123" =
+            END Model_B.
+
+            MODEL Model_C AT "foo:test" VERSION "123" =
+                IMPORTS INTERLIS, Model_A;
+                IMPORTS UNQUALIFIED Model_B;
+                IMPORTS Unknown_Model;
+            END Model_C.
+            """, expected);
+    }
+
     private static void AssertReadFile(string input, InterlisFile expected)
     {
         var actual = new InterlisReader().ReadFile(new StringReader(input));

@@ -120,6 +120,17 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             Xmlns = context.xmlns == null ? null : VisitString(context.xmlns),
         };
 
+        foreach (var import in context._imports)
+        {
+            if (!modelDef.Imports.TryAdd(import.name.Text, (import.UNQUALIFIED() != null, null)))
+            {
+                ReportError(import.name, $"Duplicate import {import.name.Text}");
+            }
+        }
+
+        // Add default INTERLIS import
+        modelDef.Imports.TryAdd("INTERLIS", (false, null));
+
         using var scopeFrame = CurrentScope.NewFrame(modelDef);
         var elements = context
             .modelContents()
