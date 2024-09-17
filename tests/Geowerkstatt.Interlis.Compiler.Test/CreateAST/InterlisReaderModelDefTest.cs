@@ -13,7 +13,7 @@ public class InterlisReaderModelDefTest
         AssertReadRule("""
             MODEL Test AT "foo.test" VERSION "123" =
             END Test.
-            """, new ModelDef { Name = "Test", URI = "foo.test", Version = "123" });
+            """, new ModelDef { Name = "Test", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, null) } } });
     }
 
     [TestMethod]
@@ -38,6 +38,7 @@ public class InterlisReaderModelDefTest
                 URI = "foo.test",
                 Version = "123",
                 Xmlns = "http://www.interlis.test",
+                Imports = { { "INTERLIS", (false, null) }, { "Test_C", (true, null) } },
             });
     }
 
@@ -57,6 +58,7 @@ public class InterlisReaderModelDefTest
                 DocComments = { string.Join(Environment.NewLine, "/**", " * Documentation String", " */") },
                 URI = "foo.test",
                 Version = "123",
+                Imports = { { "INTERLIS", (false, null) } },
             });
     }
 
@@ -74,6 +76,7 @@ public class InterlisReaderModelDefTest
                 MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ ø \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
                 URI = "foo.test",
                 Version = "123",
+                Imports = { { "INTERLIS", (false, null) } },
             });
     }
 

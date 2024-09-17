@@ -13,64 +13,97 @@ public class UnresolvedReference
     /// <summary>
     /// The source of the reference.
     /// </summary>
-    /// <remarks>Required for relative references.</remarks>
-    public IInterlisDefinition? Source;
+    public IInterlisDefinitionContainer? Source;
 
     /// <summary>
     /// The path to the target.
     /// </summary>
     public List<string> Target { get; } = new List<string>();
 
-    /// <summary>
-    /// Whether this reference is relative or absolute.
-    /// </summary>
-    public required bool IsRelative;
-
     public override string ToString()
     {
-        return $"{(IsRelative ? "relative" : "absolute")} reference '{string.Join(".", Target)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
+        return $"reference '{string.Join(".", Target)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
     }
 
-    public bool TryResolve(IContainer<IInterlisDefinition> context)
+    /// <summary>
+    /// Tries to resolve this reference. If successful, the <see cref="SetSource"/> action is called with the resolved element.
+    /// </summary>
+    /// <returns><c>true</c> if the reference was resolved, <c>false</c> otherwise.</returns>
+    public bool TryResolve()
     {
-        if (IsRelative)
+        if (Source == null)
         {
-            if (Source == null)
-            {
-                throw new ArgumentNullException(nameof(Source));
-            }
-            return ResolveRelative(Source);
+            throw new ArgumentNullException(nameof(Source));
         }
-        else
+
+        if (Target.Count == 0)
         {
-            return ResolveAbsolute(context);
+            throw new ArgumentException("Empty reference", nameof(Target));
         }
-    }
 
-    private bool ResolveAbsolute(IContainer<IInterlisDefinition> context)
-    {
-        IInterlisDefinition? target = null;
-        for (int i = 0; i < Target.Count; i++)
+        // Search root model and resolve relative
+        IInterlisDefinitionContainer? current = Source;
+        IInterlisDefinitionContainer root = Source;
+        while (current != null)
         {
-            // Try to resolve the next element
-            if (!context.Content.TryGetValue(Target[i], out IInterlisDefinition? element))
+            root = current;
+            if (current.Content.TryGetValue(Target[0], out var element))
             {
-                return false;
-            }
-
-            target = element;
-
-            // If it is not the last iteration try to cast the found element to a container
-            if (i < Target.Count - 1)
-            {
-                if (target is IContainer<IInterlisDefinition> subContext)
+                if (Target.Count == 1)
                 {
-                    context = subContext;
+                    // Found inside current modul
+                    SetSource?.Invoke(element);
+                    return true;
                 }
                 else
                 {
+                    // Reference must be fully qualified
                     return false;
                 }
+            }
+
+            current = current?.Parent;
+        }
+
+        // At the root is always a model if a complete interlis model was parsed
+        if (root is ModelDef model)
+        {
+            if (Target[0] == model.Name)
+            {
+                return ResolveAbsolute(model);
+            }
+
+            // search in imports fully qualified
+            if (model.Imports.TryGetValue(Target[0], out var importedModel))
+            {
+                return ResolveAbsolute(importedModel.ModelDef);
+            }
+
+            // search in imports unqualified
+            if (Target.Count == 1)
+            {
+                foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
+                {
+                    if (unqualifiedImport.ModelDef?.Content.TryGetValue(Target[0], out var element) == true)
+                    {
+                        SetSource?.Invoke(element);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool ResolveAbsolute(ModelDef? root)
+    {
+        IInterlisDefinition? target = root;
+        for (var i = 1; i < Target.Count; i++)
+        {
+            if (!(target is IContainer<IInterlisDefinition> collectionTarget && collectionTarget.Content.TryGetValue(Target[i], out target)))
+            {
+                return false;
             }
         }
 
@@ -81,35 +114,5 @@ public class UnresolvedReference
 
         SetSource?.Invoke(target);
         return true;
-    }
-
-    private bool ResolveRelative(IInterlisDefinition source)
-    {
-        if (Target.Count == 0)
-        {
-            return false;
-        }
-
-        IInterlisDefinition? target = source;
-        while (target != null)
-        {
-            if (target is IContainer<IInterlisDefinition> container && container.Content.TryGetValue(Target[0], out IInterlisDefinition? element))
-            {
-                if (Target.Count == 1)
-                {
-                    SetSource?.Invoke(element);
-                    return true;
-                }
-
-                if (ResolveAbsolute(container))
-                {
-                    return true;
-                }
-            }
-
-            target = target?.Parent;
-        }
-
-        return false;
     }
 }

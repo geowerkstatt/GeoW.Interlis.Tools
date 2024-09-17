@@ -28,7 +28,7 @@ public class InterlisReaderInterlisFileTest
                 {
                     {
                         "ModelName",
-                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123" }
+                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } } }
                     },
                 }
             });
@@ -54,6 +54,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
+                            Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
                             DocComments = { "/** I am a doc comment */" }
                         }
                     }
@@ -86,6 +87,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
+                            Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
                             Content =
                             {
                                 { "ClassName", new ClassDef { Name = "ClassName" } },
@@ -137,6 +139,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "Model",
                         URI = "foo.test",
                         Version = "123",
+                        Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
                         Content =
                         {
                             { "BaseTopic", baseTopic },
@@ -386,6 +389,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
+                        Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
                         Content =
                         {
                             { "text", textDomain },
@@ -532,7 +536,8 @@ public class InterlisReaderInterlisFileTest
         var heightDomain = new DomainDef
         {
             Name = "Height",
-            TypeDef = new NumericType {
+            TypeDef = new NumericType
+            {
                 Min = 0,
                 Max = 10,
                 Precision = -2,
@@ -552,6 +557,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
+                        Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
                         Content =
                         {
                             { "Length", lengthUnit },
@@ -579,32 +585,30 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithImports()
     {
+        var modelA = new ModelDef
+        {
+            Name = "Model_A",
+            URI = "foo:test",
+            Version = "123",
+            Imports = { { "INTERLIS", (true, InterlisReader.InternalInterlisModel) } },
+            Content = { }
+        };
+
+        var modelB = new ModelDef
+        {
+            Name = "Model_B",
+            URI = "foo:test",
+            Version = "123",
+            Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+            Content = { }
+        };
+
         var expected = new InterlisFile
         {
             Content =
             {
-                {
-                    "Model_A",
-                    new ModelDef
-                    {
-                        Name = "Model_A",
-                        URI = "foo:test",
-                        Version = "123",
-                        Imports = { { "INTERLIS", (true, null) } },
-                        Content = {}
-                    }
-                },
-                {
-                    "Model_B",
-                    new ModelDef
-                    {
-                        Name = "Model_B",
-                        URI = "foo:test",
-                        Version = "123",
-                        Imports = { { "INTERLIS", (false, null) } },
-                        Content = {}
-                    }
-                },
+                { "Model_A", modelA },
+                { "Model_B", modelB },
                 {
                     "Model_C",
                     new ModelDef
@@ -613,9 +617,9 @@ public class InterlisReaderInterlisFileTest
                         URI = "foo:test",
                         Version = "123",
                         Imports = {
-                            { "INTERLIS", (false, null) },
-                            { "Model_A", (false, null) },
-                            { "Model_B", (true, null) },
+                            { "INTERLIS", (false, InterlisReader.InternalInterlisModel) },
+                            { "Model_A", (false, modelA) },
+                            { "Model_B", (true, modelB) },
                             { "Unknown_Model", (false, null) },
                         },
                         Content = {}
@@ -649,7 +653,7 @@ public class InterlisReaderInterlisFileTest
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
     {
-        var actual = new InterlisReader().ReadRule(new StringReader(input), parseRule);
+        var (actual, _) = new InterlisReader().ReadRule(new StringReader(input), parseRule);
         Assert.IsInstanceOfType(actual, expected?.GetType());
         AssertDeepEqual(expected, actual);
     }

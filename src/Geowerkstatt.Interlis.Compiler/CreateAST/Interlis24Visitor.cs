@@ -13,7 +13,7 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 
 public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<object>
 {
-    private List<UnresolvedReference> ReferencestoResolve = new List<UnresolvedReference>();
+    internal List<UnresolvedReference> ReferencesToResolve { get; } = new List<UnresolvedReference>();
     private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
     private IAntlrErrorListener<IToken> errorListener;
@@ -39,7 +39,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             var reference = VisitDefinitionRef(referenceContext);
             reference.SetSource = setSource;
             reference.Source = CurrentScope.Value;
-            ReferencestoResolve.Add(reference);
+            ReferencesToResolve.Add(reference);
         }
     }
 
@@ -93,14 +93,6 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     {
         var interlisFile = new InterlisFile();
         SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef).Cast<IInterlisDefinition>());
-
-        foreach (var reference in ReferencestoResolve)
-        {
-            if (!reference.TryResolve(interlisFile))
-            {
-                ReportError(context.Start, $"Could not resolve {reference}");
-            }
-        }
 
         return interlisFile;
     }
@@ -286,13 +278,13 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
             referenceTarget.SetSource = e => references.Target = e;
             referenceTarget.Source = CurrentScope.Value;
-            ReferencestoResolve.Add(referenceTarget);
+            ReferencesToResolve.Add(referenceTarget);
 
             foreach (var restriction in restrictions)
             {
                 restriction.SetSource = references.Restrictions.Add;
                 restriction.Source = CurrentScope.Value;
-                ReferencestoResolve.Add(restriction);
+                ReferencesToResolve.Add(restriction);
             }
 
             target.Targets.Add(references);
@@ -320,7 +312,6 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         return new UnresolvedReference
         {
             Target = { new[] { context.model?.Text, context.topic?.Text, context.name.Text }.WhereNotNull() },
-            IsRelative = context.model == null,
         };
     }
 
@@ -380,13 +371,13 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             var restrictedRef = new RestrictedRef();
             target.SetSource = e => restrictedRef.Target = e;
             target.Source = CurrentScope.Value;
-            ReferencestoResolve.Add(target);
+            ReferencesToResolve.Add(target);
 
             foreach (var restriction in restrictions)
             {
                 restriction.SetSource = restrictedRef.Restrictions.Add;
                 restriction.Source = CurrentScope.Value;
-                ReferencestoResolve.Add(restriction);
+                ReferencesToResolve.Add(restriction);
             }
 
             return new ReferenceType
