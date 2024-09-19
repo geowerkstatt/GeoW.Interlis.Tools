@@ -28,7 +28,7 @@ public class InterlisReaderInterlisFileTest
                 {
                     {
                         "ModelName",
-                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } } }
+                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } } }
                     },
                 }
             });
@@ -54,7 +54,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+                            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
                             DocComments = { "/** I am a doc comment */" }
                         }
                     }
@@ -87,7 +87,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+                            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
                             Content =
                             {
                                 { "ClassName", new ClassDef { Name = "ClassName" } },
@@ -139,7 +139,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "Model",
                         URI = "foo.test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
                         Content =
                         {
                             { "BaseTopic", baseTopic },
@@ -389,7 +389,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
                         Content =
                         {
                             { "text", textDomain },
@@ -557,7 +557,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
                         Content =
                         {
                             { "Length", lengthUnit },
@@ -590,7 +590,7 @@ public class InterlisReaderInterlisFileTest
             Name = "Model_A",
             URI = "foo:test",
             Version = "123",
-            Imports = { { "INTERLIS", (true, InterlisReader.InternalInterlisModel) } },
+            Imports = { { "INTERLIS", (true, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
             Content = { }
         };
 
@@ -599,7 +599,7 @@ public class InterlisReaderInterlisFileTest
             Name = "Model_B",
             URI = "foo:test",
             Version = "123",
-            Imports = { { "INTERLIS", (false, InterlisReader.InternalInterlisModel) } },
+            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
             Content = { }
         };
 
@@ -617,7 +617,7 @@ public class InterlisReaderInterlisFileTest
                         URI = "foo:test",
                         Version = "123",
                         Imports = {
-                            { "INTERLIS", (false, InterlisReader.InternalInterlisModel) },
+                            { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) },
                             { "Model_A", (false, modelA) },
                             { "Model_B", (true, modelB) },
                             { "Unknown_Model", (false, null) },

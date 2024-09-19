@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Geowerkstatt.Interlis.Tools.AST;
 
@@ -13,6 +8,11 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitAssociationDef([NotNull] AssociationDef associationDef)
     {
+        foreach (var element in associationDef.Content.Values.OfType<IAstElement>())
+        {
+            element.Accept(this);
+        }
+
         return DefaultResult;
     }
 
@@ -23,6 +23,11 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitClassDef([NotNull] ClassDef classDef)
     {
+        foreach (var element in classDef.Content.Values.OfType<IAstElement>())
+        {
+            element.Accept(this);
+        }
+
         return DefaultResult;
     }
 
@@ -33,16 +38,31 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile)
     {
+        foreach (var element in interlisFile.Content.Values.OfType<IAstElement>())
+        {
+            element.Accept(this);
+        }
+
         return DefaultResult;
     }
 
     public virtual TResult? VisitModelDef([NotNull] ModelDef modelDef)
     {
+        foreach (var element in modelDef.Content.Values.OfType<IAstElement>())
+        {
+            element.Accept(this);
+        }
+
         return DefaultResult;
     }
 
     public virtual TResult? VisitTopicDef([NotNull] TopicDef topicDef)
     {
+        foreach (var element in topicDef.Content.Values.OfType<IAstElement>())
+        {
+            element.Accept(this);
+        }
+
         return DefaultResult;
     }
 
