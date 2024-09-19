@@ -102,7 +102,7 @@ associationDef
     : ASSOCIATION name=IDENTIFIER? properties? /* ABSTRACT, EXTENDED, FINAL, OID */ (
         EXTENDS extends=definitionRef
     )? (DERIVED FROM renamedViewableRef)? EQUAL_SIGN (
-        ( OID AS oid=definitionRef | NO OID) SEMICOLON
+        ( OID AS oid=definitionRef | NO noOid=OID) SEMICOLON
     )? roleDef* ATTRIBUTE? attributeDef* (CARDINALITY EQUAL_SIGN cardinality SEMICOLON)? constraintDef* END endName=IDENTIFIER? SEMICOLON
     ;
 

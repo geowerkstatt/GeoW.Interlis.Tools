@@ -236,6 +236,17 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.Unbound },
         };
 
+        DeferredReference(context.extends, e => associationDef.Extends = (AssociationDef)e);
+
+        if (context.oid != null)
+        {
+            DeferredReference(context.oid, e => associationDef.OidType = ((DomainDef)e).TypeDef);
+        }
+        else if (context.noOid != null)
+        {
+            associationDef.OidType = new OidType { TypeDef = OidType.NoOid };
+        }
+
         SetContentDictionary(associationDef, associationDef, context.Start, roleDefs.Concat(attributeDefs).Concat(constraintDefs));
 
         return associationDef;
