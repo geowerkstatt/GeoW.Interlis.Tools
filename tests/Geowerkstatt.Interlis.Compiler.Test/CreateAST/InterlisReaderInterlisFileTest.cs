@@ -245,7 +245,7 @@ public class InterlisReaderInterlisFileTest
     }
 
     [TestMethod]
-    public void ReadFileWithDomains()
+    public void ReadFileAttributeTypeReferences()
     {
         // Text domain
         var textDomain = new DomainDef { Name = "text", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
@@ -378,6 +378,10 @@ public class InterlisReaderInterlisFileTest
             }
         };
 
+        // Class / Structure reference targets
+        var structType = new ClassDef { Name = "structType", IsStructure = true };
+        var person = new ClassDef { Name = "Person" };
+
         var expected = new InterlisFile
         {
             Content =
@@ -403,6 +407,8 @@ public class InterlisReaderInterlisFileTest
                             { "yoloOid", yoloOidDomain },
                             { "item_id", itemIdDomain },
                             { "basket_id", basketIdDomain },
+
+                            { "structType", structType },
                             {
                                 "TopicName",
                                 new TopicDef
@@ -414,6 +420,7 @@ public class InterlisReaderInterlisFileTest
                                     {
                                         { "point3d", point3dDomain },
                                         { "surface", surfaceDomain },
+                                        { "Person", person },
                                         {
                                             "ClassName",
                                             new ClassDef
@@ -474,6 +481,54 @@ public class InterlisReaderInterlisFileTest
                                                             }
                                                         }
                                                     },
+                                                    {
+                                                        "struct",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "struct",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = structType },
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "restrictedStruct",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "restrictedStruct",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = structType, Restrictions = { structType } },
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        "externalReference",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "externalReference",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = null },
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        "reference",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "reference",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = person },
+                                                            },
+                                                        }
+                                                    },
                                                 },
                                             }
                                         }
@@ -506,6 +561,9 @@ public class InterlisReaderInterlisFileTest
                     item_id = OID 100000 .. 999999;
                     basket_id EXTENDS yoloOid = OID TEXT*6;
 
+                STRUCTURE structType =
+                END structType;
+
                 TOPIC TopicName =
                     BASKET OID AS basket_id;
                     OID AS item_id;
@@ -514,6 +572,9 @@ public class InterlisReaderInterlisFileTest
                         point3d = MANDATORY COORD 0 .. 99, 100 .. 199, 200 .. 299;
                         surface = SURFACE WITH (STRAIGHTS) VERTEX point3d;
 
+                    CLASS Person =
+                    END Person;
+
                     CLASS ClassName =
                         OID AS item_id;
 
@@ -521,6 +582,10 @@ public class InterlisReaderInterlisFileTest
                         Points : point3d;
                         Lines : DIRECTED MULTIPOLYLINE WITH (STRAIGHTS, ARCS) VERTEX point3d WITHOUT OVERLAPS >0.01;
                         Surface : surface;
+                        struct : structType;
+                        restrictedStruct : structType RESTRICTION ( ModelName.structType );
+                        externalReference : REFERENCE TO (EXTERNAL) ExternalClassName;
+                        reference : REFERENCE TO Person;
                     END ClassName;
                 END TopicName;
             END ModelName.

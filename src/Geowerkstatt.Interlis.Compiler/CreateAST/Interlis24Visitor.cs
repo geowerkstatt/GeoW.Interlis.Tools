@@ -284,21 +284,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var target = new RoleType { Cardinality = cardinality };
         foreach (var restrictedRef in context.restrictedDefinitionRef().Select(VisitRestrictedDefinitionRef))
         {
-            var (referenceTarget, restrictions) = restrictedRef;
-            var references = new RestrictedRef();
-
-            referenceTarget.SetSource = e => references.Target = e;
-            referenceTarget.Source = CurrentScope.Value;
-            ReferencesToResolve.Add(referenceTarget);
-
-            foreach (var restriction in restrictions)
-            {
-                restriction.SetSource = references.Restrictions.Add;
-                restriction.Source = CurrentScope.Value;
-                ReferencesToResolve.Add(restriction);
-            }
-
-            target.Targets.Add(references);
+            target.Targets.Add(restrictedRef);
         }
 
         return new AttributeDef
@@ -310,12 +296,34 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
-    public override Tuple<UnresolvedReference, List<UnresolvedReference>> VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
+    public override object VisitReferenceAttr([NotNull] Interlis24Parser.ReferenceAttrContext context)
+    {
+        var properties = VisitProperties(context.properties(), [Interlis24Parser.EXTERNAL]);
+
+        return new ReferenceType
+        {
+            Target = VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()),
+        };
+    }
+
+    public override RestrictedRef VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
     {
         var target = VisitDefinitionRef(context.@ref);
         var restrictions = context._restrictions.Select(VisitDefinitionRef).ToList();
 
-        return Tuple.Create(target, restrictions);
+        var restrictedRef = new RestrictedRef();
+        target.SetSource = e => restrictedRef.Target = e;
+        target.Source = CurrentScope.Value;
+        ReferencesToResolve.Add(target);
+
+        foreach (var restriction in restrictions)
+        {
+            restriction.SetSource = restrictedRef.Restrictions.Add;
+            restriction.Source = CurrentScope.Value;
+            ReferencesToResolve.Add(restriction);
+        }
+
+        return restrictedRef;
     }
 
     public override UnresolvedReference VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
@@ -375,30 +383,17 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override TypeDef VisitAttrType([NotNull] Interlis24Parser.AttrTypeContext context)
     {
-        var result = VisitChildren(context);
-        if (result is Tuple<UnresolvedReference, List<UnresolvedReference>> reference)
+        var restrictedDefinitonRef = context.restrictedDefinitionRef();
+        if (restrictedDefinitonRef != null)
         {
-            var (target, restrictions) = reference;
-            var restrictedRef = new RestrictedRef();
-            target.SetSource = e => restrictedRef.Target = e;
-            target.Source = CurrentScope.Value;
-            ReferencesToResolve.Add(target);
-
-            foreach (var restriction in restrictions)
-            {
-                restriction.SetSource = restrictedRef.Restrictions.Add;
-                restriction.Source = CurrentScope.Value;
-                ReferencesToResolve.Add(restriction);
-            }
-
             return new ReferenceType
             {
-                Target = restrictedRef,
+                Target = VisitRestrictedDefinitionRef(restrictedDefinitonRef),
             };
         }
         else
         {
-            return (TypeDef)result;
+            return (TypeDef)VisitChildren(context);
         }
     }
 
