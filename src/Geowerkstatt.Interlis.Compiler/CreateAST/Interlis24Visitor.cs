@@ -588,6 +588,19 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         };
     }
 
+    public override TypeDef VisitAlignmentType([NotNull] Interlis24Parser.AlignmentTypeContext context)
+    {
+        var reference = new RestrictedRef();
+        ReferencesToResolve.Add(new UnresolvedReference
+        {
+            Target = { "INTERLIS", context.GetText() },
+            Source = CurrentScope.Value,
+            SetSource = e => reference.Target = e
+        });
+
+        return new ReferenceType { Target = reference };
+    }
+
     public override TypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
     {
         var lineForm = context.lineForm() != null ? VisitLineForm(context.lineForm()) : Enumerable.Empty<string>();

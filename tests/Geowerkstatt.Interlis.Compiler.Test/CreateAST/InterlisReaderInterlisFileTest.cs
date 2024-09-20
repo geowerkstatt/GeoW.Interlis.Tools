@@ -529,6 +529,30 @@ public class InterlisReaderInterlisFileTest
                                                             },
                                                         }
                                                     },
+                                                    {
+                                                        "horizontalAlignment",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "horizontalAlignment",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["HALIGNMENT"] },
+                                                            },
+                                                        }
+                                                    },
+                                                    {
+                                                        "verticalAlignment",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "verticalAlignment",
+                                                            TypeDef = new ReferenceType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                                Target = new RestrictedRef { Target = Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["VALIGNMENT"] },
+                                                            },
+                                                        }
+                                                    },
                                                 },
                                             }
                                         }
@@ -586,6 +610,8 @@ public class InterlisReaderInterlisFileTest
                         restrictedStruct : structType RESTRICTION ( ModelName.structType );
                         externalReference : REFERENCE TO (EXTERNAL) ExternalClassName;
                         reference : REFERENCE TO Person;
+                        horizontalAlignment : HALIGNMENT;
+                        verticalAlignment : VALIGNMENT;
                     END ClassName;
                 END TopicName;
             END ModelName.
