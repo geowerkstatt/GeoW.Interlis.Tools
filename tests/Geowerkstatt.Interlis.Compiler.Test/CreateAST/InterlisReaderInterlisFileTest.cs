@@ -123,6 +123,54 @@ public class InterlisReaderInterlisFileTest
             Extends = new Reference<ClassDef> { Target = classA, Path = { "A" } },
         };
 
+        var associationC = new AssociationDef
+        {
+            Name = "C",
+            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            Content =
+            {
+                {
+                    "roleA",
+                    new AttributeDef
+                    {
+                        Name = "roleA",
+                        TypeDef = new RoleType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                            Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classA, Path = { "A" } } } },
+                        }
+                    }
+                },
+                {
+                    "roleB",
+                    new AttributeDef
+                    {
+                        Name = "roleB",
+                        TypeDef = new RoleType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                            Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classB, Path = { "B" } } } },
+                        }
+                    }
+                },
+                {
+                    "attr",
+                    new AttributeDef
+                    {
+                        Name = "attr",
+                        TypeDef = new TextType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Length = 12,
+                        }
+                    }
+                }
+            }
+        };
+
+        classA.AssociationAccess.Add("C", associationC);
+        classB.AssociationAccess.Add("C", associationC);
+
         var baseTopic = new TopicDef
         {
             Name = "BaseTopic",
@@ -161,53 +209,7 @@ public class InterlisReaderInterlisFileTest
                                     {
                                         { "A", classA },
                                         { "B", classB },
-                                        {
-                                            "C",
-                                            new AssociationDef
-                                            {
-                                                Name = "C",
-                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                                Content =
-                                                {
-                                                    {
-                                                        "roleA",
-                                                        new AttributeDef
-                                                        {
-                                                            Name = "roleA",
-                                                            TypeDef = new RoleType
-                                                            {
-                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classA, Path = { "A" } } } },
-                                                            }
-                                                        }
-                                                    },
-                                                    {
-                                                        "roleB",
-                                                        new AttributeDef
-                                                        {
-                                                            Name = "roleB",
-                                                            TypeDef = new RoleType
-                                                            {
-                                                                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classB, Path = { "B" } } } },
-                                                            }
-                                                        }
-                                                    },
-                                                    {
-                                                        "attr",
-                                                        new AttributeDef
-                                                        {
-                                                            Name = "attr",
-                                                            TypeDef = new TextType
-                                                            {
-                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Length = 12,
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
+                                        { "C", associationC },
                                     },
                                 }
                             },
@@ -803,6 +805,7 @@ public class InterlisReaderInterlisFileTest
                     && (nameof(Reference<object>.Source).Equals(p.Name) // Ignore reference source to break circular references
                         || nameof(Reference<object>.MapTarget).Equals(p.Name))) // Ignore Func property
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
+            .IgnoreCircularReferences()
             .Assert();
     }
 }

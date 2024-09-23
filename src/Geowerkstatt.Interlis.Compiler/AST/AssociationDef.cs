@@ -2,7 +2,7 @@
 
 namespace Geowerkstatt.Interlis.Tools.AST;
 
-public class AssociationDef : IInterlisDefinitionContainer, IExtending<AssociationDef>
+public class AssociationDef : IInterlisDefinitionContainer, IExtending<AssociationDef>, IIdentifiable
 {
     public required string Name { get; init; }
     public IInterlisDefinitionContainer? Parent { get; set; } = null;
@@ -10,6 +10,9 @@ public class AssociationDef : IInterlisDefinitionContainer, IExtending<Associati
     public Reference<AssociationDef>? Extends { get; set; }
 
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
+
+    /// <inheritdoc />
+    public Dictionary<string, AssociationDef> AssociationAccess { get; } = new Dictionary<string, AssociationDef>();
 
     public required Cardinality Cardinality { get; init; }
 

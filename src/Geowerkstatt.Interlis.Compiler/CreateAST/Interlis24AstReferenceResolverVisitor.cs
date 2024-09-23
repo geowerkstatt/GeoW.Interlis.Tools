@@ -225,4 +225,21 @@ public class Interlis24AstReferenceResolverVisitor(List<IUnresolvedReference> re
 
         return interlisFile;
     }
+
+    public override object? VisitAttributeDef([NotNull] AttributeDef attributeDef)
+    {
+        // Add references from classDefs to the associations they are part of.
+        if (attributeDef.TypeDef is RoleType roleType && attributeDef.Parent is AssociationDef association)
+        {
+            foreach (var target in roleType.Targets)
+            {
+                if (target.Value?.Target is IIdentifiable classOrAssociationDef)
+                {
+                    classOrAssociationDef.AssociationAccess.TryAdd(association.Name, association);
+                }
+            }
+        }
+
+        return base.VisitAttributeDef(attributeDef);
+    }
 }
