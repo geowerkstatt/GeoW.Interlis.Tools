@@ -10,6 +10,9 @@ using System.Text;
 
 namespace Geowerkstatt.Interlis.Tools.CreateAST;
 
+/// <summary>
+/// Visitor that creates an Abstract-Syntax-Tree (AST) from the output of ANTLR.
+/// </summary>
 public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<object>
 {
     internal List<IUnresolvedReference> ReferencesToResolve { get; } = new List<IUnresolvedReference>();

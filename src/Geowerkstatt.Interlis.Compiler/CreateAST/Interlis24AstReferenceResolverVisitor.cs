@@ -9,6 +9,9 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 /// </summary>
 public class Interlis24AstReferenceResolverVisitor(List<IUnresolvedReference> referencesToResolve) : Interlis24AstBaseVisitor<object>
 {
+    /// <summary>
+    /// The internal INTERLIS model that is always available.
+    /// </summary>
     public static readonly ModelDef InternalInterlisModel;
 
     static Interlis24AstReferenceResolverVisitor()
