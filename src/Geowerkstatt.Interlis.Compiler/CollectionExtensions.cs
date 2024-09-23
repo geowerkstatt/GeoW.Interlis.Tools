@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Geowerkstatt.Interlis.Tools;
+﻿namespace Geowerkstatt.Interlis.Tools;
 
 internal static class CollectionExtensions
 {
@@ -17,6 +11,17 @@ internal static class CollectionExtensions
         foreach (var item in items)
         {
             collection.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Add the <paramref name="element"/> to the <paramref name="collection"/> if it is not null.
+    /// </summary>
+    public static void AddIfNotNull<T>(this ICollection<T> collection, T? element) where T : class
+    {
+        if (element != null)
+        {
+            collection.Add(element);
         }
     }
 

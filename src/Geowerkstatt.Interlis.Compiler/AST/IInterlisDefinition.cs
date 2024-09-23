@@ -3,7 +3,7 @@
 /// <summary>
 /// An INTERLIS object that can be referenced by its fully qualified name.
 /// </summary>
-public interface IInterlisDefinition
+public interface IInterlisDefinition : IAstElement
 {
     /// <summary>
     /// The name of this element.
@@ -11,9 +11,9 @@ public interface IInterlisDefinition
     public string Name { get; init; }
 
     /// <summary>
-    /// The parent <see cref="IInterlisDefinition"/> or <c>null</c> if this definition has no parent.
+    /// The parent <see cref="IInterlisDefinitionContainer"/> or <c>null</c> if this definition has no parent.
     /// </summary>
-    public IInterlisDefinition? Parent { get; set; }
+    public IInterlisDefinitionContainer? Parent { get; set; }
 
     /// <summary>
     /// The fully qualified name

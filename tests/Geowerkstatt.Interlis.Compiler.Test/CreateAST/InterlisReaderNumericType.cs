@@ -64,8 +64,8 @@ public class InterlisReaderNumericType
     [TestMethod]
     public void ReadNumericDifferentPrecision()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("0.00 .. 10.0", null));
-        Assert.AreEqual("Compile error at line 1:0 Number minimum and maximum must have the same precision but minimum has precision <0.01> and maximum has precision <0.1>.", ex.Message);
+        var logs = GetLogMessages("0.00 .. 10.0");
+        Assert.AreEqual("Compile error at line 1:0 Number minimum and maximum must have the same precision but minimum has precision <0.01> and maximum has precision <0.1>.", logs.FirstOrDefault());
     }
 
     [TestMethod]
@@ -83,8 +83,8 @@ public class InterlisReaderNumericType
     [TestMethod]
     public void ReadNumericDoubleInappropriate()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("0.00000 .. 100000000000000.00000", null));
-        Assert.AreEqual("Compile error at line 1:0 The given range <0 .. 100000000000000> with a precision of <1E-05> cannot be represented by a double precision floating point number.", ex.Message);
+        var logs = GetLogMessages("0.00000 .. 100000000000000.00000");
+        Assert.AreEqual("Compile error at line 1:0 The given range <0 .. 100000000000000> with a precision of <1E-05> cannot be represented by a double precision floating point number.", logs.FirstOrDefault());
     }
 
     [TestMethod]
@@ -102,10 +102,13 @@ public class InterlisReaderNumericType
     [TestMethod]
     public void ReadNumericMinGreaterMax()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("999 .. 000", null));
-        Assert.AreEqual("Compile error at line 1:0 Number minimum <999> must be smaller than maximum <0>.", ex.Message);
+        var logs = GetLogMessages("999 .. 000");
+        Assert.AreEqual("Compile error at line 1:0 Number minimum <999> must be smaller than maximum <0>.", logs.FirstOrDefault());
     }
 
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitNumericType(p.numericType()));
+
+    private List<string> GetLogMessages(string input)
+        => InterlisReaderInterlisFileTest.GetLogMessages(input, (p, v) => v.VisitNumericType(p.numericType()));
 }

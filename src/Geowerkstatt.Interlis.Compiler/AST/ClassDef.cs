@@ -2,21 +2,24 @@
 
 namespace Geowerkstatt.Interlis.Tools.AST;
 
-public sealed class ClassDef : IAstElement, IInterlisDefinition, IDocumentation, IContainer<IInterlisDefinition>, IExtending<ClassDef>
+public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDefinitionContainer, IIdentifiable
 {
     public required string Name { get; init; }
-    public IInterlisDefinition? Parent { get; set; }
+    public IInterlisDefinitionContainer? Parent { get; set; }
 
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
-    public ClassDef? Extends { get; set; }
+    public Reference<ClassDef>? Extends { get; set; }
 
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
 
+    /// <inheritdoc />
+    public Dictionary<string, AssociationDef> AssociationAccess { get; } = new Dictionary<string, AssociationDef>();
+
     public bool IsStructure { get; init; }
 
-    public TypeDef? OidType { get; set; }
+    public Reference<TypeDef>? OidType { get; set; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

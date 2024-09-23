@@ -1,5 +1,6 @@
 ﻿using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Tools.AST;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools;
 
@@ -29,6 +30,8 @@ public class InterlisReaderAssociationDefTest
             {
                 Name = "Test_A",
                 Cardinality = new Cardinality { Min = 5, Max = 42 },
+                Extends = new Reference<AssociationDef> { Path = { "Test_B" } },
+                OidType = new Reference<TypeDef> { Path = { "oidType" } },
             });
     }
 

@@ -5,10 +5,10 @@ namespace Geowerkstatt.Interlis.Tools.AST;
 /// <summary>
 /// A type definition that has a name and can therefore be referenced.
 /// </summary>
-public class DomainDef : IAstElement, IInterlisDefinition, IDocumentation
+public class DomainDef : IInterlisDefinition, IDocumentation
 {
     public required string Name { get; init; }
-    public IInterlisDefinition? Parent { get; set; }
+    public IInterlisDefinitionContainer? Parent { get; set; }
 
     public required TypeDef TypeDef { get; init; }
 

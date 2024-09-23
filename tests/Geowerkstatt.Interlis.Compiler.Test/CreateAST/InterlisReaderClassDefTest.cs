@@ -32,6 +32,8 @@ public class InterlisReaderClassDefTest
                 Name = "Test_A",
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
+                Extends = new Reference<ClassDef> { Path = { "Test_B" } },
+                OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
             });
     }
 
@@ -79,14 +81,17 @@ public class InterlisReaderClassDefTest
     [TestMethod]
     public void ReadStructureWithOid()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("""
+        var logs = GetLogMessages("""
             STRUCTURE Test =
                 OID AS INTERLIS.UUIDOID;
             END Test;
-            """, null));
-        Assert.AreEqual("Compile error at line 2:4 Structure 'Test' cannot have an OID definition.", ex.Message);
+            """);
+        Assert.AreEqual("Compile error at line 2:4 Structure 'Test' cannot have an OID definition.", logs.FirstOrDefault());
     }
 
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitClassDef(p.classDef()));
+
+    private List<string> GetLogMessages(string input)
+        => InterlisReaderInterlisFileTest.GetLogMessages(input, (p, v) => v.VisitClassDef(p.classDef()));
 }
