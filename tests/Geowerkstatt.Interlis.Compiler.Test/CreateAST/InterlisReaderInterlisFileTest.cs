@@ -2,6 +2,8 @@
 using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Tools.CreateAST;
 using Geowerkstatt.Interlis.Tools.AST.Types;
+using Microsoft.Extensions.Logging;
+using Compiler.Test.CreateAST;
 
 namespace Geowerkstatt.Interlis.Tools;
 
@@ -794,6 +796,22 @@ public class InterlisReaderInterlisFileTest
         var (actual, _) = new InterlisReader().ReadRule(new StringReader(input), parseRule);
         Assert.IsInstanceOfType(actual, expected?.GetType());
         AssertDeepEqual(expected, actual);
+    }
+
+    internal static List<string> GetLogMessages<TResult>(string input, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
+    {
+        var logProvider = new TestLoggerProvider();
+        var loggerFactory = LoggerFactory.Create(b => b.AddProvider(logProvider));
+
+        try
+        {
+            var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
+        }
+        catch (Exception)
+        {
+        }
+
+        return logProvider.GetMessages();
     }
 
     private static void AssertDeepEqual(object expected, object actual)

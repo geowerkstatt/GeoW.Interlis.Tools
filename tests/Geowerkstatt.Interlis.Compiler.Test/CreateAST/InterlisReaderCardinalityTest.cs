@@ -39,31 +39,34 @@ public class InterlisReaderCardinalityTest
     [TestMethod]
     public void ReadCardinalityInvalidStar()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("{*..5}", null));
-        Assert.AreEqual("Compile error at line 1:1 Invalid cardinality '{*..5}', did you mean '{0..5}'.", ex.Message);
+        var logs = GetLogMessages("{*..5}");
+        Assert.AreEqual("Compile error at line 1:1 Invalid cardinality '{*..5}', did you mean '{0..5}'.", logs.FirstOrDefault());
     }
 
     [TestMethod]
     public void ReadCardinalityInvalidStarStar()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("{*..*}", null));
-        Assert.AreEqual("Compile error at line 1:1 Invalid cardinality '{*..*}', did you mean '{0..*}'.", ex.Message);
+        var logs = GetLogMessages("{*..*}");
+        Assert.AreEqual("Compile error at line 1:1 Invalid cardinality '{*..*}', did you mean '{0..*}'.", logs.FirstOrDefault());
     }
 
     [TestMethod]
     public void ReadCardinalityRangeSwapped()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("{8..1}", null));
-        Assert.AreEqual("Compile error at line 1:0 Invalid cardinality minimal value '8' is larger than maximal value '1'.", ex.Message);
+        var logs = GetLogMessages("{8..1}");
+        Assert.AreEqual("Compile error at line 1:0 Invalid cardinality minimal value '8' is larger than maximal value '1'.", logs.FirstOrDefault());
     }
 
     [TestMethod]
     public void ReadCardinalityTooLarge()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule($"{{0..9223372036854775808}}", null));
-        Assert.AreEqual("Compile error at line 1:4 Could not parse value 9223372036854775808.", ex.Message);
+        var logs = GetLogMessages($"{{0..9223372036854775808}}");
+        Assert.AreEqual("Compile error at line 1:4 Could not parse value 9223372036854775808.", logs.FirstOrDefault());
     }
 
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitCardinality(p.cardinality()));
+
+    private List<string> GetLogMessages(string input)
+        => InterlisReaderInterlisFileTest.GetLogMessages(input, (p, v) => v.VisitCardinality(p.cardinality()));
 }

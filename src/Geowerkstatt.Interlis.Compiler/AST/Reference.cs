@@ -29,4 +29,9 @@ public class Reference<T> : IUnresolvedReference where T : class
     {
         Target = MapTarget(target);
     }
+
+    public override string ToString()
+    {
+        return $"reference '{string.Join(".", Path)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
+    }
 }

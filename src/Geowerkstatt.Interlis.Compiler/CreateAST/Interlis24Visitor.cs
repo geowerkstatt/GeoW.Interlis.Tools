@@ -4,6 +4,7 @@ using Antlr4.Runtime.Tree;
 using Geowerkstatt.Interlis.Tools.AST;
 using Geowerkstatt.Interlis.Tools.AST.Expression;
 using Geowerkstatt.Interlis.Tools.AST.Types;
+using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Globalization;
 using System.Text;
@@ -13,21 +14,16 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 /// <summary>
 /// Visitor that creates an Abstract-Syntax-Tree (AST) from the output of ANTLR.
 /// </summary>
-public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<object>
+public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : ThrowingInterlis24ParserBaseVisitor<object>
 {
+    private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24Visitor>();
+
     internal List<IUnresolvedReference> ReferencesToResolve { get; } = new List<IUnresolvedReference>();
     private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
-    private IAntlrErrorListener<IToken> errorListener;
-
-    internal Interlis24Visitor(IAntlrErrorListener<IToken> errorListener)
-    {
-        this.errorListener = errorListener;
-    }
-
     private void ReportError(IToken offendingToken, string message)
     {
-        errorListener.SyntaxError(null, null, offendingToken, offendingToken.Line, offendingToken.Column, message, null);
+        logger.LogError("Compile error at line {Line}:{CharPosition} {Message}.", offendingToken.Line, offendingToken.Column, message);
     }
 
     /// <summary>

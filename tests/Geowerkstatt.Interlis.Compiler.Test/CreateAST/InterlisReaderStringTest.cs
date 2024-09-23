@@ -18,15 +18,20 @@ public class InterlisReaderStringTest
     [TestMethod]
     public void ReadStringInvalidUnicode()
     {
-        Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("\"invalid escape: \\udefg \"", null));
+        var logs = GetLogMessages("\"invalid escape: \\udefg \"");
+        Assert.IsTrue(logs.Count > 0);
     }
 
     [TestMethod]
     public void ReadStringInvalidEscape()
     {
-        Assert.ThrowsException<ParseCanceledException>(() => AssertReadRule("\"invalid escape: \\n \"", null));
+        var logs = GetLogMessages("\"invalid escape: \\n \"");
+        Assert.IsTrue(logs.Count > 0);
     }
 
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitString(p.@string()));
+
+    private List<string> GetLogMessages(string input)
+        => InterlisReaderInterlisFileTest.GetLogMessages(input, (p, v) => v.VisitString(p.@string()));
 }

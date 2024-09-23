@@ -1,5 +1,6 @@
 ﻿using Geowerkstatt.Interlis.Tools.AST;
 using Geowerkstatt.Interlis.Tools.AST.Types;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Geowerkstatt.Interlis.Tools.CreateAST;
@@ -7,8 +8,10 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 /// <summary>
 /// Resolves various references inside the AST. The AST is modified in place.
 /// </summary>
-public class Interlis24AstReferenceResolverVisitor(List<IUnresolvedReference> referencesToResolve) : Interlis24AstBaseVisitor<object>
+public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory, List<IUnresolvedReference> referencesToResolve) : Interlis24AstBaseVisitor<object>
 {
+    private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24AstReferenceResolverVisitor>();
+
     /// <summary>
     /// The internal INTERLIS model that is always available.
     /// </summary>
@@ -27,6 +30,30 @@ public class Interlis24AstReferenceResolverVisitor(List<IUnresolvedReference> re
                     {
                         Name = "m",
                         Term = "METER",
+                    }
+                },
+                {
+                    "kg",
+                    new UnitDef
+                    {
+                        Name = "kg",
+                        Term = "KILOGRAM",
+                    }
+                },
+                {
+                    "s",
+                    new UnitDef
+                    {
+                        Name = "s",
+                        Term = "SECOND",
+                    }
+                },
+                {
+                    "A",
+                    new UnitDef
+                    {
+                        Name = "A",
+                        Term = "AMPERE",
                     }
                 },
                 {
@@ -179,9 +206,19 @@ public class Interlis24AstReferenceResolverVisitor(List<IUnresolvedReference> re
             .Where(reference.CanAccept)
             .ToList();
 
-        if (mappedTargets.Count == 1)
+        switch (mappedTargets.Count)
         {
-            reference.SetTarget(mappedTargets.Single());
+            case 0:
+                logger.LogError("Could not resolve '{Reference}'", reference);
+                break;
+
+            case 1:
+                reference.SetTarget(mappedTargets.Single());
+                break;
+
+            default:
+                logger.LogError("Ambiguous '{Reference}' could be resolved to multiple targets: {Targets}", reference, string.Join(", ", mappedTargets.Select(d => d.FullyQualifiedName)));
+                break;
         }
     }
 
@@ -213,6 +250,10 @@ public class Interlis24AstReferenceResolverVisitor(List<IUnresolvedReference> re
                 if (availableModels.TryGetValue(import.Key, out var importedModel))
                 {
                     model.Imports[import.Key] = (import.Value.IsUnqualifiedAllowed, importedModel);
+                }
+                else
+                {
+                    logger.LogError("Could not resolve import '{Import}' in model '{Model}'", import.Key, model.Name);
                 }
             }
         }

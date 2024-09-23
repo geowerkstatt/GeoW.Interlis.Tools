@@ -83,20 +83,19 @@ public class InterlisReaderModelDefTest
     [TestMethod]
     public void ReadModelDefWithDuplicateMetaAttributes()
     {
-        var ex = Assert.ThrowsException<ParseCanceledException>(() =>
-        {
-            AssertReadRule("""
-                !!@ KEY_A = red; KEY_B = 1; KEY_B = 2
-                !!@ OTHER_KEY = "value"; KEY_A = green
-                MODEL Test AT "foo.test" VERSION "123" =
-                END Test.
-                """,
-                null);
-        });
+        var logs = GetLogMessages("""
+            !!@ KEY_A = red; KEY_B = 1; KEY_B = 2
+            !!@ OTHER_KEY = "value"; KEY_A = green
+            MODEL Test AT "foo.test" VERSION "123" =
+            END Test.
+            """);
 
-        Assert.AreEqual("Compile error at line 1:0 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.", ex.Message);
+        Assert.AreEqual("Compile error at line 1:0 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.", logs.FirstOrDefault());
     }
 
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitModelDef(p.modelDef()));
+
+    private List<string> GetLogMessages(string input)
+        => InterlisReaderInterlisFileTest.GetLogMessages(input, (p, v) => v.VisitModelDef(p.modelDef()));
 }
