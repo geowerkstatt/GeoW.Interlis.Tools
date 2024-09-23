@@ -389,12 +389,28 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return VisitChildren(context);
     }
 
-    public override TextType VisitTextType([NotNull] Interlis24Parser.TextTypeContext context)
+    public override TypeDef VisitTextType([NotNull] Interlis24Parser.TextTypeContext context)
     {
-        return new TextType
+        if (context.TEXT() != null || context.MTEXT() != null)
         {
-            Length = int.Parse(context.maxLength.Text),
-        };
+            return new TextType
+            {
+                Length = int.Parse(context.maxLength.Text),
+                IsMText = context.MTEXT() != null,
+            };
+        }
+        else
+        {
+            var reference = new Reference<TypeDef>
+            {
+                Path = { "INTERLIS", context.GetText() },
+                Source = CurrentScope.Value,
+                MapTarget = e => (e as DomainDef)?.TypeDef,
+            };
+
+            ReferencesToResolve.Add(reference);
+            return new TypeRef { Extends = reference };
+        }
     }
 
     public override NumericType VisitNumericType([NotNull] Interlis24Parser.NumericTypeContext context)

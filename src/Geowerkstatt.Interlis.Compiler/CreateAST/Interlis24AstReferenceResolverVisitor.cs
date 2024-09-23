@@ -19,43 +19,43 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
 
     static Interlis24AstReferenceResolverVisitor()
     {
+        var unitLength = new UnitDef { Name = "LENGTH", Term = "LENGTH" };
+        var unitMass = new UnitDef { Name = "MASS", Term = "MASS" };
+        var unitTime = new UnitDef { Name = "TIME", Term = "TIME" };
+        var unitElectricCurrent = new UnitDef { Name = "ELECTRIC_CURRENT", Term = "ELECTRIC_CURRENT" };
+        var unitTemperature = new UnitDef { Name = "TEMPERATURE", Term = "TEMPERATURE" };
+        var unitAmountOfMatter = new UnitDef { Name = "AMOUNT_OF_MATTER", Term = "AMOUNT_OF_MATTER" };
+        var unitAngle = new UnitDef { Name = "ANGLE", Term = "ANGLE" };
+        var unitSoidAngle = new UnitDef { Name = "SOLID_ANGLE", Term = "SOLID_ANGLE" };
+        var unitLuminousIntensity = new UnitDef { Name = "LUMINOUS_INTENSITY", Term = "LUMINOUS_INTENSITY" };
+
         InternalInterlisModel = new ModelDef
         {
             Name = "INTERLIS",
             Content =
             {
-                {
-                    "m",
-                    new UnitDef
-                    {
-                        Name = "m",
-                        Term = "METER",
-                    }
-                },
-                {
-                    "kg",
-                    new UnitDef
-                    {
-                        Name = "kg",
-                        Term = "KILOGRAM",
-                    }
-                },
-                {
-                    "s",
-                    new UnitDef
-                    {
-                        Name = "s",
-                        Term = "SECOND",
-                    }
-                },
-                {
-                    "A",
-                    new UnitDef
-                    {
-                        Name = "A",
-                        Term = "AMPERE",
-                    }
-                },
+                { "ANYUNIT", new UnitDef { Name = "ANYUNIT", Term = "ANYUNIT" } },
+                { "DIMENSIONLESS", new UnitDef { Name = "DIMENSIONLESS", Term = "DIMENSIONLESS" } },
+                { "LENGTH", unitLength },
+                { "MASS", unitMass },
+                { "TIME", unitTime },
+                { "ELECTRIC_CURRENT", unitElectricCurrent },
+                { "TEMPERATURE", unitTemperature },
+                { "AMOUNT_OF_MATTER", unitAmountOfMatter },
+                { "ANGLE", unitAngle },
+                { "SOLID_ANGLE", unitSoidAngle },
+                { "LUMINOUS_INTENSITY", unitLuminousIntensity },
+                { "MONEY", new UnitDef { Name = "MONEY", Term = "MONEY" } },
+
+                { "m", new UnitDef { Name = "m", Term = "METER", Extends = new Reference<UnitDef> { Target = unitLength } } },
+                { "kg", new UnitDef { Name = "kg", Term = "KILOGRAM", Extends = new Reference<UnitDef> { Target = unitMass } } },
+                { "s", new UnitDef { Name = "s", Term = "SECOND", Extends = new Reference<UnitDef> { Target = unitTime } } },
+                { "A", new UnitDef { Name = "A", Term = "AMPERE", Extends = new Reference<UnitDef> { Target = unitElectricCurrent } } },
+                { "K", new UnitDef { Name = "K", Term = "DEGREE_KELVIN", Extends = new Reference<UnitDef> { Target = unitTemperature } } },
+                { "mol", new UnitDef { Name = "mol", Term = "MOLE", Extends = new Reference<UnitDef> { Target = unitAmountOfMatter } } },
+                { "rad", new UnitDef { Name = "rad", Term = "RADIAN", Extends = new Reference<UnitDef> { Target = unitAngle } } },
+                { "sr", new UnitDef { Name = "sr", Term = "STERADIAN", Extends = new Reference<UnitDef> { Target = unitSoidAngle } } },
+                { "cd", new UnitDef { Name = "cd", Term = "CANDELA", Extends = new Reference<UnitDef> { Target = unitLuminousIntensity } } },
                 {
                     "URI",
                     new DomainDef
@@ -77,6 +77,18 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },
                             Length = 255,
+                        },
+                    }
+                },
+                {
+                    "INTERLIS_1_DATE",
+                    new DomainDef
+                    {
+                        Name = "INTERLIS_1_DATE",
+                        TypeDef = new TextType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Length = 8,
                         },
                     }
                 },
@@ -135,6 +147,11 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                         },
                     }
                 },
+                { "min", new UnitDef { Name = "min", Term = "Minute" } },
+                { "h", new UnitDef { Name = "h", Term = "Hour" } },
+                { "d", new UnitDef { Name = "d", Term = "Day" } },
+                { "M", new UnitDef { Name = "M", Term = "Month" } },
+                { "Y", new UnitDef { Name = "Y", Term = "Year" } },
             }
         };
     }

@@ -32,6 +32,6 @@ public class Reference<T> : IUnresolvedReference where T : class
 
     public override string ToString()
     {
-        return $"reference '{string.Join(".", Path)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
+        return $"reference '{(Path.Any() ? string.Join(".", Path) : (Target as IInterlisDefinition)?.FullyQualifiedName)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
     }
 }
