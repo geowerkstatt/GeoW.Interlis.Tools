@@ -1,6 +1,5 @@
 ﻿using Antlr4.Runtime;
 using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools.AST.Types;
 using Geowerkstatt.Interlis.Tools.CreateAST;
 
 namespace Geowerkstatt.Interlis.Tools;

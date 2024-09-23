@@ -4,7 +4,6 @@ using Antlr4.Runtime.Tree;
 using Geowerkstatt.Interlis.Tools.AST;
 using Geowerkstatt.Interlis.Tools.AST.Expression;
 using Geowerkstatt.Interlis.Tools.AST.Types;
-using SharpCompress.Common;
 using System.Collections;
 using System.Globalization;
 using System.Text;
