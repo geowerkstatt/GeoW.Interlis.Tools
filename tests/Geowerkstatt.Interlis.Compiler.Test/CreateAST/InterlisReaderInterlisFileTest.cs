@@ -120,7 +120,7 @@ public class InterlisReaderInterlisFileTest
         var classB = new ClassDef
         {
             Name = "B",
-            Extends = classA,
+            Extends = new Reference<ClassDef> { Target = classA, Path = { "A" } },
         };
 
         var baseTopic = new TopicDef
@@ -148,7 +148,7 @@ public class InterlisReaderInterlisFileTest
                                 new TopicDef
                                 {
                                     Name = "OtherTopic",
-                                    Extends = baseTopic,
+                                    Extends = new Reference<TopicDef> { Target = baseTopic, Path = { "Model", "BaseTopic" } },
                                 }
                             },
                             {
@@ -156,7 +156,7 @@ public class InterlisReaderInterlisFileTest
                                 new TopicDef
                                 {
                                     Name = "Topic",
-                                    Extends = baseTopic,
+                                    Extends = new Reference <TopicDef> { Target = baseTopic, Path = { "BaseTopic" } },
                                     Content =
                                     {
                                         { "A", classA },
@@ -177,7 +177,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new RoleType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                                                Targets = { new RestrictedRef { Target = classA } },
+                                                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classA, Path = { "A" } } } },
                                                             }
                                                         }
                                                     },
@@ -189,7 +189,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new RoleType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                                                Targets = { new RestrictedRef { Target = classB } },
+                                                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classB, Path = { "B" } } } },
                                                             }
                                                         }
                                                     },
@@ -248,13 +248,54 @@ public class InterlisReaderInterlisFileTest
     public void ReadFileAttributeTypeReferences()
     {
         // Text domain
-        var textDomain = new DomainDef { Name = "text", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
-        var text2Domain = new DomainDef { Name = "text2", TypeDef = new TypeRef { Extends = textDomain.TypeDef, Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound } } };
+        var textDomain = new DomainDef
+        {
+            Name = "text",
+            TypeDef = new TextType
+            {
+                Length = 12,
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
+            }
+        };
+        var text2Domain = new DomainDef
+        {
+            Name = "text2",
+            TypeDef = new TypeRef
+            {
+                Extends = new Reference<TypeDef> { Target = textDomain.TypeDef, Path = { "text" } },
+                Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound },
+            },
+        };
 
         // Oid domain
-        var yoloOidDomain = new DomainDef { Name = "yoloOid", TypeDef = new OidType { TypeDef = new OidAnyType(), Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
-        var itemIdDomain = new DomainDef { Name = "item_id", TypeDef = new OidType { TypeDef = new NumericType { Min = 100000, Max = 999999, Precision = 0 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
-        var basketIdDomain = new DomainDef { Name = "basket_id", TypeDef = new OidType { Extends = yoloOidDomain.TypeDef, TypeDef = new TextType { Length = 6 }, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } };
+        var yoloOidDomain = new DomainDef
+        {
+            Name = "yoloOid",
+            TypeDef = new OidType
+            {
+                TypeDef = new OidAnyType(),
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
+            }
+        };
+        var itemIdDomain = new DomainDef
+        {
+            Name = "item_id",
+            TypeDef = new OidType
+            {
+                TypeDef = new NumericType { Min = 100000, Max = 999999, Precision = 0 },
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
+            }
+        };
+        var basketIdDomain = new DomainDef
+        {
+            Name = "basket_id",
+            TypeDef = new OidType
+            {
+                Extends = new Reference<TypeDef> { Target = yoloOidDomain.TypeDef, Path = { "yoloOid" } },
+                TypeDef = new TextType { Length = 6 },
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
+            }
+        };
 
         // Enumeration domain
         var colorDomain = new DomainDef
@@ -276,7 +317,7 @@ public class InterlisReaderInterlisFileTest
             Name = "enhancedColor",
             TypeDef = new EnumerationType
             {
-                Extends = colorDomain.TypeDef,
+                Extends = new Reference<TypeDef> { Target = colorDomain.TypeDef, Path = { "color" } },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                 Values =
                 {
@@ -309,7 +350,7 @@ public class InterlisReaderInterlisFileTest
             Name = "superEnhancedColor",
             TypeDef = new EnumerationType
             {
-                Extends = enhancedColorDomain.TypeDef,
+                Extends = new Reference<TypeDef> { Target = enhancedColorDomain.TypeDef, Path = { "enhancedColor" } },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                 Values =
                 {
@@ -352,7 +393,7 @@ public class InterlisReaderInterlisFileTest
             TypeDef = new EnumerationAllOfType
             {
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                TargetEnumeration = (EnumerationType)superEnhancedColorDomain.TypeDef,
+                TargetEnumeration = new Reference<EnumerationType> { Target = (EnumerationType)superEnhancedColorDomain.TypeDef, Path = { "superEnhancedColor" } },
             }
         };
 
@@ -371,7 +412,7 @@ public class InterlisReaderInterlisFileTest
             Name = "surface",
             TypeDef = new SurfaceType
             {
-                VertexType = point3dDomain.TypeDef,
+                VertexType = new Reference<TypeDef> { Target = point3dDomain.TypeDef, Path = { "point3d" } },
                 OverlapTolerance = 0.0,
                 LineForm = { "STRAIGHTS" },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
@@ -414,8 +455,8 @@ public class InterlisReaderInterlisFileTest
                                 new TopicDef
                                 {
                                     Name = "TopicName",
-                                    BasketOidType = basketIdDomain.TypeDef,
-                                    OidType = itemIdDomain.TypeDef,
+                                    BasketOidType = new Reference<TypeDef> { Target = basketIdDomain.TypeDef, Path = { "basket_id" } },
+                                    OidType = new Reference<TypeDef> { Target = itemIdDomain.TypeDef, Path = { "item_id" } },
                                     Content =
                                     {
                                         { "point3d", point3dDomain },
@@ -426,7 +467,7 @@ public class InterlisReaderInterlisFileTest
                                             new ClassDef
                                             {
                                                 Name = "ClassName",
-                                                OidType = itemIdDomain.TypeDef,
+                                                OidType = new Reference<TypeDef> { Target = itemIdDomain.TypeDef, Path = { "item_id" } },
                                                 Content =
                                                 {
                                                     {
@@ -437,7 +478,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = text2Domain },
+                                                                Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = text2Domain, Path = { "text2" } } },
                                                             }
                                                         }
                                                     },
@@ -449,7 +490,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = point3dDomain },
+                                                                Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = point3dDomain, Path = { "point3d" } } },
                                                             }
                                                         }
                                                     },
@@ -462,7 +503,7 @@ public class InterlisReaderInterlisFileTest
                                                             {
                                                                 IsMultiGeometry = true,
                                                                 IsDirected = true,
-                                                                VertexType = point3dDomain.TypeDef,
+                                                                VertexType = new Reference<TypeDef> { Target = point3dDomain.TypeDef, Path = { "point3d" } },
                                                                 OverlapTolerance = 0.01,
                                                                 LineForm = { "STRAIGHTS", "ARCS" },
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -477,7 +518,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = surfaceDomain },
+                                                                Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = surfaceDomain, Path = { "surface" } } },
                                                             }
                                                         }
                                                     },
@@ -489,7 +530,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = structType },
+                                                                Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = structType, Path = { "structType" } } },
                                                             }
                                                         }
                                                     },
@@ -501,7 +542,11 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = structType, Restrictions = { structType } },
+                                                                Target = new RestrictedRef
+                                                                {
+                                                                    Value = new Reference<IInterlisDefinition> { Target = structType, Path = { "structType" } },
+                                                                    Restrictions = { new Reference<IInterlisDefinition> { Target = structType, Path = { "ModelName", "structType" } } }
+                                                                },
                                                             },
                                                         }
                                                     },
@@ -513,7 +558,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = null },
+                                                                Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ExternalClassName" } } },
                                                             },
                                                         }
                                                     },
@@ -525,7 +570,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new ReferenceType
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = person },
+                                                                Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = person, Path = { "Person" } } },
                                                             },
                                                         }
                                                     },
@@ -534,10 +579,10 @@ public class InterlisReaderInterlisFileTest
                                                         new AttributeDef
                                                         {
                                                             Name = "horizontalAlignment",
-                                                            TypeDef = new ReferenceType
+                                                            TypeDef = new TypeRef
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["HALIGNMENT"] },
+                                                                Extends = new Reference<TypeDef> { Target = ((DomainDef)Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["HALIGNMENT"]).TypeDef, Path = { "INTERLIS", "HALIGNMENT" } },
                                                             },
                                                         }
                                                     },
@@ -546,10 +591,10 @@ public class InterlisReaderInterlisFileTest
                                                         new AttributeDef
                                                         {
                                                             Name = "verticalAlignment",
-                                                            TypeDef = new ReferenceType
+                                                            TypeDef = new TypeRef
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Target = new RestrictedRef { Target = Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["VALIGNMENT"] },
+                                                                Extends = new Reference<TypeDef> { Target = ((DomainDef)Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["VALIGNMENT"]).TypeDef, Path = { "INTERLIS", "VALIGNMENT" } },
                                                             },
                                                         }
                                                     },
@@ -622,7 +667,7 @@ public class InterlisReaderInterlisFileTest
     public void ReadFileWithUnits()
     {
         var lengthUnit = new UnitDef { Name = "Length", Term = "Length" };
-        var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = lengthUnit };
+        var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = new Reference<UnitDef> { Target = lengthUnit, Path = { "Length" } } };
 
         var heightDomain = new DomainDef
         {
@@ -633,7 +678,7 @@ public class InterlisReaderInterlisFileTest
                 Max = 10,
                 Precision = -2,
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                Unit = meterUnit,
+                Unit = new Reference<UnitDef> { Target = meterUnit, Path = { "m" } },
             }
         };
 
@@ -753,6 +798,10 @@ public class InterlisReaderInterlisFileTest
     {
         expected.WithDeepEqual(actual)
             .IgnoreProperty<IInterlisDefinition>(d => d.Parent) // Ignore parent property to break circular references
+            .IgnoreProperty(p => p.DeclaringType.IsGenericType
+                    && typeof(Reference<object>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
+                    && (nameof(Reference<object>.Source).Equals(p.Name) // Ignore reference source to break circular references
+                        || nameof(Reference<object>.MapTarget).Equals(p.Name))) // Ignore Func property
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
             .Assert();
     }

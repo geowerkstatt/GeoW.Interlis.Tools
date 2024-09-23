@@ -7,5 +7,5 @@ public class NumericType : TypeDef
     public int? Precision { get; set; }
 
     public bool Circular { get; set; }
-    public UnitDef? Unit { get; set; }
+    public Reference<UnitDef>? Unit { get; set; }
 }

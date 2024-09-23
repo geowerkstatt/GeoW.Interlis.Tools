@@ -1,6 +1,7 @@
 ﻿using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Tools;
 using Geowerkstatt.Interlis.Tools.AST;
+using Geowerkstatt.Interlis.Tools.AST.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,10 @@ public class InterlisReaderTopicDefTest
                 {
                     Name = "Test_A",
                     DocComments = { "/** Doc-Comment */" },
-                    MetaAttributes = { { "key", "value" } }
+                    MetaAttributes = { { "key", "value" } },
+                    Extends = new Reference<TopicDef> { Path = { "Test_B" } },
+                    OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
+                    BasketOidType = new Reference<TypeDef> { Path = { "oidDomain" } },
                 });
     }
 

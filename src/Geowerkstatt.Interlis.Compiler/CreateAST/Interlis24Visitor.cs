@@ -13,7 +13,7 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 
 public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<object>
 {
-    internal List<UnresolvedReference> ReferencesToResolve { get; } = new List<UnresolvedReference>();
+    internal List<IUnresolvedReference> ReferencesToResolve { get; } = new List<IUnresolvedReference>();
     private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
     private IAntlrErrorListener<IToken> errorListener;
@@ -29,18 +29,19 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
     }
 
     /// <summary>
-    /// Add the <paramref name="referenceContext"/> to the references to resolve later.
-    /// When the reference is resolved, the <paramref name="setSource"/> action is called with the result.
+    /// Create a new <see cref="Reference{T}"/> from the given <paramref name="referenceContext"/>.
     /// </summary>
-    private void DeferredReference(Interlis24Parser.DefinitionRefContext referenceContext, Action<IInterlisDefinition>? setSource)
+    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class
     {
-        if (referenceContext != null)
+        var reference = referenceContext == null ? null : new Reference<T>
         {
-            var reference = VisitDefinitionRef(referenceContext);
-            reference.SetSource = setSource;
-            reference.Source = CurrentScope.Value;
-            ReferencesToResolve.Add(reference);
-        }
+            Path = { VisitDefinitionRef(referenceContext) },
+            Source = CurrentScope.Value,
+            MapTarget = mapTarget ?? (element => element as T),
+        };
+
+        ReferencesToResolve.AddIfNotNull(reference);
+        return reference;
     }
 
     /// <summary>
@@ -149,15 +150,14 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var topicDef = new TopicDef
         {
             Name = context.name.Text,
+            Extends = CreateReference<TopicDef>(context.extends),
+            OidType = CreateReference(context.oid, e => (e as DomainDef)?.TypeDef),
+            BasketOidType = CreateReference(context.basketOid, e => (e as DomainDef)?.TypeDef),
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
 
         using var scopeFrame = CurrentScope.NewFrame(topicDef);
-
-        DeferredReference(context.extends, e => topicDef.Extends = (TopicDef)e);
-        DeferredReference(context.oid, e => topicDef.OidType = ((DomainDef)e).TypeDef);
-        DeferredReference(context.basketOid, e => topicDef.BasketOidType = ((DomainDef)e).TypeDef);
 
         var elements = context
             .topicContents()
@@ -185,11 +185,10 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         {
             Name = context.name.Text,
             IsStructure = context.STRUCTURE() != null,
+            Extends = CreateReference<ClassDef>(context.extends),
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
-
-        DeferredReference(context.extends, e => classDef.Extends = (ClassDef)e);
 
         if (classDef.IsStructure && (context.oid != null || context.noOid != null))
         {
@@ -198,11 +197,11 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
         if (context.oid != null)
         {
-            DeferredReference(context.oid, e => classDef.OidType = ((DomainDef)e).TypeDef);
+            classDef.OidType = CreateReference(context.oid, e => (e as DomainDef)?.TypeDef);
         }
         else if (context.noOid != null)
         {
-            classDef.OidType = new OidType { TypeDef = OidType.NoOid };
+            classDef.OidType = new Reference<TypeDef> { Target = new OidType { TypeDef = OidType.NoOid } };
         }
 
         SetContentDictionary(classDef, classDef, context.name, VisitClassContent(context.classContent()));
@@ -233,18 +232,17 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var associationDef = new AssociationDef
         {
             Name = name,
+            Extends = CreateReference<AssociationDef>(context.extends),
             Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.Unbound },
         };
 
-        DeferredReference(context.extends, e => associationDef.Extends = (AssociationDef)e);
-
         if (context.oid != null)
         {
-            DeferredReference(context.oid, e => associationDef.OidType = ((DomainDef)e).TypeDef);
+            associationDef.OidType = CreateReference(context.oid, e => (e as DomainDef)?.TypeDef);
         }
         else if (context.noOid != null)
         {
-            associationDef.OidType = new OidType { TypeDef = OidType.NoOid };
+            associationDef.OidType = new Reference<TypeDef> { Target = new OidType { TypeDef = OidType.NoOid } };
         }
 
         SetContentDictionary(associationDef, associationDef, context.Start, roleDefs.Concat(attributeDefs).Concat(constraintDefs));
@@ -308,30 +306,16 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override RestrictedRef VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
     {
-        var target = VisitDefinitionRef(context.@ref);
-        var restrictions = context._restrictions.Select(VisitDefinitionRef).ToList();
-
-        var restrictedRef = new RestrictedRef();
-        target.SetSource = e => restrictedRef.Target = e;
-        target.Source = CurrentScope.Value;
-        ReferencesToResolve.Add(target);
-
-        foreach (var restriction in restrictions)
+        return new RestrictedRef
         {
-            restriction.SetSource = restrictedRef.Restrictions.Add;
-            restriction.Source = CurrentScope.Value;
-            ReferencesToResolve.Add(restriction);
-        }
-
-        return restrictedRef;
+            Value = CreateReference<IInterlisDefinition>(context.@ref),
+            Restrictions = { context._restrictions.Select(r => CreateReference<IInterlisDefinition>(r)).WhereNotNull() },
+        };
     }
 
-    public override UnresolvedReference VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
+    public override IEnumerable<string> VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
     {
-        return new UnresolvedReference
-        {
-            Target = { new[] { context.model?.Text, context.topic?.Text, context.name.Text }.WhereNotNull() },
-        };
+        return new[] { context.model?.Text, context.topic?.Text, context.name.Text }.WhereNotNull();
     }
 
     public override AttributeDef VisitAttributeDef([NotNull] Interlis24Parser.AttributeDefContext context)
@@ -420,6 +404,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var numericTypeDef = new NumericType()
         {
             Circular = context.CIRCULAR() != null,
+            Unit = CreateReference<UnitDef>(context.unit),
         };
 
         if (context.min != null)
@@ -449,8 +434,6 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
             numericTypeDef.Max = maxValue;
             numericTypeDef.Precision = minPrecision;
         }
-
-        DeferredReference(context.unit, e => numericTypeDef.Unit = (UnitDef)e);
 
         return numericTypeDef;
     }
@@ -528,12 +511,11 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
         var unit = new UnitDef
         {
             Name = shortName ?? term,
+            Extends = CreateReference<UnitDef>(context.extends),
             Term = term,
             DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
             MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
         };
-
-        DeferredReference(context.extends, e => unit.Extends = (UnitDef)e);
 
         return unit;
     }
@@ -552,7 +534,7 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
         var properties = VisitProperties(context.properties(), [Interlis24Parser.ABSTRACT, Interlis24Parser.GENERIC, Interlis24Parser.FINAL]);
 
-        DeferredReference(context.extends, e => type.Extends = ((DomainDef)e).TypeDef);
+        type.Extends = CreateReference(context.extends, e => (e as DomainDef)?.TypeDef);
 
         return new DomainDef
         {
@@ -590,15 +572,15 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override TypeDef VisitAlignmentType([NotNull] Interlis24Parser.AlignmentTypeContext context)
     {
-        var reference = new RestrictedRef();
-        ReferencesToResolve.Add(new UnresolvedReference
+        var reference = new Reference<TypeDef>
         {
-            Target = { "INTERLIS", context.GetText() },
+            Path = { "INTERLIS", context.GetText() },
             Source = CurrentScope.Value,
-            SetSource = e => reference.Target = e
-        });
+            MapTarget = e => (e as DomainDef)?.TypeDef,
+        };
 
-        return new ReferenceType { Target = reference };
+        ReferencesToResolve.Add(reference);
+        return new TypeRef { Extends = reference };
     }
 
     public override TypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
@@ -608,29 +590,25 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
         if (context.POLYLINE() != null || context.MULTIPOLYLINE() != null)
         {
-            var line = new PolyLineType
+            return new PolyLineType
             {
                 IsMultiGeometry = context.MULTIPOLYLINE() != null,
                 IsDirected = context.DIRECTED() != null,
                 OverlapTolerance = overlap,
                 LineForm = { lineForm },
+                VertexType = CreateReference(context.vertexType, e => (e as DomainDef)?.TypeDef),
             };
-
-            DeferredReference(context.vertexType, e => line.VertexType = ((DomainDef)e).TypeDef);
-            return line;
         }
         else
         {
-            var surface = new SurfaceType
+            return new SurfaceType
             {
                 IsMultiGeometry = context.MULTIAREA() != null || context.MULTISURFACE() != null,
                 IsCoverage = context.AREA() != null || context.MULTIAREA() != null,
                 OverlapTolerance = overlap,
                 LineForm = { lineForm },
+                VertexType = CreateReference(context.vertexType, e => (e as DomainDef)?.TypeDef),
             };
-
-            DeferredReference(context.vertexType, e => surface.VertexType = ((DomainDef)e).TypeDef);
-            return surface;
         }
     }
 
@@ -648,9 +626,10 @@ public sealed class Interlis24Visitor : ThrowingInterlis24ParserBaseVisitor<obje
 
     public override EnumerationAllOfType VisitEnumTreeValueType([NotNull] Interlis24Parser.EnumTreeValueTypeContext context)
     {
-        var enumerationAllOfType = new EnumerationAllOfType();
-        DeferredReference(context.definitionRef(), e => enumerationAllOfType.TargetEnumeration = (EnumerationType)((DomainDef)e).TypeDef);
-        return enumerationAllOfType;
+        return new EnumerationAllOfType
+        {
+            TargetEnumeration = CreateReference(context.definitionRef(), e => ((e as DomainDef)?.TypeDef) as EnumerationType),
+        };
     }
 
     public override EnumerationType VisitEnumerationType([NotNull] Interlis24Parser.EnumerationTypeContext context)

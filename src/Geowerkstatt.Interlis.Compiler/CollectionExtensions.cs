@@ -21,6 +21,17 @@ internal static class CollectionExtensions
     }
 
     /// <summary>
+    /// Add the <paramref name="element"/> to the <paramref name="collection"/> if it is not null.
+    /// </summary>
+    public static void AddIfNotNull<T>(this ICollection<T> collection, T? element) where T : class
+    {
+        if (element != null)
+        {
+            collection.Add(element);
+        }
+    }
+
+    /// <summary>
     /// Filters out null values in a way that makes the C# compiler happy.
     /// </summary>
     public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> collection) where T : class

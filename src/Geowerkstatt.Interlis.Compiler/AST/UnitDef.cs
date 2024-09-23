@@ -15,7 +15,7 @@ public class UnitDef : IAstElement, IInterlisDefinition, IDocumentation, IExtend
     public required string Name { get; init; }
     public IInterlisDefinitionContainer? Parent { get; set; }
 
-    public UnitDef? Extends { get; set; }
+    public Reference<UnitDef>? Extends { get; set; }
 
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();

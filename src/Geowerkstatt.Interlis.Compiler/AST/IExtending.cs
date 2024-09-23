@@ -6,5 +6,5 @@
 /// <typeparam name="T">The type of the object that is extended. Usually the same as the implementing type.</typeparam>
 public interface IExtending<T> where T : class
 {
-    T? Extends { get; set; }
+    Reference<T>? Extends { get; set; }
 }

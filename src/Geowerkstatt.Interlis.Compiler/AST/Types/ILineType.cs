@@ -2,7 +2,7 @@
 
 public interface ILineType
 {
-    public TypeDef? VertexType { get; set; }
+    public Reference<TypeDef>? VertexType { get; set; }
     public double? OverlapTolerance { get; set; }
 
     /// <summary>

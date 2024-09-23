@@ -24,6 +24,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "m",
                 Term = "Meter",
+                Extends = new Reference<UnitDef> { Path = { "Length" } },
             });
     }
 
@@ -46,6 +47,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "m2",
                 Term = "SquareMeter",
+                Extends = new Reference<UnitDef> { Path = { "Area" } },
             });
     }
 
