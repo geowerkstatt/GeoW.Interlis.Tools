@@ -7,7 +7,7 @@ using Geowerkstatt.Interlis.Tools.AST.Types;
 
 namespace Geowerkstatt.Interlis.Tools.AST;
 
-public sealed class AttributeDef : IAstElement, IInterlisDefinition, IDocumentation
+public sealed class AttributeDef : IInterlisDefinition, IDocumentation
 {
     public required string Name { get; init; }
     public string FullyQualifiedName => Parent != null ? $"{Parent.FullyQualifiedName} -> {Name}" : Name;

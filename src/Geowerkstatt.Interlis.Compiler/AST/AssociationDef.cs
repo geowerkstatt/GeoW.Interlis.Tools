@@ -2,7 +2,7 @@
 
 namespace Geowerkstatt.Interlis.Tools.AST;
 
-public class AssociationDef : IAstElement, IInterlisDefinitionContainer, IExtending<AssociationDef>
+public class AssociationDef : IInterlisDefinitionContainer, IExtending<AssociationDef>
 {
     public required string Name { get; init; }
     public IInterlisDefinitionContainer? Parent { get; set; } = null;

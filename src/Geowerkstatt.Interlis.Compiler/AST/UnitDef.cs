@@ -1,6 +1,6 @@
 ﻿namespace Geowerkstatt.Interlis.Tools.AST;
 
-public class UnitDef : IAstElement, IInterlisDefinition, IDocumentation, IExtending<UnitDef>
+public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
 {
     /// <summary>
     /// The term used to define the unit.

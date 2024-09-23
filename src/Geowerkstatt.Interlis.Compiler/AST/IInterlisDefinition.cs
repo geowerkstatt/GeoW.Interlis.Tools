@@ -3,7 +3,7 @@
 /// <summary>
 /// An INTERLIS object that can be referenced by its fully qualified name.
 /// </summary>
-public interface IInterlisDefinition
+public interface IInterlisDefinition : IAstElement
 {
     /// <summary>
     /// The name of this element.

@@ -8,7 +8,7 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitAssociationDef([NotNull] AssociationDef associationDef)
     {
-        foreach (var element in associationDef.Content.Values.OfType<IAstElement>())
+        foreach (var element in associationDef.Content.Values)
         {
             element.Accept(this);
         }
@@ -23,7 +23,7 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitClassDef([NotNull] ClassDef classDef)
     {
-        foreach (var element in classDef.Content.Values.OfType<IAstElement>())
+        foreach (var element in classDef.Content.Values)
         {
             element.Accept(this);
         }
@@ -38,7 +38,7 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile)
     {
-        foreach (var element in interlisFile.Content.Values.OfType<IAstElement>())
+        foreach (var element in interlisFile.Content.Values)
         {
             element.Accept(this);
         }
@@ -48,7 +48,7 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitModelDef([NotNull] ModelDef modelDef)
     {
-        foreach (var element in modelDef.Content.Values.OfType<IAstElement>())
+        foreach (var element in modelDef.Content.Values)
         {
             element.Accept(this);
         }
@@ -58,7 +58,7 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitTopicDef([NotNull] TopicDef topicDef)
     {
-        foreach (var element in topicDef.Content.Values.OfType<IAstElement>())
+        foreach (var element in topicDef.Content.Values)
         {
             element.Accept(this);
         }
