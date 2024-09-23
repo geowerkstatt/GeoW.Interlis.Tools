@@ -14,7 +14,7 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 /// <summary>
 /// Visitor that creates an Abstract-Syntax-Tree (AST) from the output of ANTLR.
 /// </summary>
-public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : ThrowingInterlis24ParserBaseVisitor<object>
+public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInterlis24ParserBaseVisitor<object>(loggerFactory)
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24Visitor>();
 
