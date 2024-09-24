@@ -785,6 +785,85 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
+    [TestMethod]
+    public void ReadFileWithFormattedType()
+    {
+        var structure = new ClassDef
+        {
+            Name = "Struct",
+            IsStructure = true,
+            Content =
+            {
+                {
+                    "Value",
+                    new AttributeDef
+                    {
+                        Name = "Value",
+                        TypeDef = new NumericType { Min = 0, Max = 90, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                    }
+                }
+            }
+        };
+
+        var formattedType = new FormattedType
+        {
+            Min = "[000]",
+            Max = "[090]",
+            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            BasedOn = new Reference<ClassDef> { Target = structure, Path = { "Struct" } },
+        };
+
+        var formattedType2 = new FormattedType
+        {
+            Min = "[012]",
+            Max = "[034]",
+            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            FormatBaseType = new Reference<FormattedType> { Target = formattedType, Path = { "Format" } },
+        };
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            { "Struct", structure },
+                            {
+                                "Format",
+                                new DomainDef { Name = "Format", TypeDef = formattedType }
+                            },
+                            {
+                                "Format2",
+                                new DomainDef { Name = "Format2", TypeDef = formattedType2 }
+                            },
+                        },
+                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                STRUCTURE Struct =
+                    Value : 0 .. 90;
+                END Struct;
+
+                DOMAIN
+                    Format = FORMAT BASED ON Struct ( "[" Value / 3 "]" ) "[000]" .. "[090]";
+                    Format2 = FORMAT Format "[012]" .. "[034]";
+            END ModelName.
+            """, expected);
+    }
+
     private static void AssertReadFile(string input, InterlisFile expected)
     {
         var actual = new InterlisReader().ReadFile(new StringReader(input));

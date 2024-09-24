@@ -452,6 +452,26 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return numericTypeDef;
     }
 
+    public override FormattedType VisitFormattedType([NotNull] Interlis24Parser.FormattedTypeContext context)
+    {
+        var type = new FormattedType
+        {
+            Min = context.min == null ? null : VisitString(context.min),
+            Max = context.max == null ? null : VisitString(context.max),
+        };
+
+        if (context.basedOn != null)
+        {
+            type.BasedOn = CreateReference<ClassDef>(context.basedOn);
+        }
+        else if (context.domainRef != null)
+        {
+            type.FormatBaseType = CreateReference(context.domainRef, d => (d as DomainDef)?.TypeDef as FormattedType);
+        }
+
+        return type;
+    }
+
     public override Tuple<double, int> VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
     {
         var number = context.EXP_NUMBER().Symbol.Text;
