@@ -129,6 +129,51 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadDateAttributeDef()
+    {
+        AssertReadRule("Attr : DATE;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new TypeRef
+                {
+                    Extends = new Reference<TypeDef> { Path = { "INTERLIS", "XMLDate" } },
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                },
+            });
+    }
+
+    [TestMethod]
+    public void ReadTimeAttributeDef()
+    {
+        AssertReadRule("Attr : TIMEOFDAY;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new TypeRef
+                {
+                    Extends = new Reference<TypeDef> { Path = { "INTERLIS", "XMLTime" } },
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                },
+            });
+    }
+
+    [TestMethod]
+    public void ReadDateTimeAttributeDef()
+    {
+        AssertReadRule("Attr : DATETIME;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new TypeRef
+                {
+                    Extends = new Reference<TypeDef> { Path = { "INTERLIS", "XMLDateTime" } },
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                },
+            });
+    }
+
+    [TestMethod]
     public void ReadAttributeDefComplete()
     {
         AssertReadRule("""

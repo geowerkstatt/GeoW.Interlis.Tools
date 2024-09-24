@@ -864,6 +864,89 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
+    [TestMethod]
+    public void ReadFileWithDateTime()
+    {
+        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+
+        var structure = new ClassDef
+        {
+            Name = "Struct",
+            IsStructure = true,
+            Content =
+            {
+                {
+                    "Date",
+                    new AttributeDef
+                    {
+                        Name = "Date",
+                        TypeDef = new TypeRef
+                        {
+                            Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDate"]).TypeDef, Path = { "INTERLIS", "XMLDate" } },
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                        }
+                    }
+                },
+                {
+                    "Time",
+                    new AttributeDef
+                    {
+                        Name = "Time",
+                        TypeDef = new TypeRef
+                        {
+                            Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLTime"]).TypeDef, Path = { "INTERLIS", "XMLTime" } },
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                        }
+                    }
+                },
+                {
+                    "DateTime",
+                    new AttributeDef
+                    {
+                        Name = "DateTime",
+                        TypeDef = new TypeRef
+                        {
+                            Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDateTime"]).TypeDef, Path = { "INTERLIS", "XMLDateTime" } },
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                        }
+                    }
+                },
+            }
+        };
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            { "Struct", structure },
+                        },
+                        Imports = { { "INTERLIS", (false, interlis) } }
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                STRUCTURE Struct =
+                    Date : DATE;
+                    Time : TIMEOFDAY;
+                    DateTime : DATETIME;
+                END Struct;
+            END ModelName.
+            """, expected);
+    }
+
     private static void AssertReadFile(string input, InterlisFile expected)
     {
         var actual = new InterlisReader().ReadFile(new StringReader(input));

@@ -238,9 +238,7 @@ baseAttrRef
     ;
 
 dateTimeType
-    : DATE
-    | TIMEOFDAY
-    | DATETIME
+    : kind=(DATE | TIMEOFDAY | DATETIME)
     ;
 
 coordinateType

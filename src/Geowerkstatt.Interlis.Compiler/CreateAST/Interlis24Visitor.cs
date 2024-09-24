@@ -472,6 +472,27 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return type;
     }
 
+    public override TypeDef VisitDateTimeType([NotNull] Interlis24Parser.DateTimeTypeContext context)
+    {
+        var domainName = context.kind.Type switch
+        {
+            Interlis24Parser.DATE => "XMLDate",
+            Interlis24Parser.TIMEOFDAY => "XMLTime",
+            Interlis24Parser.DATETIME => "XMLDateTime",
+            _ => throw new UnexpectedNodeException(context.kind),
+        };
+
+        var reference = new Reference<TypeDef>
+        {
+            Path = { "INTERLIS", domainName },
+            Source = CurrentScope.Value,
+            MapTarget = e => (e as DomainDef)?.TypeDef,
+        };
+
+        ReferencesToResolve.Add(reference);
+        return new TypeRef { Extends = reference };
+    }
+
     public override Tuple<double, int> VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
     {
         var number = context.EXP_NUMBER().Symbol.Text;
