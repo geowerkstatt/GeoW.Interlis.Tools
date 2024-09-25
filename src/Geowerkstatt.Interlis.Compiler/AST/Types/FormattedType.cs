@@ -2,8 +2,8 @@
 
 public class FormattedType : TypeDef
 {
-    public Reference<ClassDef>? BasedOn { get; set; }
-    public Reference<FormattedType>? FormatBaseType { get; set; }
+    public Reference<ClassDef>? BasedOn { get; init; }
+    public Reference<FormattedType>? FormatBaseType { get; init; }
     public string? Min { get; init; }
     public string? Max { get; init; }
 }

@@ -454,22 +454,13 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
 
     public override FormattedType VisitFormattedType([NotNull] Interlis24Parser.FormattedTypeContext context)
     {
-        var type = new FormattedType
+        return new FormattedType
         {
             Min = context.min == null ? null : VisitString(context.min),
             Max = context.max == null ? null : VisitString(context.max),
+            BasedOn = CreateReference<ClassDef>(context.basedOn),
+            FormatBaseType = CreateReference(context.domainRef, d => (d as DomainDef)?.TypeDef as FormattedType),
         };
-
-        if (context.basedOn != null)
-        {
-            type.BasedOn = CreateReference<ClassDef>(context.basedOn);
-        }
-        else if (context.domainRef != null)
-        {
-            type.FormatBaseType = CreateReference(context.domainRef, d => (d as DomainDef)?.TypeDef as FormattedType);
-        }
-
-        return type;
     }
 
     public override TypeDef VisitDateTimeType([NotNull] Interlis24Parser.DateTimeTypeContext context)
