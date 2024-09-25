@@ -29,6 +29,43 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         var unitSoidAngle = new UnitDef { Name = "SOLID_ANGLE", Term = "SOLID_ANGLE" };
         var unitLuminousIntensity = new UnitDef { Name = "LUMINOUS_INTENSITY", Term = "LUMINOUS_INTENSITY" };
 
+        var timeOfDay = new ClassDef
+        {
+            Name = "TimeOfDay",
+            IsStructure = true,
+        };
+        var utc = new ClassDef
+        {
+            Name = "UTC",
+            IsStructure = true,
+            Extends = new Reference<ClassDef> { Target = timeOfDay },
+        };
+        var gregorianDate = new ClassDef
+        {
+            Name = "GregorianDate",
+            IsStructure = true,
+        };
+        var gregorianDateTime = new ClassDef
+        {
+            Name = "GregorianDateTime",
+            IsStructure = true,
+            Extends = new Reference<ClassDef> { Target = gregorianDate },
+        };
+
+        var xmlDate = new FormattedType
+        {
+            BasedOn = new Reference<ClassDef> { Target = gregorianDate },
+        };
+        var xmlTime = new FormattedType
+        {
+            BasedOn = new Reference<ClassDef> { Target = utc },
+        };
+        var xmlDateTime = new FormattedType
+        {
+            Extends = new Reference<TypeDef> { Target = xmlDate },
+            BasedOn = new Reference<ClassDef> { Target = gregorianDateTime },
+        };
+
         InternalInterlisModel = new ModelDef
         {
             Name = "INTERLIS",
@@ -152,6 +189,13 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                 { "d", new UnitDef { Name = "d", Term = "Day" } },
                 { "M", new UnitDef { Name = "M", Term = "Month" } },
                 { "Y", new UnitDef { Name = "Y", Term = "Year" } },
+                { "TimeOfDay", timeOfDay },
+                { "UTC", utc },
+                { "GregorianDate", gregorianDate },
+                { "GregorianDateTime", gregorianDateTime },
+                { "XMLDate", new DomainDef { Name = "XMLDate", TypeDef = xmlDate } },
+                { "XMLTime", new DomainDef { Name = "XMLTime", TypeDef = xmlTime } },
+                { "XMLDateTime", new DomainDef { Name = "XMLDateTime", TypeDef = xmlDateTime } },
             }
         };
     }

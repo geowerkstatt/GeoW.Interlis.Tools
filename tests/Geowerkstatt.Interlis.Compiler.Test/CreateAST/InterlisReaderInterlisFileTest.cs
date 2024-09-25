@@ -785,6 +785,169 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
+    [TestMethod]
+    public void ReadFileWithFormattedType()
+    {
+        var structure = new ClassDef
+        {
+            Name = "Struct",
+            IsStructure = true,
+            Content =
+            {
+                {
+                    "Value",
+                    new AttributeDef
+                    {
+                        Name = "Value",
+                        TypeDef = new NumericType { Min = 0, Max = 90, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                    }
+                }
+            }
+        };
+
+        var formattedType = new FormattedType
+        {
+            Min = "[000]",
+            Max = "[090]",
+            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            BasedOn = new Reference<ClassDef> { Target = structure, Path = { "Struct" } },
+        };
+
+        var formattedType2 = new FormattedType
+        {
+            Min = "[012]",
+            Max = "[034]",
+            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            FormatBaseType = new Reference<FormattedType> { Target = formattedType, Path = { "Format" } },
+        };
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            { "Struct", structure },
+                            {
+                                "Format",
+                                new DomainDef { Name = "Format", TypeDef = formattedType }
+                            },
+                            {
+                                "Format2",
+                                new DomainDef { Name = "Format2", TypeDef = formattedType2 }
+                            },
+                        },
+                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                    }
+                }
+            }
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                STRUCTURE Struct =
+                    Value : 0 .. 90;
+                END Struct;
+
+                DOMAIN
+                    Format = FORMAT BASED ON Struct ( "[" Value / 3 "]" ) "[000]" .. "[090]";
+                    Format2 = FORMAT Format "[012]" .. "[034]";
+            END ModelName.
+            """, expected);
+    }
+
+    [TestMethod]
+    public void ReadFileWithDateTime()
+    {
+        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            {
+                                "Struct",
+                                new ClassDef
+                                {
+                                    Name = "Struct",
+                                    IsStructure = true,
+                                    Content =
+                                    {
+                                        {
+                                            "Date",
+                                            new AttributeDef
+                                            {
+                                                Name = "Date",
+                                                TypeDef = new TypeRef
+                                                {
+                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDate"]).TypeDef, Path = { "INTERLIS", "XMLDate" } },
+                                                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                },
+                                            }
+                                        },
+                                        {
+                                            "Time",
+                                            new AttributeDef
+                                            {
+                                                Name = "Time",
+                                                TypeDef = new TypeRef
+                                                {
+                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLTime"]).TypeDef, Path = { "INTERLIS", "XMLTime" } },
+                                                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                },
+                                            }
+                                        },
+                                        {
+                                            "DateTime",
+                                            new AttributeDef
+                                            {
+                                                Name = "DateTime",
+                                                TypeDef = new TypeRef
+                                                {
+                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDateTime"]).TypeDef, Path = { "INTERLIS", "XMLDateTime" } },
+                                                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                },
+                                            }
+                                        },
+                                    },
+                                }
+                            },
+                        },
+                        Imports = { { "INTERLIS", (false, interlis) } }
+                    }
+                }
+            },
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                STRUCTURE Struct =
+                    Date : DATE;
+                    Time : TIMEOFDAY;
+                    DateTime : DATETIME;
+                END Struct;
+            END ModelName.
+            """, expected);
+    }
+
     private static void AssertReadFile(string input, InterlisFile expected)
     {
         var actual = new InterlisReader().ReadFile(new StringReader(input));

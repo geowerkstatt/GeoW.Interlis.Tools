@@ -222,8 +222,8 @@ numericConst
 
 formattedType
     : FORMAT (
-        BASED ON definitionRef formatDef (min=string '..' max=string)?
-        | definitionRef min=string '..' max=string
+        BASED ON basedOn=definitionRef formatDef (min=string '..' max=string)?
+        | domainRef=definitionRef min=string '..' max=string
     )
     | min=string '..' max=string
     ;
@@ -238,9 +238,7 @@ baseAttrRef
     ;
 
 dateTimeType
-    : DATE
-    | TIMEOFDAY
-    | DATETIME
+    : kind=(DATE | TIMEOFDAY | DATETIME)
     ;
 
 coordinateType
