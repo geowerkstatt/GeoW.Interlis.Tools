@@ -20,7 +20,7 @@ public class InterlisReaderFormattedTypeTest
     [TestMethod]
     public void ReadMinMaxOfDomain()
     {
-        AssertReadRule("FORMAT INTERLIS.XMLDateTime \"2000-01-01T00:00:00.000\" .. \"2000-12-31T23:59:59.999\";",
+        AssertReadRule("""FORMAT INTERLIS.XMLDateTime "2000-01-01T00:00:00.000" .. "2000-12-31T23:59:59.999";""",
             new FormattedType
             {
                 Min = "2000-01-01T00:00:00.000",
@@ -32,7 +32,7 @@ public class InterlisReaderFormattedTypeTest
     [TestMethod]
     public void ReadFormatBasedOn()
     {
-        AssertReadRule("FORMAT BASED ON GregorianDate ( Year/4 \"-\" Month/2 \"-\" Day/2 );",
+        AssertReadRule("""FORMAT BASED ON GregorianDate ( Year/4 "-" Month/2 "-" Day/2 );""",
             new FormattedType
             {
                 BasedOn = new Reference<ClassDef> { Path = { "GregorianDate" } },

@@ -869,51 +869,6 @@ public class InterlisReaderInterlisFileTest
     {
         var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
 
-        var structure = new ClassDef
-        {
-            Name = "Struct",
-            IsStructure = true,
-            Content =
-            {
-                {
-                    "Date",
-                    new AttributeDef
-                    {
-                        Name = "Date",
-                        TypeDef = new TypeRef
-                        {
-                            Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDate"]).TypeDef, Path = { "INTERLIS", "XMLDate" } },
-                            Cardinality = new Cardinality { Min = 0, Max = 1 },
-                        }
-                    }
-                },
-                {
-                    "Time",
-                    new AttributeDef
-                    {
-                        Name = "Time",
-                        TypeDef = new TypeRef
-                        {
-                            Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLTime"]).TypeDef, Path = { "INTERLIS", "XMLTime" } },
-                            Cardinality = new Cardinality { Min = 0, Max = 1 },
-                        }
-                    }
-                },
-                {
-                    "DateTime",
-                    new AttributeDef
-                    {
-                        Name = "DateTime",
-                        TypeDef = new TypeRef
-                        {
-                            Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDateTime"]).TypeDef, Path = { "INTERLIS", "XMLDateTime" } },
-                            Cardinality = new Cardinality { Min = 0, Max = 1 },
-                        }
-                    }
-                },
-            }
-        };
-
         var expected = new InterlisFile
         {
             Content =
@@ -927,12 +882,58 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Content =
                         {
-                            { "Struct", structure },
+                            {
+                                "Struct",
+                                new ClassDef
+                                {
+                                    Name = "Struct",
+                                    IsStructure = true,
+                                    Content =
+                                    {
+                                        {
+                                            "Date",
+                                            new AttributeDef
+                                            {
+                                                Name = "Date",
+                                                TypeDef = new TypeRef
+                                                {
+                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDate"]).TypeDef, Path = { "INTERLIS", "XMLDate" } },
+                                                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                },
+                                            }
+                                        },
+                                        {
+                                            "Time",
+                                            new AttributeDef
+                                            {
+                                                Name = "Time",
+                                                TypeDef = new TypeRef
+                                                {
+                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLTime"]).TypeDef, Path = { "INTERLIS", "XMLTime" } },
+                                                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                },
+                                            }
+                                        },
+                                        {
+                                            "DateTime",
+                                            new AttributeDef
+                                            {
+                                                Name = "DateTime",
+                                                TypeDef = new TypeRef
+                                                {
+                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDateTime"]).TypeDef, Path = { "INTERLIS", "XMLDateTime" } },
+                                                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                },
+                                            }
+                                        },
+                                    },
+                                }
+                            },
                         },
                         Imports = { { "INTERLIS", (false, interlis) } }
                     }
                 }
-            }
+            },
         };
 
         AssertReadFile("""
