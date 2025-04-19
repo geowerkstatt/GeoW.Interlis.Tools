@@ -948,15 +948,17 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
-    private static void AssertReadFile(string input, InterlisFile expected)
+    internal static void AssertReadFile(string input, InterlisFile expected)
     {
-        var actual = new InterlisReader().ReadFile(new StringReader(input));
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
         AssertDeepEqual(expected, actual);
     }
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
     {
-        var (actual, _) = new InterlisReader().ReadRule(new StringReader(input), parseRule);
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
         Assert.IsInstanceOfType(actual, expected?.GetType());
         AssertDeepEqual(expected, actual);
     }
