@@ -76,9 +76,9 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
     }
 
-    private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinitionContainer? parent, IToken token, IEnumerable<T> elements) where T : IInterlisDefinition
+    private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinitionContainer? parent, IToken token, IEnumerable<T> elements) where T : class, IInterlisDefinition
     {
-        foreach (var element in elements)
+        foreach (var element in elements.WhereNotNull())
         {
             element.Parent = parent;
             if (!container.Content.TryAdd(element.Name, element))
@@ -395,7 +395,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         {
             return new TextType
             {
-                Length = int.Parse(context.maxLength.Text),
+                Length = context.maxLength != null ? int.Parse(context.maxLength.Text) : null,
                 IsMText = context.MTEXT() != null,
             };
         }

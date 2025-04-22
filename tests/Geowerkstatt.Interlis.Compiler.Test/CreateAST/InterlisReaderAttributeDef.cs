@@ -18,6 +18,17 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadTextAttributeDefWithoutLength()
+    {
+        AssertReadRule("Attr : TEXT;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new TextType { Length = null, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
     public void ReadNumericAttributeDef()
     {
         AssertReadRule("Attr : 000..999;",
@@ -32,6 +43,17 @@ public class InterlisReaderAttributeDef
     public void ReadBooleanAttributeDef()
     {
         AssertReadRule("Attr : BOOLEAN;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new BooleanType { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
+    public void ReadQualifiedBooleanAttributeDef()
+    {
+        AssertReadRule("Attr : INTERLIS.BOOLEAN;",
             new AttributeDef
             {
                 Name = "Attr",
