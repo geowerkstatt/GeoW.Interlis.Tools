@@ -40,6 +40,17 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadQualifiedBooleanAttributeDef()
+    {
+        AssertReadRule("Attr : INTERLIS.BOOLEAN;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new BooleanType { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
     public void ReadCoordAttributeDef()
     {
         AssertReadRule("Attr : COORD 0..100, 0..100;",

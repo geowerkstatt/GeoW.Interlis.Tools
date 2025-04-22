@@ -194,7 +194,7 @@ alignmentType
     ;
 
 booleanType
-    : BOOLEAN
+    : (INTERLIS '.')? BOOLEAN
     ;
 
 numericType
