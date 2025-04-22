@@ -18,6 +18,17 @@ public class InterlisReaderAttributeDef
     }
 
     [TestMethod]
+    public void ReadTextAttributeDefWithoutLength()
+    {
+        AssertReadRule("Attr : TEXT;",
+            new AttributeDef
+            {
+                Name = "Attr",
+                TypeDef = new TextType { Length = null, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+            });
+    }
+
+    [TestMethod]
     public void ReadNumericAttributeDef()
     {
         AssertReadRule("Attr : 000..999;",

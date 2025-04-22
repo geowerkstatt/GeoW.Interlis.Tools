@@ -395,7 +395,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         {
             return new TextType
             {
-                Length = int.Parse(context.maxLength.Text),
+                Length = context.maxLength != null ? int.Parse(context.maxLength.Text) : null,
                 IsMText = context.MTEXT() != null,
             };
         }
