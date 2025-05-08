@@ -9,6 +9,8 @@ public class AssociationDef : IInterlisDefinitionContainer, IExtending<Associati
 
     public Reference<AssociationDef>? Extends { get; set; }
 
+    public HashSet<Property> Properties { get; } = new HashSet<Property>();
+
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
 
     /// <inheritdoc />

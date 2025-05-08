@@ -13,6 +13,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Length",
                 Term = "Length",
+                Properties = { Property.Abstract },
             });
     }
 
@@ -36,6 +37,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Area",
                 Term = "Area",
+                Properties = { Property.Abstract },
             });
     }
 
@@ -74,6 +76,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Temperature",
                 Term = "Temperature",
+                Properties = { Property.Abstract },
                 DocComments = { "/** Base unit for all temperatures. */" },
                 MetaAttributes = { { "meta", "value" } },
             });

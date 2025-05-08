@@ -19,15 +19,15 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
 
     static Interlis24AstReferenceResolverVisitor()
     {
-        var unitLength = new UnitDef { Name = "LENGTH", Term = "LENGTH" };
-        var unitMass = new UnitDef { Name = "MASS", Term = "MASS" };
-        var unitTime = new UnitDef { Name = "TIME", Term = "TIME" };
-        var unitElectricCurrent = new UnitDef { Name = "ELECTRIC_CURRENT", Term = "ELECTRIC_CURRENT" };
-        var unitTemperature = new UnitDef { Name = "TEMPERATURE", Term = "TEMPERATURE" };
-        var unitAmountOfMatter = new UnitDef { Name = "AMOUNT_OF_MATTER", Term = "AMOUNT_OF_MATTER" };
-        var unitAngle = new UnitDef { Name = "ANGLE", Term = "ANGLE" };
-        var unitSoidAngle = new UnitDef { Name = "SOLID_ANGLE", Term = "SOLID_ANGLE" };
-        var unitLuminousIntensity = new UnitDef { Name = "LUMINOUS_INTENSITY", Term = "LUMINOUS_INTENSITY" };
+        var unitLength = new UnitDef { Name = "LENGTH", Term = "LENGTH", Properties = { Property.Abstract } };
+        var unitMass = new UnitDef { Name = "MASS", Term = "MASS", Properties = { Property.Abstract } };
+        var unitTime = new UnitDef { Name = "TIME", Term = "TIME", Properties = { Property.Abstract } };
+        var unitElectricCurrent = new UnitDef { Name = "ELECTRIC_CURRENT", Term = "ELECTRIC_CURRENT", Properties = { Property.Abstract } };
+        var unitTemperature = new UnitDef { Name = "TEMPERATURE", Term = "TEMPERATURE", Properties = { Property.Abstract } };
+        var unitAmountOfMatter = new UnitDef { Name = "AMOUNT_OF_MATTER", Term = "AMOUNT_OF_MATTER", Properties = { Property.Abstract } };
+        var unitAngle = new UnitDef { Name = "ANGLE", Term = "ANGLE", Properties = { Property.Abstract } };
+        var unitSolidAngle = new UnitDef { Name = "SOLID_ANGLE", Term = "SOLID_ANGLE", Properties = { Property.Abstract } };
+        var unitLuminousIntensity = new UnitDef { Name = "LUMINOUS_INTENSITY", Term = "LUMINOUS_INTENSITY", Properties = { Property.Abstract } };
 
         var timeOfDay = new ClassDef
         {
@@ -71,8 +71,8 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
             Name = "INTERLIS",
             Content =
             {
-                { "ANYUNIT", new UnitDef { Name = "ANYUNIT", Term = "ANYUNIT" } },
-                { "DIMENSIONLESS", new UnitDef { Name = "DIMENSIONLESS", Term = "DIMENSIONLESS" } },
+                { "ANYUNIT", new UnitDef { Name = "ANYUNIT", Term = "ANYUNIT", Properties = { Property.Abstract } } },
+                { "DIMENSIONLESS", new UnitDef { Name = "DIMENSIONLESS", Term = "DIMENSIONLESS", Properties = { Property.Abstract } } },
                 { "LENGTH", unitLength },
                 { "MASS", unitMass },
                 { "TIME", unitTime },
@@ -80,9 +80,9 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                 { "TEMPERATURE", unitTemperature },
                 { "AMOUNT_OF_MATTER", unitAmountOfMatter },
                 { "ANGLE", unitAngle },
-                { "SOLID_ANGLE", unitSoidAngle },
+                { "SOLID_ANGLE", unitSolidAngle },
                 { "LUMINOUS_INTENSITY", unitLuminousIntensity },
-                { "MONEY", new UnitDef { Name = "MONEY", Term = "MONEY" } },
+                { "MONEY", new UnitDef { Name = "MONEY", Term = "MONEY", Properties = { Property.Abstract } } },
 
                 { "m", new UnitDef { Name = "m", Term = "METER", Extends = new Reference<UnitDef> { Target = unitLength } } },
                 { "kg", new UnitDef { Name = "kg", Term = "KILOGRAM", Extends = new Reference<UnitDef> { Target = unitMass } } },
@@ -91,13 +91,14 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                 { "K", new UnitDef { Name = "K", Term = "DEGREE_KELVIN", Extends = new Reference<UnitDef> { Target = unitTemperature } } },
                 { "mol", new UnitDef { Name = "mol", Term = "MOLE", Extends = new Reference<UnitDef> { Target = unitAmountOfMatter } } },
                 { "rad", new UnitDef { Name = "rad", Term = "RADIAN", Extends = new Reference<UnitDef> { Target = unitAngle } } },
-                { "sr", new UnitDef { Name = "sr", Term = "STERADIAN", Extends = new Reference<UnitDef> { Target = unitSoidAngle } } },
+                { "sr", new UnitDef { Name = "sr", Term = "STERADIAN", Extends = new Reference<UnitDef> { Target = unitSolidAngle } } },
                 { "cd", new UnitDef { Name = "cd", Term = "CANDELA", Extends = new Reference<UnitDef> { Target = unitLuminousIntensity } } },
                 {
                     "URI",
                     new DomainDef
                     {
                         Name = "URI",
+                        Properties = { Property.Final },
                         TypeDef = new TextType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -110,6 +111,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                     new DomainDef
                     {
                         Name = "NAME",
+                        Properties = { Property.Final },
                         TypeDef = new TextType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -122,6 +124,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                     new DomainDef
                     {
                         Name = "INTERLIS_1_DATE",
+                        Properties = { Property.Final },
                         TypeDef = new TextType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -134,6 +137,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                     new DomainDef
                     {
                         Name = "BOOLEAN",
+                        Properties = { Property.Final },
                         TypeDef = new EnumerationType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -151,6 +155,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                     new DomainDef
                     {
                         Name = "HALIGNMENT",
+                        Properties = { Property.Final },
                         TypeDef = new EnumerationType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -169,6 +174,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                     new DomainDef
                     {
                         Name = "VALIGNMENT",
+                        Properties = { Property.Final },
                         TypeDef = new EnumerationType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = 1 },

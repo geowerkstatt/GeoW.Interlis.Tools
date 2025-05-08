@@ -9,6 +9,8 @@ public sealed class TopicDef : IDocumentation, IExtending<TopicDef>, IInterlisDe
 
     public Reference<TopicDef>? Extends { get; set; }
 
+    public HashSet<Property> Properties { get; } = new HashSet<Property>();
+
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
 
     public IList<string> DocComments { get; } = new List<string>();

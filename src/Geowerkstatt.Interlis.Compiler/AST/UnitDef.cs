@@ -20,6 +20,8 @@ public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
+    public HashSet<Property> Properties { get; } = new HashSet<Property>();
+
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {
         return visitor.VisitUnitDef(this);

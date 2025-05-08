@@ -12,6 +12,8 @@ public sealed class AttributeDef : IInterlisDefinition, IDocumentation
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
     public required TypeDef TypeDef { get; init; }
 
+    public HashSet<Property> Properties { get; } = new HashSet<Property>();
+
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {
         return visitor.VisitAttributeDef(this);

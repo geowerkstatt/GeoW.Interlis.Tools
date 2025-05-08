@@ -12,6 +12,8 @@ public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDe
 
     public Reference<ClassDef>? Extends { get; set; }
 
+    public HashSet<Property> Properties { get; } = new HashSet<Property>();
+
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
 
     /// <inheritdoc />

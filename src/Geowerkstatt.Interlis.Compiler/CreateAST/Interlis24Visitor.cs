@@ -182,6 +182,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             BasketOidType = CreateReference(context.basketOid, e => (e as DomainDef)?.TypeDef),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
 
         using var scopeFrame = CurrentScope.NewFrame(topicDef);
@@ -215,6 +216,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Extends = CreateReference<ClassDef>(context.extends),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
 
         if (classDef.IsStructure && (context.oid != null || context.noOid != null))
@@ -261,6 +263,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Name = name,
             Extends = CreateReference<AssociationDef>(context.extends),
             Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            Properties = { properties },
         };
 
         if (context.oid != null)
@@ -318,6 +321,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = target,
+            Properties = { properties },
         };
     }
 
@@ -328,6 +332,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new ReferenceType
         {
             Target = VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()),
+            Properties = { properties },
         };
     }
 
@@ -355,6 +360,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = VisitAttrTypeDef(context.attrTypeDef()),
+            Properties = { properties },
         };
     }
 
@@ -582,6 +588,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         var term = context.unitTerm.Text;
         var shortName = context.unitShortName?.Text;
+        List<Property> properties = context.ABSTRACT() != null ? [Property.Abstract] : [];
 
         var unit = new UnitDef
         {
@@ -590,6 +597,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Term = term,
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
 
         return unit;
@@ -617,6 +625,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             TypeDef = type,
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
     }
 
@@ -874,17 +883,17 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     }
 
     /// <summary>
-    /// Get a collection of <see cref="IToken.Type"/> from the <see cref="Interlis24Parser.PropertiesContext"/>.
+    /// Get a collection of <see cref="Property"/> from the <see cref="Interlis24Parser.PropertiesContext"/>.
     /// </summary>
-    private HashSet<int> VisitProperties(Interlis24Parser.PropertiesContext context, int[] allowedProperties)
+    private HashSet<Property> VisitProperties(Interlis24Parser.PropertiesContext context, int[] allowedProperties)
     {
-        var result = new HashSet<int>();
+        var result = new HashSet<Property>();
         if (context == null) return result;
 
         var properties = VisitProperties(context);
         foreach (var property in properties)
         {
-            if (!result.Add(property.Type))
+            if (!result.Add((Property)property.Type))
             {
                 ReportError(property, $"Duplicate property {property.Text}");
             }

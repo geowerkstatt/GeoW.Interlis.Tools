@@ -561,6 +561,7 @@ public class InterlisReaderInterlisFileTest
                                                             Name = "externalReference",
                                                             TypeDef = new ReferenceType
                                                             {
+                                                                Properties = { Property.External },
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                                 Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ExternalClassName" } } },
                                                             },
@@ -670,7 +671,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithUnits()
     {
-        var lengthUnit = new UnitDef { Name = "Length", Term = "Length" };
+        var lengthUnit = new UnitDef { Name = "Length", Term = "Length", Properties = { Property.Abstract } };
         var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = new Reference<UnitDef> { Target = lengthUnit, Path = { "Length" } } };
 
         var heightDomain = new DomainDef
