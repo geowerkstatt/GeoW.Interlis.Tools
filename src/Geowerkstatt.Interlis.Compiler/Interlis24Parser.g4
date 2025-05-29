@@ -60,7 +60,14 @@ topicContents
     ;
 
 definitionRef
-    : (model=(IDENTIFIER | INTERLIS) '.' ( topic=IDENTIFIER '.')?)? name=IDENTIFIER
+    : (model=(IDENTIFIER | INTERLIS) '.' ( topic=IDENTIFIER '.')?)? name=(
+        IDENTIFIER
+        | URI
+        | NAME
+        | HALIGNMENT
+        | VALIGNMENT
+        | METAOBJECT
+    )
     ;
 
 classDef
