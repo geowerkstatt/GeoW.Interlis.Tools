@@ -481,7 +481,7 @@ viewDef
     : VIEW name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ (
         formationDef
         | EXTENDS definitionRef
-    )? (baseExtensionDef)* (selection)* EQUAL_SIGN (viewAttributes)? (constraintDef)* END endName=IDENTIFIER SEMICOLON
+    )? (baseExtensionDef)* (selection)* EQUAL_SIGN viewAttributes (constraintDef)* END endName=IDENTIFIER SEMICOLON
     ;
 
 formationDef
@@ -525,7 +525,7 @@ viewAttributes
         ALL OF base=IDENTIFIER SEMICOLON
         | attributeDef
         | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON
-    )+
+    )*
     ;
 
 graphicDef
