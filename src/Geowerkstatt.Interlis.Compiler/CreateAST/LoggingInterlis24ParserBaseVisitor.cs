@@ -8,14 +8,9 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 /// <summary>
 /// Base visitor that throws a <see cref="NotImplementedException"/> for all rule visit methods.
 /// </summary>
-public class LoggingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVisitor<TResult>, IInterlis24ParserVisitor<TResult>
+public class LoggingInterlis24ParserBaseVisitor<TResult>(ILoggerFactory loggerFactory) : AbstractParseTreeVisitor<TResult>, IInterlis24ParserVisitor<TResult>
 {
-    private readonly ILogger logger;
-
-    public LoggingInterlis24ParserBaseVisitor(ILoggerFactory loggerFactory)
-    {
-        logger = loggerFactory.CreateLogger(GetType());
-    }
+    private readonly ILogger logger = loggerFactory.CreateLogger<LoggingInterlis24ParserBaseVisitor<TResult>>();
 
     /// <summary>
     /// Throws a <see cref="NotImplementedException"/> with some additional information.
@@ -333,7 +328,12 @@ public class LoggingInterlis24ParserBaseVisitor<TResult> : AbstractParseTreeVisi
         return LogNotImplementedWarning(context);
     }
 
-    public virtual TResult VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)
+    public virtual TResult VisitMetaComment([NotNull] Interlis24Parser.MetaCommentContext context)
+    {
+        return LogNotImplementedWarning(context);
+    }
+
+    public virtual TResult VisitMetaComments([NotNull] Interlis24Parser.MetaCommentsContext context)
     {
         return LogNotImplementedWarning(context);
     }

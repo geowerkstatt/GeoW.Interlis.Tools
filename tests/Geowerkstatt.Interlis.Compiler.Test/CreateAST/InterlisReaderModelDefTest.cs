@@ -90,7 +90,7 @@ public class InterlisReaderModelDefTest
             END Test.
             """);
 
-        Assert.AreEqual("Compile error at line 1:0 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.", logs.FirstOrDefault());
+        Assert.AreEqual("Compile error at line 3:0 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.", logs.FirstOrDefault());
     }
 
     private void AssertReadRule(string input, object? expected)

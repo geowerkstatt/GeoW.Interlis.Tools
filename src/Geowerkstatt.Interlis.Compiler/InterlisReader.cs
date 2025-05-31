@@ -44,11 +44,12 @@ public class InterlisReader
         interlisLexer.RemoveErrorListeners();
         interlisLexer.AddErrorListener(new ILoggerLexerErrorListener(loggerFactory));
 
-        var interlisParser = new Interlis24Parser(new CommonTokenStream(interlisLexer));
+        var tokenStream = new CommonTokenStream(interlisLexer);
+        var interlisParser = new Interlis24Parser(tokenStream);
         interlisParser.RemoveErrorListeners();
         interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
 
-        var visitor = new Interlis24Visitor(loggerFactory);
+        var visitor = new Interlis24Visitor(loggerFactory, tokenStream);
         return (parseRule(interlisParser, visitor), visitor.ReferencesToResolve);
     }
 }
