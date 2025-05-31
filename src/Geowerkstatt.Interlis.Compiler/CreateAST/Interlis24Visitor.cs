@@ -80,18 +80,17 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
                 .Select(g => $"'{g.Key}'")
                 .ToList();
 
-            if (duplicateMetaAttributes.Count > 0)
+            if (duplicateMetaAttributes.Count == 0)
+            {
+                return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
+            }
+            else
             {
                 ReportError(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
             }
+        }
 
-            return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
-        }
-        else
-        {
-            // No meta comment found, return an empty dictionary
-            return new Dictionary<string, string>();
-        }
+        return new Dictionary<string, string>();
     }
 
     /// <summary>

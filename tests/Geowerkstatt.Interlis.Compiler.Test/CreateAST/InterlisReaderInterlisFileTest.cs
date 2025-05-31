@@ -973,8 +973,9 @@ public class InterlisReaderInterlisFileTest
         {
             var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Assert.Fail($"Exception thrown during parsing: {ex}");
         }
 
         return logProvider.GetMessages();
