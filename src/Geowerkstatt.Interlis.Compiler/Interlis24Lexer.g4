@@ -248,7 +248,7 @@ INVALID_UNICODE    : '\\u' . . . .;
 UNKNOWN_ESCAPE     : '\\' .;
 
 // Same as string literals but on other channel
-mode metaCommentStringLiteral;
+mode MetaCommentStringLiteral;
 STR_DOUBLE_QUOTE_CLOSE : '"'                                       -> channel(META_COMMENT), type(DOUBLE_QUOTE_CLOSE), popMode;
 STR_LITERAL_TEXT       : ~["\\]+                                   -> channel(META_COMMENT), type(LITERAL_TEXT);
 STR_BACKSLASH          : '\\\\'                                    -> channel(META_COMMENT), type(BACKSLASH);
@@ -264,5 +264,5 @@ META_WHITESPACE         : (' ' | '\t')        -> channel(HIDDEN), type(WHITESPAC
 META_ATTR_NAME          : ~[\t\f\r\n =;,"\\]+ -> channel(META_COMMENT);
 META_EQUAL              : '='                 -> channel(META_COMMENT), type(EQUAL_SIGN);
 META_SEMICOLON          : ';'                 -> channel(META_COMMENT), type(SEMICOLON);
-META_DOUBLE_QUOTE_OPEN  : '"'                 -> channel(META_COMMENT), type(DOUBLE_QUOTE_OPEN), pushMode(metaCommentStringLiteral);
+META_DOUBLE_QUOTE_OPEN  : '"'                 -> channel(META_COMMENT), type(DOUBLE_QUOTE_OPEN), pushMode(MetaCommentStringLiteral);
 META_COMMENT_UNEXPECTED : .                   -> channel(META_COMMENT);
