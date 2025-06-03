@@ -249,13 +249,13 @@ UNKNOWN_ESCAPE     : '\\' .;
 
 // Same as string literals but on other channel
 mode MetaCommentStringLiteral;
-STR_DOUBLE_QUOTE_CLOSE : '"'                                       -> channel(META_COMMENT), type(DOUBLE_QUOTE_CLOSE), popMode;
-STR_LITERAL_TEXT       : ~["\\]+                                   -> channel(META_COMMENT), type(LITERAL_TEXT);
-STR_BACKSLASH          : '\\\\'                                    -> channel(META_COMMENT), type(BACKSLASH);
-STR_DOUBLE_QUOTE       : '\\"'                                     -> channel(META_COMMENT), type(DOUBLE_QUOTE);
-STR_UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT -> channel(META_COMMENT), type(UNICODE);
-STR_INVALID_UNICODE    : '\\u' . . . .                             -> channel(META_COMMENT), type(INVALID_UNICODE);
-STR_UNKNOWN_ESCAPE     : '\\' .                                    -> channel(META_COMMENT), type(UNKNOWN_ESCAPE);
+META_STR_DOUBLE_QUOTE_CLOSE : '"'                                       -> channel(META_COMMENT), type(DOUBLE_QUOTE_CLOSE), popMode;
+META_STR_LITERAL_TEXT       : ~["\\]+                                   -> channel(META_COMMENT), type(LITERAL_TEXT);
+META_STR_BACKSLASH          : '\\\\'                                    -> channel(META_COMMENT), type(BACKSLASH);
+META_STR_DOUBLE_QUOTE       : '\\"'                                     -> channel(META_COMMENT), type(DOUBLE_QUOTE);
+META_STR_UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT -> channel(META_COMMENT), type(UNICODE);
+META_STR_INVALID_UNICODE    : '\\u' . . . .                             -> channel(META_COMMENT), type(INVALID_UNICODE);
+META_STR_UNKNOWN_ESCAPE     : '\\' .                                    -> channel(META_COMMENT), type(UNKNOWN_ESCAPE);
 
 // Inside a meta comment
 mode MetaComment;
