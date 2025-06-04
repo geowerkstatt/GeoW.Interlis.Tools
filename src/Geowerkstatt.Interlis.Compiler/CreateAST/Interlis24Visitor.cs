@@ -14,13 +14,20 @@ namespace Geowerkstatt.Interlis.Tools.CreateAST;
 /// <summary>
 /// Visitor that creates an Abstract-Syntax-Tree (AST) from the output of ANTLR.
 /// </summary>
-public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInterlis24ParserBaseVisitor<object>(loggerFactory)
+/// <param name="loggerFactory">The Factory to create logger instances.</param>
+/// <param name="tokenStream">The <see cref="CommonTokenStream"/> to access hidden tokens.</param>
+public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenStream tokenStream) : LoggingInterlis24ParserBaseVisitor<object>(loggerFactory)
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24Visitor>();
 
     internal List<IUnresolvedReference> ReferencesToResolve { get; } = new List<IUnresolvedReference>();
     private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
+    /// <summary>
+    /// Report an error at the position of the <paramref name="offendingToken"/>.
+    /// </summary>
+    /// <param name="offendingToken">The <see cref="IToken"/> that caused the error.</param>
+    /// <param name="message">The error message.</param>
     private void ReportError(IToken offendingToken, string message)
     {
         logger.LogError("Compile error at line {Line}:{CharPosition} {Message}.", offendingToken.Line, offendingToken.Column, message);
@@ -54,26 +61,47 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
     }
 
     /// <summary>
-    /// Create a meta-attribute dictionary from <see cref="Interlis24Parser.MetaAttributeContext"/>s.
+    /// Create a meta-attribute dictionary from the meta comments preceding the specified <paramref name="context"/>.
     /// </summary>
-    private Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context, Interlis24Parser.MetaAttributesContext[] metaAttributeContexts)
+    public Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context)
     {
-        var metaAttributeList = metaAttributeContexts
-            .SelectMany(VisitMetaAttributes)
-            .ToList();
-
-        var duplicateMetaAttributes = metaAttributeList
-            .GroupBy(m => m.Item1)
-            .Where(g => g.Count() > 1)
-            .Select(g => $"'{g.Key}'")
-            .ToList();
-
-        if (duplicateMetaAttributes.Count > 0)
+        var metaCommentTokens = (tokenStream.GetHiddenTokensToLeft(context.Start.TokenIndex, Interlis24Lexer.META_COMMENT) ?? Enumerable.Empty<IToken>()).ToList();
+        if (metaCommentTokens.Any())
         {
-            ReportError(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
+            var interlisParser = new Interlis24Parser(new CommonTokenStream(new ListTokenSource(metaCommentTokens), Interlis24Lexer.META_COMMENT));
+            interlisParser.RemoveErrorListeners();
+            interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
+
+            var metaAttributeList = VisitMetaComments(interlisParser.metaComments());
+
+            var duplicateMetaAttributes = metaAttributeList
+                .GroupBy(m => m.Item1)
+                .Where(g => g.Count() > 1)
+                .Select(g => $"'{g.Key}'")
+                .ToList();
+
+            if (duplicateMetaAttributes.Count == 0)
+            {
+                return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
+            }
+            else
+            {
+                ReportError(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
+            }
         }
 
-        return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
+        return new Dictionary<string, string>();
+    }
+
+    /// <summary>
+    /// Get the documentation comments preceding the given <paramref name="context"/>.
+    /// </summary>
+    private IList<string> GetDocComments(ParserRuleContext context)
+    {
+        return (tokenStream.GetHiddenTokensToLeft(context.Start.TokenIndex) ?? Enumerable.Empty<IToken>())
+            .Where(t => t.Type == Interlis24Lexer.DOC_COMMENT)
+            .Select(t => t.Text)
+            .ToList();
     }
 
     private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinitionContainer? parent, IToken token, IEnumerable<T> elements) where T : class, IInterlisDefinition
@@ -103,8 +131,8 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         var modelDef = new ModelDef
         {
             Name = context.name.Text,
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
             Language = context.language?.Text,
             URI = VisitString(context.uri),
             Version = VisitString(context.modelVersion),
@@ -151,8 +179,9 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
             Extends = CreateReference<TopicDef>(context.extends),
             OidType = CreateReference(context.oid, e => (e as DomainDef)?.TypeDef),
             BasketOidType = CreateReference(context.basketOid, e => (e as DomainDef)?.TypeDef),
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
 
         using var scopeFrame = CurrentScope.NewFrame(topicDef);
@@ -184,8 +213,9 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
             Name = context.name.Text,
             IsStructure = context.STRUCTURE() != null,
             Extends = CreateReference<ClassDef>(context.extends),
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
 
         if (classDef.IsStructure && (context.oid != null || context.noOid != null))
@@ -232,6 +262,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
             Name = name,
             Extends = CreateReference<AssociationDef>(context.extends),
             Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            Properties = { properties },
         };
 
         if (context.oid != null)
@@ -286,9 +317,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return new AttributeDef
         {
             Name = context.name.Text,
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = target,
+            Properties = { properties },
         };
     }
 
@@ -299,6 +331,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return new ReferenceType
         {
             Target = VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()),
+            Properties = { properties },
         };
     }
 
@@ -323,9 +356,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return new AttributeDef
         {
             Name = context.name.Text,
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = VisitAttrTypeDef(context.attrTypeDef()),
+            Properties = { properties },
         };
     }
 
@@ -553,14 +587,16 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
     {
         var term = context.unitTerm.Text;
         var shortName = context.unitShortName?.Text;
+        List<Property> properties = context.ABSTRACT() != null ? [Property.Abstract] : [];
 
         var unit = new UnitDef
         {
             Name = shortName ?? term,
             Extends = CreateReference<UnitDef>(context.extends),
             Term = term,
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
 
         return unit;
@@ -586,8 +622,9 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         {
             Name = context.name.Text,
             TypeDef = type,
-            DocComments = { context.DOC_COMMENT().Select(d => d.GetText()) },
-            MetaAttributes = { ProcessMetaAttributes(context, context.metaAttributes()) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
+            Properties = { properties },
         };
     }
 
@@ -710,8 +747,8 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
             leaf = node;
         }
 
-        leaf.DocComments.Add(context.DOC_COMMENT().Select(d => d.GetText()));
-        leaf.MetaAttributes.Add(ProcessMetaAttributes(context, context.metaAttributes()));
+        leaf.DocComments.Add(GetDocComments(context));
+        leaf.MetaAttributes.Add(ProcessMetaAttributes(context));
         if (context.enumeration() != null)
         {
             leaf.SubValues.Add(VisitEnumeration(context.enumeration()));
@@ -720,7 +757,12 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
         return root;
     }
 
-    public override List<Tuple<string, string>> VisitMetaAttributes([NotNull] Interlis24Parser.MetaAttributesContext context)
+    public override List<Tuple<string, string>> VisitMetaComments([NotNull] Interlis24Parser.MetaCommentsContext context)
+    {
+        return context.metaComment().SelectMany(VisitMetaComment).ToList();
+    }
+
+    public override List<Tuple<string, string>> VisitMetaComment([NotNull] Interlis24Parser.MetaCommentContext context)
     {
         return context.metaAttribute().Select(VisitMetaAttribute).ToList();
     }
@@ -840,17 +882,17 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory) : LoggingInt
     }
 
     /// <summary>
-    /// Get a collection of <see cref="IToken.Type"/> from the <see cref="Interlis24Parser.PropertiesContext"/>.
+    /// Get a collection of <see cref="Property"/> from the <see cref="Interlis24Parser.PropertiesContext"/>.
     /// </summary>
-    private HashSet<int> VisitProperties(Interlis24Parser.PropertiesContext context, int[] allowedProperties)
+    private HashSet<Property> VisitProperties(Interlis24Parser.PropertiesContext context, int[] allowedProperties)
     {
-        var result = new HashSet<int>();
+        var result = new HashSet<Property>();
         if (context == null) return result;
 
         var properties = VisitProperties(context);
         foreach (var property in properties)
         {
-            if (!result.Add(property.Type))
+            if (!result.Add((Property)property.Type))
             {
                 ReportError(property, $"Duplicate property {property.Text}");
             }

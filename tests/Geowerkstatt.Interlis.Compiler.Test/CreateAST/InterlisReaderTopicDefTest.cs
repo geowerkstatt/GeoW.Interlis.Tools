@@ -44,6 +44,7 @@ public class InterlisReaderTopicDefTest
                     Extends = new Reference<TopicDef> { Path = { "Test_B" } },
                     OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
                     BasketOidType = new Reference<TypeDef> { Path = { "oidDomain" } },
+                    Properties = { Property.Abstract, Property.Final }
                 });
     }
 

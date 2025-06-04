@@ -34,6 +34,7 @@ public class InterlisReaderClassDefTest
                 MetaAttributes = { { "key", "value" } },
                 Extends = new Reference<ClassDef> { Path = { "Test_B" } },
                 OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
+                Properties = { Property.Abstract, Property.Extended },
             });
     }
 

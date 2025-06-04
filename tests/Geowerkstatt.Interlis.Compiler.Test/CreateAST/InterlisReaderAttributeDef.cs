@@ -209,6 +209,7 @@ public class InterlisReaderAttributeDef
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
                 TypeDef = new NumericType { Min = 0, Max = 100, Precision = -2, Cardinality = new Cardinality { Min = 0, Max = 1 } },
+                Properties = { Property.Abstract, Property.Extended },
             });
     }
 

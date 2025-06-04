@@ -40,6 +40,7 @@ public class InterlisReaderInterlisFileTest
     public void ReadFileWithModelWithDocComment()
     {
         AssertReadFile("""
+            /** Ignored doc comment because "interlis" rule does not read doc comments */
             INTERLIS 2.4;
             /** I am a doc comment */
             MODEL ModelName AT "foo.test" VERSION "123" =
@@ -561,6 +562,7 @@ public class InterlisReaderInterlisFileTest
                                                             Name = "externalReference",
                                                             TypeDef = new ReferenceType
                                                             {
+                                                                Properties = { Property.External },
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                                 Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ExternalClassName" } } },
                                                             },
@@ -670,7 +672,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithUnits()
     {
-        var lengthUnit = new UnitDef { Name = "Length", Term = "Length" };
+        var lengthUnit = new UnitDef { Name = "Length", Term = "Length", Properties = { Property.Abstract } };
         var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = new Reference<UnitDef> { Target = lengthUnit, Path = { "Length" } } };
 
         var heightDomain = new DomainDef
@@ -948,15 +950,92 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
-    private static void AssertReadFile(string input, InterlisFile expected)
+    [TestMethod]
+    public void ReadFileWithViews()
     {
-        var actual = new InterlisReader().ReadFile(new StringReader(input));
+        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            {
+                                "Topic",
+                                new TopicDef
+                                {
+                                    Name = "Topic",
+                                    Content =
+                                    {
+                                        {
+                                            "Class",
+                                            new ClassDef
+                                            {
+                                                Name = "Class",
+                                                Content =
+                                                {
+                                                    {
+                                                        "Attr",
+                                                        new AttributeDef
+                                                        {
+                                                            Name = "Attr",
+                                                            TypeDef = new TextType
+                                                            {
+                                                                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                                                            },
+                                                        }
+                                                    },
+                                                },
+                                            }
+                                        },
+                                    }
+                                }
+                            },
+                        },
+                        Imports = { { "INTERLIS", (false, interlis) } }
+                    }
+                }
+            },
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                TOPIC Topic =
+                    CLASS Class =
+                        Attr : TEXT;
+                    END Class;
+
+                    !! Empty view with ATTRIBUTE keyword
+                    VIEW EmptyView
+                      PROJECTION OF base~Class;
+                      =
+                      ATTRIBUTE
+                    END EmptyView;
+                END Topic;
+            END ModelName.
+            """, expected);
+    }
+
+    internal static void AssertReadFile(string input, InterlisFile expected)
+    {
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
         AssertDeepEqual(expected, actual);
     }
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
     {
-        var (actual, _) = new InterlisReader().ReadRule(new StringReader(input), parseRule);
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
         Assert.IsInstanceOfType(actual, expected?.GetType());
         AssertDeepEqual(expected, actual);
     }
@@ -970,8 +1049,9 @@ public class InterlisReaderInterlisFileTest
         {
             var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Assert.Fail($"Exception thrown during parsing: {ex}");
         }
 
         return logProvider.GetMessages();

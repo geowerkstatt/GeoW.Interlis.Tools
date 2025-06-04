@@ -1,8 +1,12 @@
-// $antlr-format alignTrailingComments true, columnLimit 150, maxEmptyLinesToKeep 1, reflowComments false, useTab false
+// $antlr-format alignTrailingComments true, columnLimit 200, maxEmptyLinesToKeep 1, reflowComments false, useTab false
 // $antlr-format allowShortRulesOnASingleLine true, allowShortBlocksOnASingleLine true, minEmptyLines 0, alignSemicolons ownLine
 // $antlr-format alignColons trailing, singleLineOverrulesHangingColon true, alignLexerCommands true, alignLabels true, alignTrailers true
 
 lexer grammar Interlis24Lexer;
+
+channels {
+    META_COMMENT
+}
 
 SEMICOLON  : ';';
 COLON      : ':';
@@ -226,11 +230,11 @@ POS_NUMBER     : DIGIT+;
 IDENTIFIER        : LETTER (LETTER | DIGIT | '_')*;
 DOUBLE_QUOTE_OPEN : '"' -> pushMode(StringLiteral);
 EXPLANATION       : '//' .*? '//';
-META_COMMENT_OPEN : '!!@'                    -> pushMode(MetaComment);
+META_COMMENT_OPEN : '!!@'                    -> channel(META_COMMENT), pushMode(MetaComment);
 LINE_COMMENT      : '!!' (~[@] .*?)? NEWLINE -> channel(HIDDEN);
-DOC_COMMENT       : '/**' .*? '*/';
-BLOCK_COMMENT     : '/*' .*? '*/'          -> channel(HIDDEN);
-WHITESPACE        : (' ' | '\t' | NEWLINE) -> channel(HIDDEN);
+DOC_COMMENT       : '/**' .*? '*/'           -> channel(HIDDEN);
+BLOCK_COMMENT     : '/*' .*? '*/'            -> channel(HIDDEN);
+WHITESPACE        : (' ' | '\t' | NEWLINE)+  -> channel(HIDDEN);
 UNEXPECTED        : .;
 
 // Parsing string literal
@@ -243,11 +247,22 @@ UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT;
 INVALID_UNICODE    : '\\u' . . . .;
 UNKNOWN_ESCAPE     : '\\' .;
 
+// Same as string literals but on other channel
+mode MetaCommentStringLiteral;
+META_STR_DOUBLE_QUOTE_CLOSE : '"'                                       -> channel(META_COMMENT), type(DOUBLE_QUOTE_CLOSE), popMode;
+META_STR_LITERAL_TEXT       : ~["\\]+                                   -> channel(META_COMMENT), type(LITERAL_TEXT);
+META_STR_BACKSLASH          : '\\\\'                                    -> channel(META_COMMENT), type(BACKSLASH);
+META_STR_DOUBLE_QUOTE       : '\\"'                                     -> channel(META_COMMENT), type(DOUBLE_QUOTE);
+META_STR_UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT -> channel(META_COMMENT), type(UNICODE);
+META_STR_INVALID_UNICODE    : '\\u' . . . .                             -> channel(META_COMMENT), type(INVALID_UNICODE);
+META_STR_UNKNOWN_ESCAPE     : '\\' .                                    -> channel(META_COMMENT), type(UNKNOWN_ESCAPE);
+
 // Inside a meta comment
 mode MetaComment;
-META_COMMENT_CLOSE     : NEWLINE      -> popMode;
-META_WHITESPACE        : (' ' | '\t') -> skip;
-META_ATTR_NAME         : ~[\t\f\r\n =;,"\\]+;
-META_EQUAL             : '=' -> type(EQUAL_SIGN);
-META_SEMICOLON         : ';' -> type(SEMICOLON);
-META_DOUBLE_QUOTE_OPEN : '"' -> pushMode(StringLiteral), type(DOUBLE_QUOTE_OPEN);
+META_COMMENT_CLOSE      : NEWLINE             -> channel(META_COMMENT), popMode;
+META_WHITESPACE         : (' ' | '\t')        -> channel(HIDDEN), type(WHITESPACE);
+META_ATTR_NAME          : ~[\t\f\r\n =;,"\\]+ -> channel(META_COMMENT);
+META_EQUAL              : '='                 -> channel(META_COMMENT), type(EQUAL_SIGN);
+META_SEMICOLON          : ';'                 -> channel(META_COMMENT), type(SEMICOLON);
+META_DOUBLE_QUOTE_OPEN  : '"'                 -> channel(META_COMMENT), type(DOUBLE_QUOTE_OPEN), pushMode(MetaCommentStringLiteral);
+META_COMMENT_UNEXPECTED : .                   -> channel(META_COMMENT);

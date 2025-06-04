@@ -12,7 +12,7 @@ interlis
     ;
 
 modelDef
-    : (metaAttributes | DOC_COMMENT)* CONTRACTED? (TYPE | REFSYSTEM | SYMBOLOGY)? MODEL name=IDENTIFIER (
+    : CONTRACTED? (TYPE | REFSYSTEM | SYMBOLOGY)? MODEL name=IDENTIFIER (
         '(' language=IDENTIFIER ')'
     )? NOINCREMENTALTRANSFER? AT uri=string VERSION modelVersion=string EXPLANATION? (
         TRANSLATION OF translationOf=IDENTIFIER '[' translationOfVersion=string ']'
@@ -38,7 +38,7 @@ modelContents
     ;
 
 topicDef
-    : (metaAttributes | DOC_COMMENT)* VIEW? TOPIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (
+    : VIEW? TOPIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (
         EXTENDS extends=definitionRef
     )? EQUAL_SIGN (BASKET OID AS basketOid=definitionRef SEMICOLON)? (
         OID AS oid=definitionRef SEMICOLON
@@ -60,11 +60,18 @@ topicContents
     ;
 
 definitionRef
-    : (model=(IDENTIFIER | INTERLIS) '.' ( topic=IDENTIFIER '.')?)? name=IDENTIFIER
+    : (model=(IDENTIFIER | INTERLIS) '.' ( topic=IDENTIFIER '.')?)? name=(
+        IDENTIFIER
+        | URI
+        | NAME
+        | HALIGNMENT
+        | VALIGNMENT
+        | METAOBJECT
+    )
     ;
 
 classDef
-    : (metaAttributes | DOC_COMMENT)* (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
+    : (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
     )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? classContent END endName=IDENTIFIER SEMICOLON
     ;
@@ -74,8 +81,9 @@ classContent
     ;
 
 attributeDef
-    : (metaAttributes | DOC_COMMENT)* (CONTINUOUS? SUBDIVISION)? name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':'
-      attrTypeDef (':=' factor ( ',' factor)*)? SEMICOLON
+    : (CONTINUOUS? SUBDIVISION)? name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':' attrTypeDef (
+        ':=' factor ( ',' factor)*
+    )? SEMICOLON
     ;
 
 attrTypeDef
@@ -107,7 +115,7 @@ associationDef
     ;
 
 roleDef
-    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, HIDING, ORDERED, EXTERNAL */ referenceType=(
+    : name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, HIDING, ORDERED, EXTERNAL */ referenceType=(
         '--'
         | '-<>'
         | '-<#>'
@@ -123,9 +131,10 @@ domainDef
     ;
 
 domainTypeDef
-    : (metaAttributes | DOC_COMMENT)* name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (
-        EXTENDS extends=definitionRef
-    )? EQUAL_SIGN (MANDATORY type? | type) (CONSTRAINTS domainConstraint (',' domainConstraint)*)? SEMICOLON
+    : name=IDENTIFIER properties? /* ABSTRACT, GENERIC, FINAL */ (EXTENDS extends=definitionRef)? EQUAL_SIGN (
+        MANDATORY type?
+        | type
+    ) (CONSTRAINTS domainConstraint (',' domainConstraint)*)? SEMICOLON
     ;
 
 domainConstraint
@@ -181,7 +190,7 @@ enumeration
     ;
 
 enumElement
-    : (metaAttributes | DOC_COMMENT)* IDENTIFIER ('.' IDENTIFIER)* enumeration?
+    : IDENTIFIER ('.' IDENTIFIER)* enumeration?
     ;
 
 enumerationConst
@@ -304,9 +313,7 @@ lineFormType
     ;
 
 lineFormTypeDef
-    : LINE FORM (
-        (metaAttributes | DOC_COMMENT)* lineFormTypeName=IDENTIFIER ':' lineStructureName=IDENTIFIER SEMICOLON
-    )*
+    : LINE FORM (lineFormTypeName=IDENTIFIER ':' lineStructureName=IDENTIFIER SEMICOLON)*
     ;
 
 unitDef
@@ -314,9 +321,9 @@ unitDef
     ;
 
 unitTypeDef
-    : (metaAttributes | DOC_COMMENT)* unitTerm=IDENTIFIER (
-        '(' ABSTRACT ')' | '[' unitShortName=IDENTIFIER ']'
-    )? (EXTENDS extends=definitionRef)? (EQUAL_SIGN (derivedUnit | composedUnit))? SEMICOLON
+    : unitTerm=IDENTIFIER ('(' ABSTRACT ')' | '[' unitShortName=IDENTIFIER ']')? (
+        EXTENDS extends=definitionRef
+    )? (EQUAL_SIGN (derivedUnit | composedUnit))? SEMICOLON
     ;
 
 derivedUnit
@@ -328,11 +335,11 @@ composedUnit
     ;
 
 metaDataBasketDef
-    : (metaAttributes | DOC_COMMENT)* (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? /* FINAL */ (
+    : (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? /* FINAL */ (
         EXTENDS definitionRef
     )? '~' topic=definitionRef (
-        OBJECTS OF className=IDENTIFIER ':' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER (
-            ',' (metaAttributes | DOC_COMMENT)* metaObjectName=IDENTIFIER
+        OBJECTS OF className=IDENTIFIER ':' metaObjectName=IDENTIFIER (
+            ',' metaObjectName=IDENTIFIER
         )*
     )* SEMICOLON
     ;
@@ -342,20 +349,18 @@ metaObjectRef
     ;
 
 parameterDef
-    : (metaAttributes | DOC_COMMENT)* arameter=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ ':' (
+    : arameter=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ ':' (
         attrTypeDef
         | METAOBJECT (OF metaObject=definitionRef)?
     ) SEMICOLON
     ;
 
 runTimeParameterDef
-    : PARAMETER (
-        (metaAttributes | DOC_COMMENT)* runTimeParameterName=IDENTIFIER ':' attrTypeDef SEMICOLON
-    )*
+    : PARAMETER (runTimeParameterName=IDENTIFIER ':' attrTypeDef SEMICOLON)*
     ;
 
 constraintDef
-    : (metaAttributes | DOC_COMMENT)* (
+    : (
         mandatoryConstraint
         | plausibilityConstraint
         | existenceConstraint
@@ -458,7 +463,7 @@ argument
     ;
 
 functionDef
-    : (metaAttributes | DOC_COMMENT)* FUNCTION name=IDENTIFIER '(' (
+    : FUNCTION name=IDENTIFIER '(' (
         argumentName=IDENTIFIER ':' argumentType (
             SEMICOLON argumentName=IDENTIFIER ':' IDENTIFIER
         )*
@@ -473,10 +478,10 @@ argumentType
     ;
 
 viewDef
-    : (metaAttributes | DOC_COMMENT)* VIEW name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ (
+    : VIEW name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ (
         formationDef
         | EXTENDS definitionRef
-    )? (baseExtensionDef)* (selection)* EQUAL_SIGN (viewAttributes)? (constraintDef)* END endName=IDENTIFIER SEMICOLON
+    )? (baseExtensionDef)* (selection)* EQUAL_SIGN viewAttributes (constraintDef)* END endName=IDENTIFIER SEMICOLON
     ;
 
 formationDef
@@ -520,13 +525,13 @@ viewAttributes
         ALL OF base=IDENTIFIER SEMICOLON
         | attributeDef
         | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON
-    )+
+    )*
     ;
 
 graphicDef
-    : (metaAttributes | DOC_COMMENT)* GRAPHIC name=IDENTIFIER (EXTENDS definitionRef)? (
-        BASED ON definitionRef
-    )? EQUAL_SIGN (drawingRule)* END endName=IDENTIFIER SEMICOLON
+    : GRAPHIC name=IDENTIFIER (EXTENDS definitionRef)? (BASED ON definitionRef)? EQUAL_SIGN (
+        drawingRule
+    )* END endName=IDENTIFIER SEMICOLON
     ;
 
 drawingRule
@@ -582,7 +587,15 @@ string
     : DOUBLE_QUOTE_OPEN (LITERAL_TEXT | BACKSLASH | DOUBLE_QUOTE | UNICODE)* DOUBLE_QUOTE_CLOSE
     ;
 
-metaAttributes
+/**
+ * Meta comments (on channel META_COMMENT)
+ * This rules are in the main grammar to easily reuse the string rule.
+ */
+metaComments
+    : metaComment+ EOF
+    ;
+
+metaComment
     : META_COMMENT_OPEN metaAttribute (SEMICOLON metaAttribute)* SEMICOLON? META_COMMENT_CLOSE
     ;
 
