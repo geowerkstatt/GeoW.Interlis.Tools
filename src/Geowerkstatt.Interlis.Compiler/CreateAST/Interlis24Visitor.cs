@@ -337,10 +337,19 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
 
     public override RestrictedRef VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
     {
+        // RestrictedDefinitionRef only accepts InterlisDefinitions of certain types
+        Func<IInterlisDefinition, IInterlisDefinition?> acceptTypes = interlisDef => interlisDef switch
+        {
+            ClassDef c => c,
+            AssociationDef a => a,
+            DomainDef d => d, // Domains cannot be restricted, but are accepted because of an ambiguity in 'attrType' that can only be resolved when the target type of the reference is known.
+            _ => null,
+        };
+
         return new RestrictedRef
         {
-            Value = CreateReference<IInterlisDefinition>(context.@ref),
-            Restrictions = { context._restrictions.Select(r => CreateReference<IInterlisDefinition>(r)).WhereNotNull() },
+            Value = CreateReference<IInterlisDefinition>(context.@ref, acceptTypes),
+            Restrictions = { context._restrictions.Select(r => CreateReference<IInterlisDefinition>(r, acceptTypes)).WhereNotNull() },
         };
     }
 
