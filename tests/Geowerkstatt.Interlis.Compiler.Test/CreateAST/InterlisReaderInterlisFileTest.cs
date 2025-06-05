@@ -1025,6 +1025,119 @@ public class InterlisReaderInterlisFileTest
             """, expected);
     }
 
+    [TestMethod]
+    public void ReferenceResolutionModelTopiClassSameName()
+    {
+        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var nameClass = new ClassDef { Name = "Name" };
+        var association = new AssociationDef
+        {
+            Name = "AssociationName",
+            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+            Content =
+            {
+                {
+                    "Name",
+                    new AttributeDef
+                    {
+                        Name = "Name",
+                        TypeDef = new RoleType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                            Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = nameClass, Path = { "Name" } } } },
+                        }
+                    }
+                },
+                {
+                    "Name2",
+                    new AttributeDef
+                    {
+                        Name = "Name2",
+                        TypeDef = new RoleType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                            Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = nameClass, Path = { "Name" } } } },
+                        }
+                    }
+                },
+            }
+        };
+
+        nameClass.AssociationAccess.Add("AssociationName", association);
+
+        var expected = new InterlisFile
+        {
+            Content =
+            {
+                {
+                    "Name",
+                    new ModelDef
+                    {
+                        Name = "Name",
+                        URI = "foo:test",
+                        Version = "123",
+                        Content =
+                        {
+                            {
+                                "Name",
+                                new TopicDef
+                                {
+                                    Name = "Name",
+                                    Content =
+                                    {
+                                        { "Name", nameClass },
+                                        { "AssociationName", association },
+                                    }
+                                }
+                            },
+                        },
+                        Imports = { { "INTERLIS", (false, interlis) } }
+                    }
+                },
+            },
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+            MODEL Name AT "foo:test" VERSION "123" =
+                TOPIC Name =
+                    CLASS Name =
+                    END Name;
+
+                    ASSOCIATION AssociationName =
+                        Name -- Name;
+                        Name2 -- Name;
+                    END AssociationName;
+                END Name;
+            END Name.
+            """, expected);
+    }
+
+    [TestMethod]
+    public void ReferenceResolutionConflictWithUnqualifiedImport()
+    {
+        var logProvider = new TestLoggerProvider();
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole().AddProvider(logProvider));
+        var reader = new InterlisReader(loggerFactory);
+        reader.ReadFile(new StringReader("""
+            INTERLIS 2.4;
+            MODEL OtherName AT "foo:test" VERSION "123" =
+                DOMAIN Name = TEXT;
+            END OtherName.
+
+            MODEL Name AT "foo:test" VERSION "123" =
+                IMPORTS UNQUALIFIED OtherName;
+                TOPIC Name =
+                    CLASS Name =
+                        Name : Name;
+                    END Name;
+                END Name;
+            END Name.
+            """));
+
+        Assert.AreEqual("Ambiguous 'reference 'Name' from Name.Name' could be resolved to multiple targets: Name.Name.Name, OtherName.Name", logProvider.GetMessages().FirstOrDefault());
+    }
+
     internal static void AssertReadFile(string input, InterlisFile expected)
     {
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
