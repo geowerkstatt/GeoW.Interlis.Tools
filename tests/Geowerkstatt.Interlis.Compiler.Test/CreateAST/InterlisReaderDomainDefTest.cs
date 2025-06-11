@@ -1,8 +1,8 @@
-﻿using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools.AST.Expression;
-using Geowerkstatt.Interlis.Tools.AST.Types;
+﻿using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderDomainDefTest

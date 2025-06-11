@@ -1,6 +1,6 @@
-﻿using Geowerkstatt.Interlis.Tools.AST.Expression;
+﻿using Geowerkstatt.Interlis.Compiler.AST.Expression;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderExpressionTest

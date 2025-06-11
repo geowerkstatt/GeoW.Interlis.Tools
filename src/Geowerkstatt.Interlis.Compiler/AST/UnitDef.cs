@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
 {

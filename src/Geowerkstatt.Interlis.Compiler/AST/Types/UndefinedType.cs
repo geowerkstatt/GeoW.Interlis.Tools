@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST.Types;
 
 /// <summary>
 /// The undefined type represents the absence of a value.

@@ -1,7 +1,7 @@
 ﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 
-namespace Geowerkstatt.Interlis.Tools.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
 /// <summary>
 /// This exception indicates that an assumption about the grammar was wrong.

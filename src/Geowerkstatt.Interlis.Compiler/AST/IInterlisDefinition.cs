@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// An INTERLIS object that can be referenced by its fully qualified name.

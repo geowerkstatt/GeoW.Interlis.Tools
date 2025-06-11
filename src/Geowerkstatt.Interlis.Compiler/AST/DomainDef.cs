@@ -1,6 +1,6 @@
-﻿using Geowerkstatt.Interlis.Tools.AST.Types;
+﻿using Geowerkstatt.Interlis.Compiler.AST.Types;
 
-namespace Geowerkstatt.Interlis.Tools.AST;
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// A type definition that has a name and can therefore be referenced.

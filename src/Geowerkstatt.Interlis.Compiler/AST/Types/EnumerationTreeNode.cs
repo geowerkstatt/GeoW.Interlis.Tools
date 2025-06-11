@@ -1,5 +1,5 @@
 ﻿
-namespace Geowerkstatt.Interlis.Tools.AST.Types;
+namespace Geowerkstatt.Interlis.Compiler.AST.Types;
 
 /// <summary>
 /// An enumeration value that can have sub-enumerations

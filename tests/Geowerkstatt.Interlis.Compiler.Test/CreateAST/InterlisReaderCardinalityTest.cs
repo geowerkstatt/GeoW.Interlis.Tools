@@ -1,13 +1,13 @@
 ﻿using Antlr4.Runtime.Misc;
 using DeepEqual.Syntax;
-using Geowerkstatt.Interlis.Tools.AST;
+using Geowerkstatt.Interlis.Compiler.AST;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderCardinalityTest

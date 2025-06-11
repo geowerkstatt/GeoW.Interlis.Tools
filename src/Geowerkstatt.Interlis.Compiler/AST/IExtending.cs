@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// An INTERLIS object that can extend another INTERLIS object.

@@ -1,7 +1,7 @@
 ﻿using Antlr4.Runtime;
 using Microsoft.Extensions.Logging;
 
-namespace Geowerkstatt.Interlis.Tools.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
 internal class ILoggerParserErrorListener(ILoggerFactory loggerFactory) : IAntlrErrorListener<IToken>
 {

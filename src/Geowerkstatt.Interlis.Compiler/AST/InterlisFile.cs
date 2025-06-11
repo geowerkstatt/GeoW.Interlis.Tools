@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// Represents an Interlis file with references to all models it contains.

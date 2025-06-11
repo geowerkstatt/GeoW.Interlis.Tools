@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// Interface to put <see cref="Reference{T}"/> instances into a collection and resolve them later.

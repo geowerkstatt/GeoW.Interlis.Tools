@@ -1,14 +1,14 @@
 ﻿using DeepEqual.Syntax;
-using Geowerkstatt.Interlis.Tools;
-using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools.AST.Types;
+using Geowerkstatt.Interlis.Compiler;
+using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderTopicDefTest

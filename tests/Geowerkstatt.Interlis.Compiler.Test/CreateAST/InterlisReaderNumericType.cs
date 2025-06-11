@@ -1,7 +1,7 @@
 ﻿using Antlr4.Runtime.Misc;
-using Geowerkstatt.Interlis.Tools.AST.Types;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderNumericType

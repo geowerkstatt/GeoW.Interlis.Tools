@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public sealed class ModelDef : IDocumentation, IInterlisDefinitionContainer
 {

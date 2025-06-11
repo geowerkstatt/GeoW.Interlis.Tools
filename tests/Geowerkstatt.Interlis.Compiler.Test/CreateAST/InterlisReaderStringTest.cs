@@ -1,7 +1,7 @@
 ﻿using Antlr4.Runtime.Misc;
 using DeepEqual.Syntax;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderStringTest

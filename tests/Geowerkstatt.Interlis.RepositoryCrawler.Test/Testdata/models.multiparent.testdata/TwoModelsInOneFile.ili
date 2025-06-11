@@ -1,0 +1,7 @@
+INTERLIS 2.4;
+
+MODEL TwoModelsInOneFile_Model1 (en) AT "mailto:noreply@localhost" VERSION "2024_07_18" = 
+END TwoModelsInOneFile_Model1.
+
+MODEL TwoModelsInOneFile_Model2 (en) AT "mailto:noreply@localhost" VERSION "2024_07_18" = 
+END TwoModelsInOneFile_Model2.

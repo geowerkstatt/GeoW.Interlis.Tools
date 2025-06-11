@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST.Types;
 
 public class EnumerationValuesList : List<EnumerationTreeNode>
 {

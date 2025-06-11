@@ -1,15 +1,15 @@
 ﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
-using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools.AST.Expression;
-using Geowerkstatt.Interlis.Tools.AST.Types;
+using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Globalization;
 using System.Text;
 
-namespace Geowerkstatt.Interlis.Tools.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
 /// <summary>
 /// Visitor that creates an Abstract-Syntax-Tree (AST) from the output of ANTLR.

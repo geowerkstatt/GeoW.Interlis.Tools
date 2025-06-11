@@ -1,6 +1,6 @@
-﻿using Geowerkstatt.Interlis.Tools.AST.Types;
+﻿using Geowerkstatt.Interlis.Compiler.AST.Types;
 
-namespace Geowerkstatt.Interlis.Tools.AST.Expression;
+namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 public class NotExpression : UnaryExpression
 {

@@ -1,9 +1,9 @@
-﻿using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools.AST.Types;
+﻿using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Geowerkstatt.Interlis.Tools.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
 /// <summary>
 /// Resolves various references inside the AST. The AST is modified in place.
