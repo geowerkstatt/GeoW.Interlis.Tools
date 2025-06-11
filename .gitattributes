@@ -76,3 +76,6 @@
 
 # *nix shell scripts always use LF (see .editorconfig)
 *.sh          text eol=lf
+
+# INTERLIS files set to a fixed line ending to get consistent file hashes
+*.ili text eol=lf

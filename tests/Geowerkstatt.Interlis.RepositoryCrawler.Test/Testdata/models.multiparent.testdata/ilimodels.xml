@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TRANSFER>
+  <HEADERSECTION SENDER="KOGIS-20200115" VERSION="2.3">
+    <MODELS>
+      <MODEL NAME="IliRepository09" VERSION="2012-02-20" URI="mailto:ce@eisenhutinformatik.ch"/>
+      <MODEL NAME="IliRepository20" VERSION="2020-04-17" URI="http://models.interlis.ch/core"/>
+    </MODELS>
+  </HEADERSECTION>
+  <DATASECTION>
+    <IliRepository09.RepositoryIndex BID="models.multiparent.testdata">
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="3729">
+        <Name>Test_Model_Without_MD5</Name>
+        <SchemaLanguage>ili2_3</SchemaLanguage>
+        <File>TestModel.ili</File>
+        <Version>2022-08-17</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2022-08-17</publishingDate>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="3982">
+        <Name>Test_Model_With_Empty_MD5</Name>
+        <SchemaLanguage>ili2_3</SchemaLanguage>
+        <File>TestModel.ili</File>
+        <Version>2022-08-17</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2022-08-17</publishingDate>
+        <md5/>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="5415">
+        <Name>Test_Model_Without_MD5_And_Invalid_File</Name>
+        <SchemaLanguage>ili2_3</SchemaLanguage>
+        <File>DoesNotExist.ili</File>
+        <Version>2022-08-17</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2022-08-17</publishingDate>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="5416">
+        <Name>Test_Model_With_Correct_MD5</Name>
+        <SchemaLanguage>ili2_3</SchemaLanguage>
+        <File>TestModel.ili</File>
+        <Version>2022-08-17</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2022-08-17</publishingDate>
+        <md5>eb137f3b28d3d06c41f20237886a8b41</md5>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="5417">
+        <Name>Test_Model_With_Wrong_MD5</Name>
+        <SchemaLanguage>ili2_3</SchemaLanguage>
+        <File>TestModel.ili</File>
+        <Version>2022-08-17</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2022-08-17</publishingDate>
+        <md5>85d9577a5d8d9115484cdf2c0917c802</md5>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="5418">
+        <Name>TwoModelsInOneFile_Model1</Name>
+        <SchemaLanguage>ili2_4</SchemaLanguage>
+        <File>TwoModelsInOneFile.ili</File>
+        <Version>2024_07_18</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2024-07-18</publishingDate>
+        <md5>17dd3681a880848baef146904991c36b</md5>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+      <IliRepository20.RepositoryIndex.ModelMetadata TID="5419">
+        <Name>TwoModelsInOneFile_Model2</Name>
+        <SchemaLanguage>ili2_4</SchemaLanguage>
+        <File>TwoModelsInOneFile.ili</File>
+        <Version>2024_07_18</Version>
+        <NameLanguage>en</NameLanguage>
+        <publishingDate>2024-07-18</publishingDate>
+        <md5>17dd3681a880848baef146904991c36b</md5>
+      </IliRepository20.RepositoryIndex.ModelMetadata>
+    </IliRepository09.RepositoryIndex>
+  </DATASECTION>
+</TRANSFER>
