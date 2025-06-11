@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Geowerkstatt.Interlis.Compiler\Compiler.csproj" />
+    <ProjectReference Include="..\..\src\Geowerkstatt.Interlis.Compiler\Geowerkstatt.Interlis.Compiler.csproj" />
   </ItemGroup>
 
 </Project>

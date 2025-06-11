@@ -1,10 +1,10 @@
 ﻿using Geowerkstatt.Interlis.Compiler.AST;
-using Geowerkstatt.Interlis.Compiler.NTS;
+using Geowerkstatt.Interlis.XtfReader.NTS;
 using NetTopologySuite.Geometries;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Geowerkstatt.Interlis.Compiler.XtfReader;
+namespace Geowerkstatt.Interlis.XtfReader;
 
 public class XtfReader
 {

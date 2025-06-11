@@ -1,6 +1,6 @@
-﻿namespace Geowerkstatt.Interlis.Compiler;
+﻿namespace Geowerkstatt.Interlis.Common;
 
-internal static class CollectionExtensions
+public static class CollectionExtensions
 {
     /// <summary>
     /// Add all <paramref name="items"/> one by one to the <paramref name="collection"/>.

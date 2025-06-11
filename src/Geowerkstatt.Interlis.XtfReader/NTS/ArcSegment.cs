@@ -1,7 +1,7 @@
 ﻿using NetTopologySuite.Algorithm;
 using NetTopologySuite.Geometries;
 
-namespace Geowerkstatt.Interlis.Compiler.NTS;
+namespace Geowerkstatt.Interlis.XtfReader.NTS;
 
 [Serializable]
 public class ArcSegment : ICurveSegment

@@ -26,4 +26,12 @@
     <PackageReference Include="NetTopologySuite" Version="2.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Geowerkstatt.Interlis.Common\Geowerkstatt.Interlis.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Geowerkstatt.Interlis.Common" />
+  </ItemGroup>
+
 </Project>

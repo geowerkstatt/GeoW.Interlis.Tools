@@ -1,6 +1,6 @@
 ﻿using NetTopologySuite.Geometries;
 
-namespace Geowerkstatt.Interlis.Compiler.NTS;
+namespace Geowerkstatt.Interlis.XtfReader.NTS;
 
 /// <summary>
 /// A <see cref="CompoundCurve"/> with the guarantee that the first and last point are equal.

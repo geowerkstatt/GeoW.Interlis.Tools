@@ -1,7 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
 
-namespace Geowerkstatt.Interlis.Compiler.XtfReader;
+namespace Geowerkstatt.Interlis.XtfReader;
 
 internal static class XmlReaderExtensions
 {

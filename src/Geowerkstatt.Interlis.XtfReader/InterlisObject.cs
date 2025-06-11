@@ -1,6 +1,6 @@
 ﻿using Geowerkstatt.Interlis.Compiler.AST;
 
-namespace Geowerkstatt.Interlis.Compiler.XtfReader;
+namespace Geowerkstatt.Interlis.XtfReader;
 
 /// <summary>
 /// Represents an instance of an interlis definition.

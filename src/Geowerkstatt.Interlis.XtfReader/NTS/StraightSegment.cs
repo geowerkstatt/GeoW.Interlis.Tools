@@ -1,6 +1,6 @@
 ﻿using NetTopologySuite.Geometries;
 
-namespace Geowerkstatt.Interlis.Compiler.NTS;
+namespace Geowerkstatt.Interlis.XtfReader.NTS;
 
 public class StraightSegment : LineSegment, ICurveSegment
 {
