@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.AST.Types;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST.Types;
 
 /// <summary>
 /// A type that references (extends) another type without changing anything.

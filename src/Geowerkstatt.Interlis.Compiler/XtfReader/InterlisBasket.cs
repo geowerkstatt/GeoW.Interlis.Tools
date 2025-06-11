@@ -1,6 +1,6 @@
-﻿using Geowerkstatt.Interlis.Tools.AST;
+﻿using Geowerkstatt.Interlis.Compiler.AST;
 
-namespace Geowerkstatt.Interlis.Tools.XtfReader;
+namespace Geowerkstatt.Interlis.Compiler.XtfReader;
 
 public class InterlisBasket
 {

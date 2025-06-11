@@ -1,4 +1,4 @@
-﻿using Geowerkstatt.Interlis.Tools.NTS;
+﻿using Geowerkstatt.Interlis.Compiler.NTS;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate;
 using System;

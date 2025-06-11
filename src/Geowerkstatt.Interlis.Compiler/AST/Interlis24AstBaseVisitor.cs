@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Geowerkstatt.Interlis.Tools.AST;
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 {

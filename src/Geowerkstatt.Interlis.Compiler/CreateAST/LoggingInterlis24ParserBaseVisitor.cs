@@ -3,7 +3,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Microsoft.Extensions.Logging;
 
-namespace Geowerkstatt.Interlis.Tools.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
 /// <summary>
 /// Base visitor that throws a <see cref="NotImplementedException"/> for all rule visit methods.

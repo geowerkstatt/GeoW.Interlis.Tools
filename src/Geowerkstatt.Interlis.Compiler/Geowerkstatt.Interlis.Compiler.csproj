@@ -2,10 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>Geowerkstatt.Interlis.Tools</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>$(RootNamespace).Compiler</PackageId>
     <PackageDescription>The geowerkstatt Interlis compiler.</PackageDescription>
   </PropertyGroup>
 
@@ -17,7 +15,7 @@
     <Antlr4 Include="**\*.g4">
       <Listener>false</Listener>
       <Visitor>true</Visitor>
-      <Package>Geowerkstatt.Interlis.Tools</Package>
+      <Package>Geowerkstatt.Interlis.Compiler</Package>
     </Antlr4>
   </ItemGroup>
 

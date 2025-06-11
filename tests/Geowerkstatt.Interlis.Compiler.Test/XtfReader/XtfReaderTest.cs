@@ -1,6 +1,6 @@
-﻿using Geowerkstatt.Interlis.Tools.NTS;
+﻿using Geowerkstatt.Interlis.Compiler.NTS;
 
-namespace Geowerkstatt.Interlis.Tools.XtfReader;
+namespace Geowerkstatt.Interlis.Compiler.XtfReader;
 
 [TestClass]
 public class XtfReaderTest

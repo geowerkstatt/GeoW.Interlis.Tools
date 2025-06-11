@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools.CreateAST;
+﻿namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
 internal sealed class Scope<T> where T : class
 {

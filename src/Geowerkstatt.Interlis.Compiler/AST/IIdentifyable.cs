@@ -1,6 +1,6 @@
-﻿using Geowerkstatt.Interlis.Tools.AST.Types;
+﻿using Geowerkstatt.Interlis.Compiler.AST.Types;
 
-namespace Geowerkstatt.Interlis.Tools.AST;
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// Represents INTERLIS definitions that are identifiable by an OID during the transfer.

@@ -1,11 +1,11 @@
-﻿using Geowerkstatt.Interlis.Tools.AST;
+﻿using Geowerkstatt.Interlis.Compiler.AST;
 using DeepEqual.Syntax;
-using Geowerkstatt.Interlis.Tools.CreateAST;
-using Geowerkstatt.Interlis.Tools.AST.Types;
+using Geowerkstatt.Interlis.Compiler.CreateAST;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using Compiler.Test.CreateAST;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 [TestClass]
 public class InterlisReaderInterlisFileTest

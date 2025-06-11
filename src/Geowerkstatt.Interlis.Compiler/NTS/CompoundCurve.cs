@@ -1,6 +1,6 @@
 ﻿using NetTopologySuite.Geometries;
 
-namespace Geowerkstatt.Interlis.Tools.NTS;
+namespace Geowerkstatt.Interlis.Compiler.NTS;
 
 public class CompoundCurve
 {

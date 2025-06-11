@@ -1,4 +1,4 @@
-﻿namespace Geowerkstatt.Interlis.Tools;
+﻿namespace Geowerkstatt.Interlis.Compiler;
 
 internal static class CollectionExtensions
 {

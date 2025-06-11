@@ -1,10 +1,10 @@
 ﻿using Antlr4.Runtime;
-using Geowerkstatt.Interlis.Tools.AST;
-using Geowerkstatt.Interlis.Tools.CreateAST;
+using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.CreateAST;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Geowerkstatt.Interlis.Tools;
+namespace Geowerkstatt.Interlis.Compiler;
 
 public class InterlisReader
 {

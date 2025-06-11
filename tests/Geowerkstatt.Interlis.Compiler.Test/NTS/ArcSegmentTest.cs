@@ -1,7 +1,7 @@
 ﻿using NetTopologySuite.Geometries;
 using Degrees = NetTopologySuite.Utilities.Degrees;
 
-namespace Geowerkstatt.Interlis.Tools.NTS;
+namespace Geowerkstatt.Interlis.Compiler.NTS;
 
 [TestClass]
 public class ArcSegmentTest
