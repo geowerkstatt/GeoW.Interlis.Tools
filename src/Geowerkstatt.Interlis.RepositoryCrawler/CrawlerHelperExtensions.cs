@@ -33,7 +33,7 @@ internal static class CrawlerHelperExtensions
     }
 
     internal static string GetTitle(this DatasetMetadata data)
-        => data.title?.MultilingualText?.LocalisedTexts?.FirstOrDefault(lt => string.Empty.Equals(lt.Language, StringComparison.OrdinalIgnoreCase))?.Language ?? string.Empty;
+        => data.title?.MultilingualText?.LocalisedTexts?.FirstOrDefault(lt => string.Empty.Equals(lt.Language, StringComparison.OrdinalIgnoreCase))?.Text ?? string.Empty;
 
     internal static List<string> GetFiles(this DatasetMetadata data)
         => data.files?
