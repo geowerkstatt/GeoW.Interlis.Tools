@@ -11,8 +11,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler;
 [TestClass]
 public class RepositoryCrawlerTest
 {
-    private Mock<ILogger<RepositoryCrawler>> loggerMock;
-    private Mock<IHttpClientFactory> httpClientFactory;
+    private Mock<ILogger> loggerMock;
     private RepositoryCrawler repositoryCrawler;
     private MockHttpMessageHandler mockHttp;
     private Dictionary<string, MockedRequest> mockRequests;
@@ -21,48 +20,25 @@ public class RepositoryCrawlerTest
     public void Initialize()
     {
         mockHttp = new MockHttpMessageHandler();
-        mockRequests = SetupHttpMockFiles();
+        mockRequests = mockHttp.SetupHttpMockForTestdataFiles();
 
         SetupRepositoryCrawlerInstance(mockHttp.ToHttpClient());
     }
 
-    private Dictionary<string, MockedRequest> SetupHttpMockFiles()
-    {
-        var mockRequests = new Dictionary<string, MockedRequest>();
-        foreach (var dir in Directory.GetDirectories("./Testdata"))
-        {
-            foreach (var file in Directory.GetFiles(dir))
-            {
-                var url = $"https://{Path.GetFileName(dir)}/{Path.GetFileName(file)}";
-                mockRequests.Add(url, mockHttp
-                    .When(url)
-                    .Respond("application/xml", new FileStream(file, FileMode.Open, FileAccess.Read)));
-            }
-
-            mockHttp
-                .When(HttpMethod.Head, $"https://{Path.GetFileName(dir)}/")
-                .Respond(HttpStatusCode.OK);
-        }
-
-        mockHttp.Fallback.Respond(HttpStatusCode.NotFound);
-        return mockRequests;
-    }
-
     private void SetupRepositoryCrawlerInstance(HttpClient httpClient)
     {
-        loggerMock = new Mock<ILogger<RepositoryCrawler>>();
-        httpClientFactory = new Mock<IHttpClientFactory>();
-        httpClientFactory
-            .Setup(cf => cf.CreateClient(""))
-            .Returns(httpClient);
-        repositoryCrawler = new RepositoryCrawler(loggerMock.Object, httpClientFactory.Object);
+        var loggerProvider = new MockLoggerProvider();
+        loggerMock = loggerProvider.LoggerMock;
+        var loggerFactory = LoggerFactory.Create(b => b.AddConsole().AddProvider(loggerProvider));
+
+        repositoryCrawler = new RepositoryCrawler(loggerFactory, httpClient);
     }
 
     [TestCleanup]
     public void Cleanup()
     {
-        httpClientFactory.VerifyAll();
         loggerMock.VerifyAll();
+        mockHttp.Dispose();
     }
 
     [TestMethod]
@@ -255,7 +231,7 @@ public class RepositoryCrawlerTest
             .When($"https://models.multiparent.testdata/ilisite.xml")
             .Respond("application/xml", new MemoryStream(Encoding.UTF8.GetBytes("Bad Formatted xml stream")));
 
-        SetupHttpMockFiles();
+        mockHttp.SetupHttpMockForTestdataFiles();
         SetupRepositoryCrawlerInstance(mockHttp.ToHttpClient());
 
         var result = await repositoryCrawler.CrawlModelRepositories(new RepositoryCrawlerOptions { RootRepositoryUri = "https://models.interlis.testdata" });
@@ -271,12 +247,18 @@ public class RepositoryCrawlerTest
         Assert.IsNotNull(result);
         result.AssertCount(1).Single().Value.Models.AssertCount(7);
 
-        await repositoryCrawler.FetchInterlisFiles(Enumerable.Empty<InterlisFile>(), result.Values);
-        Assert.IsNotNull(result);
-        result.AssertCount(1);
-
-        result.AssertSingleItem("https://models.multiparent.testdata/", repository =>
+        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
+        result.AssertSingleItem("https://models.multiparent.testdata/", async repository =>
         {
+            foreach (var model in repository.Models)
+            {
+                var file = await repositoryCrawler.FetchInterlisFile(model, md5 => cachedFiles.GetValueOrDefault(md5));
+                if (file != null)
+                {
+                    cachedFiles[file.MD5] = file;
+                }
+            }
+
             repository.Models
                 .AssertCount(7)
                 .AssertSingleItem(m => m.Name == "Test_Model_Without_MD5", m => Assert.AreEqual("EB137F3B28D3D06C41F20237886A8B41", m.MD5))
@@ -296,9 +278,15 @@ public class RepositoryCrawlerTest
         Assert.IsNotNull(result);
         result.AssertCount(1).Single().Value.Models.AssertCount(7);
 
-        await repositoryCrawler.FetchInterlisFiles(Enumerable.Empty<InterlisFile>(), result.Values);
-        Assert.IsNotNull(result);
-        result.AssertCount(1);
+        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in result.Single().Value.Models)
+        {
+            var file = await repositoryCrawler.FetchInterlisFile(model, md5 => cachedFiles.GetValueOrDefault(md5));
+            if (file != null)
+            {
+                cachedFiles[file.MD5] = file;
+            }
+        }
 
         Assert.AreEqual(1, mockHttp.GetMatchCount(mockRequests["https://models.multiparent.testdata/TwoModelsInOneFile.ili"]));
         Assert.AreEqual(3, mockHttp.GetMatchCount(mockRequests["https://models.multiparent.testdata/TestModel.ili"]), "Missing or wrong MD5 hashes in ilimodels.xml lead to refetches.");
@@ -312,14 +300,17 @@ public class RepositoryCrawlerTest
         result.AssertCount(1).Single().Value.Models.AssertCount(7);
 
         var expectedContent = "Expected Content NISECTIOUSIS";
-        await repositoryCrawler.FetchInterlisFiles([new InterlisFile { MD5 = "17DD3681A880848BAEF146904991C36B", Content = expectedContent }], result.Values);
-        Assert.IsNotNull(result);
-        result.AssertCount(1);
+        var md5 = "17DD3681A880848BAEF146904991C36B";
+        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase) { { md5, new InterlisFile { MD5 = md5, Content = expectedContent } } };
+
+        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model1"), md5 => cachedFiles.GetValueOrDefault(md5));
+        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model2"), md5 => cachedFiles.GetValueOrDefault(md5));
+        cachedFiles.AssertCount(1, "The cached files dictionary should only contain the initial file.");
 
         Assert.AreEqual(0, mockHttp.GetMatchCount(mockRequests["https://models.multiparent.testdata/TwoModelsInOneFile.ili"]));
         result.Single().Value.Models
-            .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model1", m => Assert.AreEqual(expectedContent, m.FileContent.Content))
-            .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model2", m => Assert.AreEqual(expectedContent, m.FileContent.Content));
+            .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model1", m => Assert.AreEqual(expectedContent, m.FileContent?.Content))
+            .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model2", m => Assert.AreEqual(expectedContent, m.FileContent?.Content));
     }
 
     [TestMethod]
@@ -383,7 +374,7 @@ public class RepositoryCrawlerTest
             .When("https://models.multiparent.testdata/ilisite.xml")
             .Throw(new OperationCanceledException());
 
-        SetupHttpMockFiles();
+        mockHttp.SetupHttpMockForTestdataFiles();
         SetupRepositoryCrawlerInstance(mockHttp.ToHttpClient());
 
         var result = await repositoryCrawler.CrawlModelRepositories(new RepositoryCrawlerOptions { RootRepositoryUri = "https://models.interlis.testdata" });
