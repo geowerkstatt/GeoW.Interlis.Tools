@@ -4,7 +4,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public interface IInterlis24AstVisitor<TResult>
 {
-    TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile);
+    TResult? VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisFile);
 
     TResult? VisitModelDef([NotNull] ModelDef modelDef);
 

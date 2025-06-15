@@ -36,9 +36,9 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
         return DefaultResult;
     }
 
-    public virtual TResult? VisitInterlisFile([NotNull] InterlisFile interlisFile)
+    public virtual TResult? VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisEnvironment)
     {
-        foreach (var element in interlisFile.Content.Values)
+        foreach (var element in interlisEnvironment.Content.Values)
         {
             element.Accept(this);
         }

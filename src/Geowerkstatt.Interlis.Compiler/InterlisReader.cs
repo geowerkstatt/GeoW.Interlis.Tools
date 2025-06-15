@@ -16,13 +16,18 @@ public class InterlisReader
     }
 
     /// <summary>
-    /// Compiles the content of the <paramref name="textReader"/> to a <see cref="InterlisFile"/>.
+    /// Compiles the content of the <paramref name="textReader"/> to a <see cref="InterlisEnvironment"/>.
     /// </summary>
     /// <param name="textReader">The input to compile.</param>
+    /// <param name="sourceUri">The filepath or URL to the source interlis file.</param>
     /// <returns>The compiled representation of the <paramref name="textReader"/> input.</returns>
-    public InterlisFile ReadFile(TextReader textReader)
+    public InterlisEnvironment ReadFile(TextReader textReader, string? sourceUri = null)
     {
         var (interlisFile, unresolvedReferences) = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()));
+        foreach (var model in interlisFile.Content.Values)
+        {
+            model.SourceUri = sourceUri;
+        }
 
         var referenceResolver = new Interlis24AstReferenceResolverVisitor(loggerFactory, unresolvedReferences);
         interlisFile.Accept(referenceResolver);

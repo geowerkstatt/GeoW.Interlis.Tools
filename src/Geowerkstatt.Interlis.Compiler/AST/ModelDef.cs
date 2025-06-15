@@ -17,6 +17,11 @@ public sealed class ModelDef : IDocumentation, IInterlisDefinitionContainer
     public string? Version { get; set; }
     public string? Xmlns { get; set; }
 
+    /// <summary>
+    /// The path or URL to the source interlis file where this model was defined.
+    /// </summary>
+    public string? SourceUri { get; set; }
+
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {
         return visitor.VisitModelDef(this);

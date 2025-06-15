@@ -303,10 +303,10 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         return target;
     }
 
-    public override InterlisFile VisitInterlisFile([NotNull] InterlisFile interlisFile)
+    public override InterlisEnvironment VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisEnvironment)
     {
         // resolve model imports
-        var modelDefs = interlisFile.Content.Values.OfType<ModelDef>().ToList();
+        var modelDefs = interlisEnvironment.Content.Values.OfType<ModelDef>().ToList();
         var availableModels = modelDefs.ToDictionary(m => m.Name);
         availableModels["INTERLIS"] = InternalInterlisModel;
 
@@ -332,9 +332,9 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         }
 
         // visit children
-        base.VisitInterlisFile(interlisFile);
+        base.VisitInterlisEnvironment(interlisEnvironment);
 
-        return interlisFile;
+        return interlisEnvironment;
     }
 
     public override object? VisitAttributeDef([NotNull] AttributeDef attributeDef)

@@ -104,7 +104,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             .ToList();
     }
 
-    private void SetContentDictionary<T>(IContainer<IInterlisDefinition> container, IInterlisDefinitionContainer? parent, IToken token, IEnumerable<T> elements) where T : class, IInterlisDefinition
+    private void SetContentDictionary<T>(IContainer<T> container, IInterlisDefinitionContainer? parent, IToken token, IEnumerable<T> elements) where T : class, IInterlisDefinition
     {
         foreach (var element in elements.WhereNotNull())
         {
@@ -116,10 +116,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
     }
 
-    public override InterlisFile VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
+    public override InterlisEnvironment VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
     {
-        var interlisFile = new InterlisFile();
-        SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef).Cast<IInterlisDefinition>());
+        var interlisFile = new InterlisEnvironment();
+        SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef));
 
         return interlisFile;
     }

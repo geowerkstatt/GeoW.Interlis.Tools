@@ -13,7 +13,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileNoModels()
     {
-        AssertReadFile("INTERLIS 2.4;", new InterlisFile());
+        AssertReadFile("INTERLIS 2.4;", new InterlisEnvironment());
     }
 
     [TestMethod]
@@ -24,7 +24,7 @@ public class InterlisReaderInterlisFileTest
             MODEL ModelName AT "foo.test" VERSION "123" =
             END ModelName.
             """,
-            new InterlisFile
+            new InterlisEnvironment
             {
                 Content =
                 {
@@ -46,7 +46,7 @@ public class InterlisReaderInterlisFileTest
             MODEL ModelName AT "foo.test" VERSION "123" =
             END ModelName.
             """,
-            new InterlisFile
+            new InterlisEnvironment
             {
                 Content =
                 {
@@ -79,7 +79,7 @@ public class InterlisReaderInterlisFileTest
                 END TopicName;
             END ModelName.
             """,
-            new InterlisFile
+            new InterlisEnvironment
             {
                 Content =
                 {
@@ -179,7 +179,7 @@ public class InterlisReaderInterlisFileTest
             Name = "BaseTopic",
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -428,7 +428,7 @@ public class InterlisReaderInterlisFileTest
         var structType = new ClassDef { Name = "structType", IsStructure = true };
         var person = new ClassDef { Name = "Person" };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -688,7 +688,7 @@ public class InterlisReaderInterlisFileTest
             }
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -745,7 +745,7 @@ public class InterlisReaderInterlisFileTest
             Content = { }
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -823,7 +823,7 @@ public class InterlisReaderInterlisFileTest
             FormatBaseType = new Reference<FormattedType> { Target = formattedType, Path = { "Format" } },
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -871,7 +871,7 @@ public class InterlisReaderInterlisFileTest
     {
         var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -955,7 +955,7 @@ public class InterlisReaderInterlisFileTest
     {
         var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -1065,7 +1065,7 @@ public class InterlisReaderInterlisFileTest
 
         nameClass.AssociationAccess.Add("AssociationName", association);
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
             Content =
             {
@@ -1138,7 +1138,7 @@ public class InterlisReaderInterlisFileTest
         Assert.AreEqual("Ambiguous 'reference 'Name' from Name.Name' could be resolved to multiple targets: Name.Name.Name, OtherName.Name", logProvider.GetMessages().FirstOrDefault());
     }
 
-    internal static void AssertReadFile(string input, InterlisFile expected)
+    internal static void AssertReadFile(string input, InterlisEnvironment expected)
     {
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
