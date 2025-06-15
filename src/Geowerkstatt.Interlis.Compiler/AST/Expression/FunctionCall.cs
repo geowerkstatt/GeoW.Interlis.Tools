@@ -6,7 +6,7 @@ public class FunctionCall : IExpression
 {
     /// <inheritdoc />
     /// <remarks>Is resolved from the <see cref="FunctionDef"/>.</remarks>
-    public TypeDef ReturnType { get; set; } = default!;
+    public TypeDef ReturnType => FunctionDef.Target?.ReturnType!;
 
     public required Reference<FunctionDef> FunctionDef { get; init; }
 

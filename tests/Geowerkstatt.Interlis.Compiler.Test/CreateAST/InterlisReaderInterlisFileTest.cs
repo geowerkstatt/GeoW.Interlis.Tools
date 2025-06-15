@@ -4,6 +4,7 @@ using Geowerkstatt.Interlis.Compiler.CreateAST;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using Compiler.Test.CreateAST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -1138,6 +1139,101 @@ public class InterlisReaderInterlisFileTest
         Assert.AreEqual("Ambiguous 'reference 'Name' from Name.Name' could be resolved to multiple targets: Name.Name.Name, OtherName.Name", logProvider.GetMessages().FirstOrDefault());
     }
 
+    [TestMethod]
+    public void ReadFileWithFunctionCall()
+    {
+        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+
+        var functionDef = new FunctionDef
+        {
+            Name = "endsWith",
+            ReturnType = new BooleanType { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+        };
+
+        var functionModel = new ModelDef
+        {
+            Name = "Text_V2",
+            URI = "http://www.interlis.ch/models",
+            Version = "2023-05-25",
+            Language = "en",
+            Imports = { { "INTERLIS", (false, interlis) } },
+            Content = { { "endsWith", functionDef } }
+        };
+
+        var expected = new InterlisEnvironment
+        {
+            Content =
+            {
+                { "Text_V2", functionModel },
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Imports =
+                        {
+                            { "INTERLIS", (false, interlis) },
+                            { "Text_V2", (true, functionModel) },
+                        },
+                        Content =
+                        {
+                            {
+                                "specialText",
+                                new DomainDef
+                                {
+                                    Name = "specialText",
+                                    TypeDef = new TextType
+                                    {
+                                        Length = 12,
+                                        Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                                        Constraints =
+                                        {
+                                            new DomainConstraint
+                                            {
+                                                Name = "EndsWithPoint",
+                                                Condition = new FunctionCall
+                                                {
+                                                    FunctionDef = new Reference<FunctionDef> { Target = functionDef, Path = { "endsWith" } },
+                                                    Arguments =
+                                                    {
+                                                        new PathExpression
+                                                        {
+                                                            Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This } },
+                                                        },
+                                                        new TextConstant
+                                                        {
+                                                            Value = ".",
+                                                            ReturnType = new TextType(),
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                    }
+                }
+            },
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+
+            TYPE MODEL Text_V2 (en) AT "http://www.interlis.ch/models" VERSION "2023-05-25" =
+                FUNCTION endsWith(val: TEXT; suffix: TEXT): BOOLEAN;
+            END Text_V2.
+
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                IMPORTS UNQUALIFIED Text_V2;
+                DOMAIN specialText = TEXT*12 CONSTRAINTS EndsWithPoint : endsWith(THIS, ".");
+            END ModelName.
+            """, expected);
+    }
+
     internal static void AssertReadFile(string input, InterlisEnvironment expected)
     {
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
@@ -1178,7 +1274,8 @@ public class InterlisReaderInterlisFileTest
             .IgnoreProperty(p => p.DeclaringType.IsGenericType
                     && typeof(Reference<object>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
                     && (nameof(Reference<object>.Source).Equals(p.Name) // Ignore reference source to break circular references
-                        || nameof(Reference<object>.MapTarget).Equals(p.Name))) // Ignore Func property
+                        || nameof(Reference<object>.MapTarget).Equals(p.Name) // Ignore Func property
+                        || nameof(Reference<object>.OnResolved).Equals(p.Name))) // Ignore Callback property
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
             .IgnoreCircularReferences();
 

@@ -6,14 +6,20 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 {
     protected internal virtual TResult? DefaultResult => default;
 
+    /// <summary>
+    /// Aggregates the results of visiting multiple children of a node.
+    /// </summary>
+    /// <param name="aggregate">The previous aggregate value.</param>
+    /// <param name="nextResult">The result of the immediately preceeding call to visit a child node.</param>
+    /// <returns>The updated aggregate result.</returns>
+    protected internal virtual TResult? AggregateResult(TResult? aggregate, TResult? nextResult)
+    {
+        return nextResult;
+    }
+
     public virtual TResult? VisitAssociationDef([NotNull] AssociationDef associationDef)
     {
-        foreach (var element in associationDef.Content.Values)
-        {
-            element.Accept(this);
-        }
-
-        return DefaultResult;
+        return associationDef.Content.Values.Aggregate(DefaultResult, (accu, element) => AggregateResult(accu, element.Accept(this)));
     }
 
     public virtual TResult? VisitAttributeDef([NotNull] AttributeDef attributeDef)
@@ -23,12 +29,7 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitClassDef([NotNull] ClassDef classDef)
     {
-        foreach (var element in classDef.Content.Values)
-        {
-            element.Accept(this);
-        }
-
-        return DefaultResult;
+        return classDef.Content.Values.Aggregate(DefaultResult, (accu, element) => AggregateResult(accu, element.Accept(this)));
     }
 
     public virtual TResult? VisitDomainDef([NotNull] DomainDef domainDef)
@@ -38,40 +39,25 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
 
     public virtual TResult? VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisEnvironment)
     {
-        foreach (var element in interlisEnvironment.Content.Values)
-        {
-            element.Accept(this);
-        }
-
-        return DefaultResult;
+        return interlisEnvironment.Content.Values.Aggregate(DefaultResult, (accu, element) => AggregateResult(accu, element.Accept(this)));
     }
 
     public virtual TResult? VisitModelDef([NotNull] ModelDef modelDef)
     {
-        foreach (var element in modelDef.Content.Values)
-        {
-            element.Accept(this);
-        }
-
-        return DefaultResult;
+        return modelDef.Content.Values.Aggregate(DefaultResult, (accu, element) => AggregateResult(accu, element.Accept(this)));
     }
 
     public virtual TResult? VisitTopicDef([NotNull] TopicDef topicDef)
     {
-        foreach (var element in topicDef.Content.Values)
-        {
-            element.Accept(this);
-        }
-
-        return DefaultResult;
+        return topicDef.Content.Values.Aggregate(DefaultResult, (accu, element) => AggregateResult(accu, element.Accept(this)));
     }
 
-    public TResult? VisitUnitDef([NotNull] UnitDef unitDef)
+    public virtual TResult? VisitUnitDef([NotNull] UnitDef unitDef)
     {
         return DefaultResult;
     }
 
-    public TResult? VisitFunctionDef([NotNull] FunctionDef functionDef)
+    public virtual TResult? VisitFunctionDef([NotNull] FunctionDef functionDef)
     {
         return DefaultResult;
     }

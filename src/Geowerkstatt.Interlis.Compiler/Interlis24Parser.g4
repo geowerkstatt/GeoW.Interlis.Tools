@@ -452,9 +452,9 @@ argument
 functionDef
     : FUNCTION name=IDENTIFIER '(' (
         argumentName=IDENTIFIER ':' argumentType (
-            SEMICOLON argumentName=IDENTIFIER ':' IDENTIFIER
+            SEMICOLON argumentName=IDENTIFIER ':' argumentType
         )*
-    )? ')' ':' argumentType EXPLANATION? SEMICOLON
+    )? ')' ':' returnType=argumentType EXPLANATION? SEMICOLON
     ;
 
 argumentType

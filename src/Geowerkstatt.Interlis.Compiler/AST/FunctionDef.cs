@@ -1,4 +1,6 @@
-﻿namespace Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Types;
+
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public class FunctionDef : IInterlisDefinition, IDocumentation
 {
@@ -8,6 +10,8 @@ public class FunctionDef : IInterlisDefinition, IDocumentation
 
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
+
+    public required TypeDef ReturnType { get; init; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

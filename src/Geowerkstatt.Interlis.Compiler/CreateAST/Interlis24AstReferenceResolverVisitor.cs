@@ -8,7 +8,7 @@ namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 /// <summary>
 /// Resolves various references inside the AST. The AST is modified in place.
 /// </summary>
-public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory, List<IReference> referencesToResolve) : Interlis24AstBaseVisitor<object>
+public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory, List<IReference> referencesToResolve) : Interlis24AstBaseVisitor<bool>
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24AstReferenceResolverVisitor>();
 
@@ -209,11 +209,13 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
     /// <summary>
     /// Resolves the reference. If successful, the <see cref="Reference{T}.Target"/> is set accordingly.
     /// </summary>
-    private void Resolve(IReference reference)
+    /// <returns><see langword="true"/> if the <paramref name="reference"/> was resolved successfully, <see langword="false"/> otherwise.</returns>
+    private bool Resolve(IReference reference)
     {
         if (reference == null || reference.Source == null)
         {
-            return;
+            // Nothing to resolve
+            return true;
         }
 
         if (reference.Path.Count == 0)
@@ -277,15 +279,15 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         {
             case 0:
                 logger.LogError("Could not resolve '{Reference}'", reference);
-                break;
+                return false;
 
             case 1:
                 reference.SetTarget(mappedTargets.Single());
-                break;
+                return true;
 
             default:
                 logger.LogError("Ambiguous '{Reference}' could be resolved to multiple targets: {Targets}", reference, string.Join(", ", mappedTargets.Select(d => d.FullyQualifiedName)));
-                break;
+                return false;
         }
     }
 
@@ -303,7 +305,14 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         return target;
     }
 
-    public override InterlisEnvironment VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisEnvironment)
+    protected internal override bool DefaultResult => true;
+
+    protected internal override bool AggregateResult(bool aggregate, bool nextResult)
+    {
+        return aggregate && nextResult;
+    }
+
+    public override bool VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisEnvironment)
     {
         // resolve model imports
         var modelDefs = interlisEnvironment.Content.Values.OfType<ModelDef>().ToList();
@@ -326,18 +335,22 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         }
 
         // resolve references
+        var allSuccessful = true;
         foreach (var reference in referencesToResolve)
         {
-            Resolve(reference);
+            if (!Resolve(reference))
+            {
+                allSuccessful = false;
+            }
         }
 
         // visit children
-        base.VisitInterlisEnvironment(interlisEnvironment);
+        allSuccessful &= base.VisitInterlisEnvironment(interlisEnvironment);
 
-        return interlisEnvironment;
+        return allSuccessful;
     }
 
-    public override object? VisitAttributeDef([NotNull] AttributeDef attributeDef)
+    public override bool VisitAttributeDef([NotNull] AttributeDef attributeDef)
     {
         // Add references from classDefs to the associations they are part of.
         if (attributeDef.TypeDef is RoleType roleType && attributeDef.Parent is AssociationDef association)

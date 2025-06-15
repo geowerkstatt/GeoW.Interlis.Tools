@@ -1101,6 +1101,34 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
     }
 
+    public override object VisitFunctionDef([NotNull] Interlis24Parser.FunctionDefContext context)
+    {
+        return new FunctionDef
+        {
+            Name = context.name.Text,
+            NameLocations = { GetRange(context.name) },
+            DocComments = { GetDocComments(context) },
+            MetaAttributes = { ProcessMetaAttributes(context) },
+            ReturnType = VisitArgumentType(context.returnType),
+        };
+    }
+
+    public override TypeDef VisitArgumentType([NotNull] Interlis24Parser.ArgumentTypeContext context)
+    {
+        if (context.attrTypeDef() != null)
+        {
+            return VisitAttrTypeDef(context.attrTypeDef());
+        }
+        else if (context.OBJECT() != null || context.OBJECTS() != null)
+        {
+            return new ObjectType();
+        }
+        else
+        {
+            return new EnumerationType();
+        }
+    }
+
     public override object VisitFunctionCall([NotNull] Interlis24Parser.FunctionCallContext context)
     {
         return new FunctionCall

@@ -19,6 +19,11 @@ public class Reference<T> : IReference where T : class
     /// </summary>
     public Func<IInterlisDefinition, T?> MapTarget { get; init; } = element => element as T;
 
+    /// <summary>
+    /// A function that is called when the target is resolved.
+    /// </summary>
+    public Action<T>? OnResolved;
+
     /// <inheritdoc />
     public List<string> Path { get; } = new List<string>();
 
@@ -32,6 +37,7 @@ public class Reference<T> : IReference where T : class
     public void SetTarget(IInterlisDefinition target)
     {
         Target = MapTarget(target);
+        OnResolved?.Invoke(Target!);
     }
 
     public override string ToString()
