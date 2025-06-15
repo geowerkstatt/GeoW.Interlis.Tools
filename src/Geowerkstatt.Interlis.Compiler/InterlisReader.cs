@@ -44,6 +44,20 @@ public class InterlisReader
     /// <returns>The compiled representation of the <paramref name="textReader"/> input and a list of <see cref="UnresolvedReference"/>s.</returns>
     public TResult ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
     {
+        var tokenStream = RunLexer(textReader, lineOffset);
+        var interlisParser = GetParser(tokenStream);
+        var astCreator = new Interlis24Visitor(loggerFactory, tokenStream);
+        return parseRule(interlisParser, astCreator);
+    }
+
+    /// <summary>
+    /// Create a <see cref="CommonTokenStream"/> from the given input <paramref name="textReader"/>.
+    /// </summary>
+    /// <param name="textReader">The input to compile.</param>
+    /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
+    /// <returns>A <see cref="CommonTokenStream"/> with the tokens from the lexer.</returns>
+    public CommonTokenStream RunLexer(TextReader textReader, int lineOffset = 0)
+    {
         var inputStream = CharStreams.fromTextReader(textReader);
 
         var interlisLexer = new Interlis24Lexer(inputStream);
@@ -51,12 +65,20 @@ public class InterlisReader
         interlisLexer.RemoveErrorListeners();
         interlisLexer.AddErrorListener(new ILoggerLexerErrorListener(loggerFactory));
 
-        var tokenStream = new CommonTokenStream(interlisLexer);
+        return new CommonTokenStream(interlisLexer);
+    }
+
+    /// <summary>
+    /// Configure a new instance of <see cref="Interlis24Parser"/> with the given <paramref name="tokenStream"/>.
+    /// </summary>
+    /// <param name="tokenStream">The <see cref="CommonTokenStream"/> to parse.</param>
+    /// <returns>A <see cref="Interlis24Parser"/> for parsing.</returns>
+    public Interlis24Parser GetParser(CommonTokenStream tokenStream)
+    {
         var interlisParser = new Interlis24Parser(tokenStream);
         interlisParser.RemoveErrorListeners();
         interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
 
-        var visitor = new Interlis24Visitor(loggerFactory, tokenStream);
-        return parseRule(interlisParser, visitor);
+        return interlisParser;
     }
 }
