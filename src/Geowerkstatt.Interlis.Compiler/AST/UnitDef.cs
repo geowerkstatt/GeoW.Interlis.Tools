@@ -1,4 +1,6 @@
-﻿namespace Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
+
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
 {
@@ -22,6 +24,8 @@ public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
     public HashSet<Property> Properties { get; } = new HashSet<Property>();
+
+    public IExpression? Expression { get; set; }
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

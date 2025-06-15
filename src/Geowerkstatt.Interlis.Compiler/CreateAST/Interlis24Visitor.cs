@@ -616,7 +616,6 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         var term = context.unitTerm.Text;
         var shortName = context.unitShortName?.Text;
-        List<Property> properties = context.ABSTRACT() != null ? [Property.Abstract] : [];
 
         var unit = new UnitDef
         {
@@ -626,10 +625,64 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Term = term,
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
-            Properties = { properties },
+            Properties = { context.ABSTRACT() != null ? [Property.Abstract] : [] },
+            Expression = context switch
+            {
+                var ctx when ctx.derivedUnit() is { } d => VisitDerivedUnit(d),
+                var ctx when ctx.composedUnit() is { } c => VisitComposedUnit(c),
+                _ => null
+            },
         };
 
         return unit;
+    }
+
+    public override IExpression VisitDerivedUnit([NotNull] Interlis24Parser.DerivedUnitContext context)
+    {
+        var derivedFrom = new PathExpression { Path = { new ReferencePathElement { Value = CreateReference<IInterlisDefinition>(context.definitionRef()) } } };
+
+        if (context.FUNCTION() != null)
+        {
+            return null!;
+        }
+
+        var constants = context.decConst().Select(n => { var (value, precision) = VisitDecConst(n); return value; }).ToArray();
+        if (constants.Length == 0)
+        {
+            return derivedFrom;
+        }
+        else
+        {
+            var constant = constants[0];
+            for (var i = 1; i < constants.Length; i++)
+            {
+                constant = context._op[i - 1].Type switch
+                {
+                    Interlis24Parser.ASTERISK => constant * constants[i],
+                    Interlis24Parser.SLASH => constant / constants[i],
+                    _ => throw new UnexpectedNodeException(context._op[i - 1]),
+                };
+            }
+
+            return new Multiplication { FirstOperand = new NumericConstant { Value = constant }, SecondOperand = derivedFrom };
+        }
+    }
+
+    public override IExpression VisitComposedUnit([NotNull] Interlis24Parser.ComposedUnitContext context)
+    {
+        var composedFrom = context.definitionRef().Select(d => new PathExpression { Path = { new ReferencePathElement { Value = CreateReference<IInterlisDefinition>(d) } } }).ToArray();
+        IExpression result = composedFrom[0];
+        for (var i = 1; i < composedFrom.Length; i++)
+        {
+            result = context._op[i - 1].Type switch
+            {
+                Interlis24Parser.ASTERISK => new Multiplication { FirstOperand = result, SecondOperand = composedFrom[i] },
+                Interlis24Parser.SLASH => new Division { FirstOperand = result, SecondOperand = composedFrom[i] },
+                _ => throw new UnexpectedNodeException(context._op[i - 1]),
+            };
+        }
+
+        return result;
     }
 
     public override List<DomainDef> VisitDomainDef([NotNull] Interlis24Parser.DomainDefContext context)
@@ -1006,10 +1059,8 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
 
     public override NumericConstant VisitNumericConst([NotNull] Interlis24Parser.NumericConstContext context)
     {
-        if (context.definitionRef() != null) throw new NotImplementedException("Unit not supported");
-
         var (value, precision) = VisitDecConst(context.decConst());
-        return new NumericConstant { Value = value };
+        return new NumericConstant { Value = value, Unit = CreateReference<UnitDef>(context.definitionRef()) };
     }
 
     public override EnumerationConstant VisitEnumerationConst([NotNull] Interlis24Parser.EnumerationConstContext context)

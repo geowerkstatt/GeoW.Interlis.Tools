@@ -1,4 +1,5 @@
-﻿using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -41,31 +42,64 @@ public class InterlisReaderUnitDefTest
                 Term = "Area",
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
                 Properties = { Property.Abstract },
+                Expression = new Multiplication
+                {
+                    FirstOperand = new PathExpression
+                    {
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" } } } }
+                    },
+                    SecondOperand = new PathExpression
+                    {
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" } } } },
+                    }
+                }
             });
     }
 
     [TestMethod]
     public void ReadComposedUnit()
     {
-        AssertReadRule("SquareMeter [m2] EXTENDS Area = (m * m);",
+        AssertReadRule("KilometersPerHour [kmh] EXTENDS Speed = (km / h);",
             new UnitDef
             {
-                Name = "m2",
-                Term = "SquareMeter",
-                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 13 }, End = new Position { Line = 0, Character = 15 } } },
-                Extends = new Reference<UnitDef> { Path = { "Area" } },
+                Name = "kmh",
+                Term = "KilometersPerHour",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 19 }, End = new Position { Line = 0, Character = 22 } } },
+                Extends = new Reference<UnitDef> { Path = { "Speed" } },
+                Expression = new Division
+                {
+                    FirstOperand = new PathExpression
+                    {
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "km" } } } }
+                    },
+                    SecondOperand = new PathExpression
+                    {
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "h" } } } },
+                    }
+                }
             });
     }
 
     [TestMethod]
     public void ReadDerivedUnit()
     {
-        AssertReadRule("AngleDegree = 180 / PI [AngleRad];",
+        AssertReadRule("AngleDegree = 360 / 2 / PI [AngleRad];",
             new UnitDef
             {
                 Name = "AngleDegree",
                 Term = "AngleDegree",
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 11 } } },
+                Expression = new Multiplication
+                {
+                    FirstOperand = new NumericConstant
+                    {
+                        Value = 57.29577951308232,
+                    },
+                    SecondOperand = new PathExpression
+                    {
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "AngleRad" } } } },
+                    }
+                }
             });
     }
 

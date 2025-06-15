@@ -327,11 +327,11 @@ unitTypeDef
     ;
 
 derivedUnit
-    : (decConst ( ( '*' | '/') decConst)* | FUNCTION EXPLANATION)? '[' definitionRef ']'
+    : (decConst ( op+=( '*' | '/') decConst)* | FUNCTION EXPLANATION)? '[' definitionRef ']'
     ;
 
 composedUnit
-    : '(' definitionRef (( '*' | '/') definitionRef)* ')'
+    : '(' definitionRef (op+=( '*' | '/') definitionRef)* ')'
     ;
 
 metaDataBasketDef
