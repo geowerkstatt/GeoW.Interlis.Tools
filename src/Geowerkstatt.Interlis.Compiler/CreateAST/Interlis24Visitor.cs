@@ -140,9 +140,19 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
 
     public override InterlisEnvironment VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
     {
-        var interlisFile = new InterlisEnvironment();
-        SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef));
+        double? version = context.numeric() == null ? null : ((Tuple<double, int>)Visit(context.numeric())).Item1;
 
+        var interlisFile = new InterlisEnvironment
+        {
+            Version = version,
+        };
+
+        if (version != 2.4)
+        {
+            logger.LogWarning("Unsupported INTERLIS version {Version}. Only version 2.4 is supported.", version);
+        }
+
+        SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef));
         return interlisFile;
     }
 

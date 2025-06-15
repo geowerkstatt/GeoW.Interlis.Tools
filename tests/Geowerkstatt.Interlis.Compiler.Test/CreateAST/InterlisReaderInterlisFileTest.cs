@@ -14,7 +14,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileNoModels()
     {
-        AssertReadFile("INTERLIS 2.4;", new InterlisEnvironment());
+        AssertReadFile("INTERLIS 2.4;", new InterlisEnvironment { Version = 2.4 });
     }
 
     [TestMethod]
@@ -27,6 +27,7 @@ public class InterlisReaderInterlisFileTest
             """,
             new InterlisEnvironment
             {
+                Version = 2.4,
                 Content =
                 {
                     {
@@ -49,6 +50,7 @@ public class InterlisReaderInterlisFileTest
             """,
             new InterlisEnvironment
             {
+                Version = 2.4,
                 Content =
                 {
                     {
@@ -82,6 +84,7 @@ public class InterlisReaderInterlisFileTest
             """,
             new InterlisEnvironment
             {
+                Version = 2.4,
                 Content =
                 {
                     {
@@ -182,6 +185,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -431,6 +435,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -691,6 +696,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -748,6 +754,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 { "Model_A", modelA },
@@ -834,6 +841,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -876,6 +884,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -960,6 +969,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -1070,6 +1080,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -1164,6 +1175,7 @@ public class InterlisReaderInterlisFileTest
 
         var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 { "Text_V2", functionModel },

@@ -6,6 +6,8 @@
 /// </summary>
 public sealed class InterlisEnvironment : IAstElement, IContainer<ModelDef>
 {
+    public double? Version { get; init; }
+
     public Dictionary<string, ModelDef> Content { get; } = new Dictionary<string, ModelDef>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
