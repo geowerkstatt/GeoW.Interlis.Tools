@@ -25,7 +25,7 @@ public class InterlisReaderFormattedTypeTest
             {
                 Min = "2000-01-01T00:00:00.000",
                 Max = "2000-12-31T23:59:59.999",
-                FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" } },
+                FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 7 }, End = new Position { Line = 0, Character = 27 } } },
             });
     }
 
@@ -35,7 +35,7 @@ public class InterlisReaderFormattedTypeTest
         AssertReadRule("""FORMAT BASED ON GregorianDate ( Year/4 "-" Month/2 "-" Day/2 );""",
             new FormattedType
             {
-                BasedOn = new Reference<ClassDef> { Path = { "GregorianDate" } },
+                BasedOn = new Reference<ClassDef> { Path = { "GregorianDate" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 16 }, End = new Position { Line = 0, Character = 29 } } },
             });
     }
 

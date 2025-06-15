@@ -45,8 +45,8 @@ public class InterlisReaderAssociationDefTest
                     new RangePosition { Start = new Position { Line = 4, Character = 4 }, End = new Position { Line = 4, Character = 10 } },
                 },
                 Cardinality = new Cardinality { Min = 5, Max = 42 },
-                Extends = new Reference<AssociationDef> { Path = { "Test_B" } },
-                OidType = new Reference<DomainDef> { Path = { "oidType" } },
+                Extends = new Reference<AssociationDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 48 }, End = new Position { Line = 0, Character = 54 } } },
+                OidType = new Reference<DomainDef> { Path = { "oidType" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 1, Character = 11 }, End = new Position { Line = 1, Character = 18 } } },
                 Properties = { Property.Abstract, Property.Extended },
             });
     }
@@ -76,7 +76,7 @@ public class InterlisReaderAssociationDefTest
                             TypeDef = new RoleType
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "DocumentClass" } } } },
+                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "DocumentClass" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 1, Character = 16 }, End = new Position { Line = 1, Character = 29 } } } } },
                             }
                         }
                     },
@@ -89,7 +89,7 @@ public class InterlisReaderAssociationDefTest
                             TypeDef = new RoleType
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ActionClass" } } } },
+                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ActionClass" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 2, Character = 14 }, End = new Position { Line = 2, Character = 25 } } } } },
                             }
                         }
                     },

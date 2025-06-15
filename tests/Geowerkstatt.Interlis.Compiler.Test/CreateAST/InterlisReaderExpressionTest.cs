@@ -57,7 +57,7 @@ public class InterlisReaderExpressionTest
             {
                 Path =
                 {
-                    new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Model", "Topic", "Class" } } },
+                    new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Model", "Topic", "Class" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 1 }, End = new Position { Line = 0, Character = 18 } } } },
                 }
             });
     }
@@ -70,7 +70,7 @@ public class InterlisReaderExpressionTest
             {
                 Path =
                 {
-                    new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Model", "Topic", "Class" } } },
+                    new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Model", "Topic", "Class" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 2 }, End = new Position { Line = 0, Character = 19 } } } },
                     new IdentifierPathElement { Value = "Attribute" },
                 }
             });
@@ -299,7 +299,7 @@ public class InterlisReaderExpressionTest
         AssertReadRule("len(textAttr)",
             new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "len" } },
+                FunctionDef = new Reference<FunctionDef> { Path = { "len" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 3 } } },
                 Arguments = { new PathExpression { Path = { new IdentifierPathElement { Value = "textAttr" } } } },
             });
     }

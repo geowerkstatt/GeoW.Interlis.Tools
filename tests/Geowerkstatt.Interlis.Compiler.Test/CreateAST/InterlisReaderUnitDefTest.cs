@@ -28,7 +28,7 @@ public class InterlisReaderUnitDefTest
                 Name = "m",
                 Term = "Meter",
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 7 }, End = new Position { Line = 0, Character = 8 } } },
-                Extends = new Reference<UnitDef> { Path = { "Length" } },
+                Extends = new Reference<UnitDef> { Path = { "Length" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 18 }, End = new Position { Line = 0, Character = 24 } } },
             });
     }
 
@@ -46,11 +46,11 @@ public class InterlisReaderUnitDefTest
                 {
                     FirstOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" } } } }
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 19 }, End = new Position { Line = 0, Character = 25 } } } } }
                     },
                     SecondOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" } } } },
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 28 }, End = new Position { Line = 0, Character = 34 } } } } },
                     }
                 }
             });
@@ -65,16 +65,16 @@ public class InterlisReaderUnitDefTest
                 Name = "kmh",
                 Term = "KilometersPerHour",
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 19 }, End = new Position { Line = 0, Character = 22 } } },
-                Extends = new Reference<UnitDef> { Path = { "Speed" } },
+                Extends = new Reference<UnitDef> { Path = { "Speed" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 32 }, End = new Position { Line = 0, Character = 37 } } },
                 Expression = new Division
                 {
                     FirstOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "km" } } } }
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "km" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 41 }, End = new Position { Line = 0, Character = 43 } } } } }
                     },
                     SecondOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "h" } } } },
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "h" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 46 }, End = new Position { Line = 0, Character = 47 } } } } },
                     }
                 }
             });
@@ -97,7 +97,17 @@ public class InterlisReaderUnitDefTest
                     },
                     SecondOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "AngleRad" } } } },
+                        Path =
+                        {
+                            new ReferencePathElement
+                            {
+                                Value = new Reference<IInterlisDefinition>
+                                {
+                                    Path = { "AngleRad" },
+                                    ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 28 }, End = new Position { Line = 0, Character = 36 } }
+                                }
+                            }
+                        },
                     }
                 }
             });

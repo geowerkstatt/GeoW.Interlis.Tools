@@ -38,19 +38,20 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     [return: NotNullIfNotNull(nameof(referenceContext))]
     private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IInterlisDefinition
     {
-        return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), mapTarget);
+        return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), GetRange(referenceContext), mapTarget);
     }
 
     /// <summary>
     /// Create a new <see cref="Reference{T}"/> with the given <paramref name="path"/>.
     /// </summary>
-    private Reference<T> CreateReference<T>(IEnumerable<string> path, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IInterlisDefinition
+    private Reference<T> CreateReference<T>(IEnumerable<string> path, RangePosition? location = null, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IInterlisDefinition
     {
         var reference = new Reference<T>
         {
             Path = { path },
             Source = CurrentScope.Value,
             MapTarget = mapTarget ?? (element => element as T),
+            ReferenceLocation = location,
         };
 
         CurrentScope.Value?.ContainerReferences.Add(reference);
@@ -79,6 +80,19 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         {
             Start = new Position { Line = token.Line - 1, Character = token.Column },
             End = new Position { Line = token.Line - 1, Character = token.Column + token.Text.Length },
+        };
+    }
+
+    /// <summary>
+    /// Create a <see cref="RangePosition"/> from the given <paramref name="context"/>.
+    /// </summary>
+    /// <remarks>Only works correctly if the last <paramref name="token"/> does not span multiple lines.</remarks>
+    private RangePosition GetRange(ParserRuleContext context)
+    {
+        return new RangePosition
+        {
+            Start = new Position { Line = context.Start.Line - 1, Character = context.Start.Column },
+            End = new Position { Line = context.Stop.Line - 1, Character = context.Stop.Column + context.Stop.Text.Length },
         };
     }
 

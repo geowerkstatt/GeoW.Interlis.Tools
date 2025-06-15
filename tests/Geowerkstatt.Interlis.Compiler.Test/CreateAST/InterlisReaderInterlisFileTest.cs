@@ -1253,7 +1253,11 @@ public class InterlisReaderInterlisFileTest
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
         AssertDeepEqual(expected, actual, deepEqual => deepEqual
-                .IgnoreProperty<IInterlisDefinition>(p => p.NameLocations)); // Ignore NameLocations because it adds too much clutter in tests for whole interlis files
+                .IgnoreProperty<IInterlisDefinition>(p => p.NameLocations) // Ignore NameLocations because it adds too much clutter in tests for whole interlis files
+                .IgnoreProperty(p => p.DeclaringType.IsGenericType
+                    && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
+                    && nameof(Reference<IInterlisDefinition>.ReferenceLocation).Equals(p.Name))
+                );
     }
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)

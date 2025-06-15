@@ -27,6 +27,11 @@ public class Reference<T> : IReference where T : class, IInterlisDefinition
     /// <inheritdoc />
     public List<string> Path { get; } = new List<string>();
 
+    /// <summary>
+    /// The location of this reference in the INTERLIS source file.
+    /// </summary>
+    public RangePosition? ReferenceLocation { get; init; }
+
     /// <inheritdoc />
     public bool CanAccept(IInterlisDefinition potentialTarget)
     {
