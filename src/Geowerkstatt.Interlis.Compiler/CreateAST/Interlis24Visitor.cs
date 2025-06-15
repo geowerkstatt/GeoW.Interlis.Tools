@@ -20,7 +20,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24Visitor>();
 
-    internal List<IUnresolvedReference> ReferencesToResolve { get; } = new List<IUnresolvedReference>();
+    internal List<IReference> ReferencesToResolve { get; } = new List<IReference>();
     private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
     /// <summary>

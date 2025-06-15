@@ -1,6 +1,6 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
-public class Reference<T> : IUnresolvedReference where T : class
+public class Reference<T> : IReference where T : class
 {
     /// <summary>
     /// The resolved object.

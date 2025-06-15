@@ -1,9 +1,10 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
-/// Interface to put <see cref="Reference{T}"/> instances into a collection and resolve them later.
+/// Interface to put <see cref="Reference{T}"/> instances into a collection.
+/// Does not care about the type of the target and has all necessary info to resolve the reference.
 /// </summary>
-public interface IUnresolvedReference
+public interface IReference
 {
     /// <summary>
     /// The path to the target object.

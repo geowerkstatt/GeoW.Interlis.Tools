@@ -8,7 +8,7 @@ namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 /// <summary>
 /// Resolves various references inside the AST. The AST is modified in place.
 /// </summary>
-public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory, List<IUnresolvedReference> referencesToResolve) : Interlis24AstBaseVisitor<object>
+public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory, List<IReference> referencesToResolve) : Interlis24AstBaseVisitor<object>
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24AstReferenceResolverVisitor>();
 
@@ -209,7 +209,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
     /// <summary>
     /// Resolves the reference. If successful, the <see cref="Reference{T}.Target"/> is set accordingly.
     /// </summary>
-    private void Resolve(IUnresolvedReference reference)
+    private void Resolve(IReference reference)
     {
         if (reference == null || reference.Source == null)
         {
@@ -289,7 +289,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         }
     }
 
-    private IInterlisDefinition? ResolveAbsolute(IUnresolvedReference reference, ModelDef? root)
+    private IInterlisDefinition? ResolveAbsolute(IReference reference, ModelDef? root)
     {
         IInterlisDefinition? target = root;
         for (var i = 1; i < reference.Path.Count; i++)

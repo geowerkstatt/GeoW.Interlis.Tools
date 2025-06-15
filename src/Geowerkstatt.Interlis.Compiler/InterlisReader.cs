@@ -42,7 +42,7 @@ public class InterlisReader
     /// <param name="parseRule">A function to parse the input given the <see cref="Interlis24Parser"/> and <see cref="Interlis24Visitor"/>.</param>
     /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
     /// <returns>The compiled representation of the <paramref name="textReader"/> input and a list of <see cref="UnresolvedReference"/>s.</returns>
-    public (TResult, List<IUnresolvedReference>) ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
+    public (TResult, List<IReference>) ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
     {
         var inputStream = CharStreams.fromTextReader(textReader);
 
