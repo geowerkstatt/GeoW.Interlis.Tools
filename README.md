@@ -3,7 +3,11 @@
 # geowerkstatt Interlis Tools
 
 ## GitHub NuGet Feed
-NuGet package: https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.Tools.Compiler
+| NuGet package |
+|-|
+| [Geowerkstatt.Interlis.Compiler](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.Compiler) |
+| [Geowerkstatt.Interlis.RepositoryCrawler](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.RepositoryCrawler) |
+| [Geowerkstatt.Interlis.XtfReader](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.XtfReader) |
 
 To authenticate to the geowerkstatt GitHub Packages registry you must use a [personal access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with at least `read:packages` scope to install packages associated with other private repositories.
 Then create a _nuget.config_ file in your project directory specifying GitHub Packages as a source (see example below).
