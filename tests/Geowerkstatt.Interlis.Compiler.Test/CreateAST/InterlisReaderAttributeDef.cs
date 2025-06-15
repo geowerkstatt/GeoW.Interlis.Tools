@@ -169,7 +169,7 @@ public class InterlisReaderAttributeDef
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
                 TypeDef = new TypeRef
                 {
-                    Extends = new Reference<TypeDef> { Path = { "INTERLIS", "XMLDate" } },
+                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDate" } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                 },
             });
@@ -185,7 +185,7 @@ public class InterlisReaderAttributeDef
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
                 TypeDef = new TypeRef
                 {
-                    Extends = new Reference<TypeDef> { Path = { "INTERLIS", "XMLTime" } },
+                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "XMLTime" } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                 },
             });
@@ -201,7 +201,7 @@ public class InterlisReaderAttributeDef
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
                 TypeDef = new TypeRef
                 {
-                    Extends = new Reference<TypeDef> { Path = { "INTERLIS", "XMLDateTime" } },
+                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                 },
             });

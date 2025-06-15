@@ -25,7 +25,7 @@ public class InterlisReaderFormattedTypeTest
             {
                 Min = "2000-01-01T00:00:00.000",
                 Max = "2000-12-31T23:59:59.999",
-                FormatBaseType = new Reference<FormattedType> { Path = { "INTERLIS", "XMLDateTime" } },
+                FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" } },
             });
     }
 

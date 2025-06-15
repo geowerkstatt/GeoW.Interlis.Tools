@@ -23,13 +23,13 @@ public class InterlisReader
     /// <returns>The compiled representation of the <paramref name="textReader"/> input.</returns>
     public InterlisEnvironment ReadFile(TextReader textReader, string? sourceUri = null)
     {
-        var (interlisFile, unresolvedReferences) = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()));
+        var interlisFile = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()));
         foreach (var model in interlisFile.Content.Values)
         {
             model.SourceUri = sourceUri;
         }
 
-        var referenceResolver = new Interlis24AstReferenceResolverVisitor(loggerFactory, unresolvedReferences);
+        var referenceResolver = new Interlis24AstReferenceResolverVisitor(loggerFactory);
         interlisFile.Accept(referenceResolver);
 
         return interlisFile;
@@ -42,7 +42,7 @@ public class InterlisReader
     /// <param name="parseRule">A function to parse the input given the <see cref="Interlis24Parser"/> and <see cref="Interlis24Visitor"/>.</param>
     /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
     /// <returns>The compiled representation of the <paramref name="textReader"/> input and a list of <see cref="UnresolvedReference"/>s.</returns>
-    public (TResult, List<IReference>) ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
+    public TResult ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
     {
         var inputStream = CharStreams.fromTextReader(textReader);
 
@@ -57,6 +57,6 @@ public class InterlisReader
         interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
 
         var visitor = new Interlis24Visitor(loggerFactory, tokenStream);
-        return (parseRule(interlisParser, visitor), visitor.ReferencesToResolve);
+        return parseRule(interlisParser, visitor);
     }
 }

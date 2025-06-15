@@ -19,7 +19,9 @@ public class AssociationDef : IInterlisDefinitionContainer, IExtending<Associati
 
     public required Cardinality Cardinality { get; init; }
 
-    public Reference<TypeDef>? OidType { get; set; }
+    public Reference<DomainDef>? OidType { get; set; }
+
+    public ICollection<IReference> ContainerReferences { get; } = new List<IReference>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

@@ -22,7 +22,9 @@ public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDe
 
     public bool IsStructure { get; init; }
 
-    public Reference<TypeDef>? OidType { get; set; }
+    public Reference<DomainDef>? OidType { get; set; }
+
+    public ICollection<IReference> ContainerReferences { get; } = new List<IReference>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

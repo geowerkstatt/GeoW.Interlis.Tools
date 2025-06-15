@@ -4,7 +4,7 @@
 /// A reference to another Definition in the interlis file.
 /// </summary>
 /// <typeparam name="T">The type of the target.</typeparam>
-public class Reference<T> : IReference where T : class
+public class Reference<T> : IReference where T : class, IInterlisDefinition
 {
     /// <summary>
     /// The resolved object.
@@ -43,5 +43,10 @@ public class Reference<T> : IReference where T : class
     public override string ToString()
     {
         return $"reference '{(Path.Any() ? string.Join(".", Path) : (Target as IInterlisDefinition)?.FullyQualifiedName)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
+    }
+
+    public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
+    {
+        return visitor.VisitReference(this);
     }
 }

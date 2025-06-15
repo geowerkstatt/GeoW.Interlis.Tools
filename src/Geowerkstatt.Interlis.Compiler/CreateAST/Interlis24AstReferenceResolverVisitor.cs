@@ -9,7 +9,7 @@ namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 /// <summary>
 /// Resolves various references inside the AST. The AST is modified in place.
 /// </summary>
-public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory, List<IReference> referencesToResolve) : Interlis24AstBaseVisitor<bool>
+public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory) : Interlis24AstBaseVisitor<bool>
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24AstReferenceResolverVisitor>();
 
@@ -263,18 +263,32 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
             }
         };
 
-        var xmlTime = new FormattedType
+        var xmlTime = new DomainDef
         {
-            BasedOn = new Reference<ClassDef> { Target = utc },
+            Name = "XMLTime",
+            TypeDef = new FormattedType
+            {
+                BasedOn = new Reference<ClassDef> { Target = utc },
+            }
         };
-        var xmlDate = new FormattedType
+
+        var xmlDate = new DomainDef
         {
-            BasedOn = new Reference<ClassDef> { Target = gregorianDate },
+            Name = "XMLDate",
+            TypeDef = new FormattedType
+            {
+                BasedOn = new Reference<ClassDef> { Target = gregorianDate },
+            }
         };
-        var xmlDateTime = new FormattedType
+
+        var xmlDateTime = new DomainDef
         {
-            Extends = new Reference<TypeDef> { Target = xmlDate },
-            BasedOn = new Reference<ClassDef> { Target = gregorianDateTime },
+            Name = "XMLDateTime",
+            TypeDef = new FormattedType
+            {
+                Extends = new Reference<DomainDef> { Target = xmlDate },
+                BasedOn = new Reference<ClassDef> { Target = gregorianDateTime },
+            }
         };
 
         InternalInterlisModel = new ModelDef
@@ -410,9 +424,9 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                 { "UTC", utc },
                 { "GregorianDate", gregorianDate },
                 { "GregorianDateTime", gregorianDateTime },
-                { "XMLDate", new DomainDef { Name = "XMLDate", TypeDef = xmlDate } },
-                { "XMLTime", new DomainDef { Name = "XMLTime", TypeDef = xmlTime } },
-                { "XMLDateTime", new DomainDef { Name = "XMLDateTime", TypeDef = xmlDateTime } },
+                { "XMLDate", xmlDate },
+                { "XMLTime", xmlTime },
+                { "XMLDateTime", xmlDateTime },
             }
         };
     }
@@ -421,8 +435,14 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
     /// Resolves the reference. If successful, the <see cref="Reference{T}.Target"/> is set accordingly.
     /// </summary>
     /// <returns><see langword="true"/> if the <paramref name="reference"/> was resolved successfully, <see langword="false"/> otherwise.</returns>
-    private bool Resolve(IReference reference)
+    private bool Resolve<T>(Reference<T> reference) where T : class, IInterlisDefinition
     {
+        if (reference.Target != null)
+        {
+            // Already resolved
+            return true;
+        }
+
         if (reference == null || reference.Source == null)
         {
             // Nothing to resolve
@@ -545,20 +565,8 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
             }
         }
 
-        // resolve references
-        var allSuccessful = true;
-        foreach (var reference in referencesToResolve)
-        {
-            if (!Resolve(reference))
-            {
-                allSuccessful = false;
-            }
-        }
-
         // visit children
-        allSuccessful &= base.VisitInterlisEnvironment(interlisEnvironment);
-
-        return allSuccessful;
+        return base.VisitInterlisEnvironment(interlisEnvironment);
     }
 
     public override bool VisitAttributeDef([NotNull] AttributeDef attributeDef)
@@ -576,5 +584,10 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         }
 
         return base.VisitAttributeDef(attributeDef);
+    }
+
+    public override bool VisitReference<T>([NotNull] Reference<T> reference)
+    {
+        return Resolve(reference);
     }
 }

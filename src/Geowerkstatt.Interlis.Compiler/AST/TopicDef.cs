@@ -1,6 +1,4 @@
-﻿using Geowerkstatt.Interlis.Compiler.AST.Types;
-
-namespace Geowerkstatt.Interlis.Compiler.AST;
+﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public sealed class TopicDef : IDocumentation, IExtending<TopicDef>, IInterlisDefinitionContainer
 {
@@ -17,8 +15,10 @@ public sealed class TopicDef : IDocumentation, IExtending<TopicDef>, IInterlisDe
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
-    public Reference<TypeDef>? BasketOidType { get; set; }
-    public Reference<TypeDef>? OidType { get; set; }
+    public Reference<DomainDef>? BasketOidType { get; set; }
+    public Reference<DomainDef>? OidType { get; set; }
+
+    public ICollection<IReference> ContainerReferences { get; } = new List<IReference>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

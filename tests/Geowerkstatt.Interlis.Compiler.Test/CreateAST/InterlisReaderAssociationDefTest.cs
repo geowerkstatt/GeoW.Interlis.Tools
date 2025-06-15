@@ -46,7 +46,7 @@ public class InterlisReaderAssociationDefTest
                 },
                 Cardinality = new Cardinality { Min = 5, Max = 42 },
                 Extends = new Reference<AssociationDef> { Path = { "Test_B" } },
-                OidType = new Reference<TypeDef> { Path = { "oidType" } },
+                OidType = new Reference<DomainDef> { Path = { "oidType" } },
                 Properties = { Property.Abstract, Property.Extended },
             });
     }

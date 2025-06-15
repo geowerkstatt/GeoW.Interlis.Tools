@@ -4,7 +4,7 @@
 /// Interface to put <see cref="Reference{T}"/> instances into a collection.
 /// Does not care about the type of the target and has all necessary info to resolve the reference.
 /// </summary>
-public interface IReference
+public interface IReference : IAstElement
 {
     /// <summary>
     /// The path to the target object.

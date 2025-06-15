@@ -21,4 +21,6 @@ public interface IInterlis24AstVisitor<TResult>
     TResult? VisitUnitDef([NotNull] UnitDef unitDef);
 
     TResult? VisitFunctionDef([NotNull] FunctionDef functionDef);
+
+    TResult? VisitReference<T>([NotNull] Reference<T> reference) where T : class, IInterlisDefinition;
 }

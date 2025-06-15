@@ -2,5 +2,5 @@
 
 public class EnumerationAllOfType : TypeDef
 {
-    public Reference<EnumerationType>? TargetEnumeration { get; set; }
+    public Reference<DomainDef>? TargetEnumeration { get; set; }
 }

@@ -18,6 +18,8 @@ public sealed class ModelDef : IDocumentation, IInterlisDefinitionContainer
     public string? Version { get; set; }
     public string? Xmlns { get; set; }
 
+    public ICollection<IReference> ContainerReferences { get; } = new List<IReference>();
+
     /// <summary>
     /// The path or URL to the source interlis file where this model was defined.
     /// </summary>

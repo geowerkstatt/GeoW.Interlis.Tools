@@ -46,7 +46,7 @@ public class InterlisReaderClassDefTest
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
                 Extends = new Reference<ClassDef> { Path = { "Test_B" } },
-                OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
+                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" } },
                 Properties = { Property.Abstract, Property.Extended },
             });
     }
