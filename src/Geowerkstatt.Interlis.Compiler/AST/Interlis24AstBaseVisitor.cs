@@ -70,4 +70,9 @@ public class Interlis24AstBaseVisitor<TResult> : IInterlis24AstVisitor<TResult>
     {
         return DefaultResult;
     }
+
+    public TResult? VisitFunctionDef([NotNull] FunctionDef functionDef)
+    {
+        return DefaultResult;
+    }
 }

@@ -401,7 +401,7 @@ uniqueEl
 localUniqueness
     : '(' LOCAL ')' structureAttribute=IDENTIFIER ('->' structureAttribute=IDENTIFIER)* ':' attributeName=IDENTIFIER (
         ',' attributeName=IDENTIFIER
-    )
+    )*
     ;
 
 setConstraint
@@ -423,9 +423,9 @@ expression
     ;
 
 factor
-    : objectOrAttributePath
+    : functionCall
+    | objectOrAttributePath
     | (inspection | INSPECTION definitionRef) (OF objectOrAttributePath)?
-    | functionCall
     | PARAMETER definitionRef
     | constant
     ;
@@ -435,22 +435,9 @@ objectOrAttributePath
     ;
 
 pathEl
-    : THIS
-    | THISAREA
-    | THATAREA
-    | PARENT
-    | IDENTIFIER ('[' IDENTIFIER ']')?
-    | associationPath
-    | attributeRef
-    ;
-
-associationPath
-    : BACKSLASH? IDENTIFIER
-    ;
-
-attributeRef
-    : attribute=IDENTIFIER ('[' ( FIRST | LAST | axisListIndex=POS_NUMBER) ']')?
-    | AGGREGATES
+    : keyword=(THIS | THISAREA | THATAREA | PARENT | AGGREGATES)
+    | BACKSLASH name=IDENTIFIER
+    | name=IDENTIFIER ('[' detail=( FIRST | LAST | POS_NUMBER | IDENTIFIER) ']')?
     ;
 
 functionCall
@@ -473,8 +460,7 @@ functionDef
 argumentType
     : attrTypeDef
     | (OBJECT | OBJECTS) OF (restrictedDefinitionRef | definitionRef)
-    | ENUMVAL
-    | ENUMTREEVAL
+    | (ENUMVAL | ENUMTREEVAL)
     ;
 
 viewDef

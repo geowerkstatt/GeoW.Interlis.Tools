@@ -1,5 +1,9 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
+/// <summary>
+/// A reference to another Definition in the interlis file.
+/// </summary>
+/// <typeparam name="T">The type of the target.</typeparam>
 public class Reference<T> : IReference where T : class
 {
     /// <summary>

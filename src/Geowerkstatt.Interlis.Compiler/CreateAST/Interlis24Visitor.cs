@@ -1,11 +1,11 @@
 ﻿using Antlr4.Runtime;
-using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Geowerkstatt.Interlis.Compiler.AST;
 using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 
@@ -36,7 +36,8 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     /// <summary>
     /// Create a new <see cref="Reference{T}"/> from the given <paramref name="referenceContext"/>.
     /// </summary>
-    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class
+    [return: NotNullIfNotNull(nameof(referenceContext))]
+    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class
     {
         var reference = referenceContext == null ? null : new Reference<T>
         {
@@ -997,19 +998,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
 
     public override ConstantExpression VisitConstant([NotNull] Interlis24Parser.ConstantContext context)
     {
-        if (context.@string() != null)
-        {
-            var value = VisitString(context.@string());
-            return new TextConstant { Value = value };
-        }
-        else if (context.UNDEFINED() != null)
-        {
-            return new UndefinedConstant();
-        }
-        else
-        {
-            return (ConstantExpression)VisitChildren(context);
-        }
+        if (context.@string() != null) return new TextConstant { Value = VisitString(context.@string()) };
+        if (context.UNDEFINED() != null) return new UndefinedConstant();
+
+        return (ConstantExpression)VisitChildren(context);
     }
 
     public override NumericConstant VisitNumericConst([NotNull] Interlis24Parser.NumericConstContext context)
@@ -1037,5 +1029,99 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         if (context.LNBASE() != null) return Tuple.Create(Math.E, -16);
 
         return (Tuple<double, int>)Visit(context.numeric());
+    }
+
+    public override object VisitAttributePathConst([NotNull] Interlis24Parser.AttributePathConstContext context)
+    {
+        IPathElement pathStart = context.definitionRef() == null ?
+            new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This } :
+            new ReferencePathElement { Value = CreateReference<IInterlisDefinition>(context.definitionRef()) };
+
+        return new PathExpression
+        {
+            Path =
+            {
+                pathStart,
+                new IdentifierPathElement { Value = context.attribute.Text },
+            },
+        };
+    }
+
+    public override object VisitClassConst([NotNull] Interlis24Parser.ClassConstContext context)
+    {
+        return new PathExpression
+        {
+            Path =
+            {
+                new ReferencePathElement { Value = CreateReference<IInterlisDefinition>(context.definitionRef()) }
+            },
+        };
+    }
+
+    public override PathExpression VisitObjectOrAttributePath([NotNull] Interlis24Parser.ObjectOrAttributePathContext context)
+    {
+        return new PathExpression
+        {
+            Path = { context.pathEl().SelectMany(VisitPathEl).ToList() },
+        };
+    }
+
+    public override IEnumerable<IPathElement> VisitPathEl([NotNull] Interlis24Parser.PathElContext context)
+    {
+        if (context.name != null)
+        {
+            yield return new IdentifierPathElement { Value = context.name.Text };
+
+            if (context.detail != null)
+            {
+                if (context.FIRST() != null)
+                {
+                    yield return new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.First };
+                }
+                else if (context.LAST() != null)
+                {
+                    yield return new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.Last };
+                }
+                else if (context.POS_NUMBER() != null)
+                {
+                    yield return new IndexerPathElement { Value = int.Parse(context.POS_NUMBER().Symbol.Text) };
+                }
+                else if (context.IDENTIFIER(1) != null)
+                {
+                    yield return new IdentifierPathElement { Value = context.IDENTIFIER(1).GetText() };
+                }
+            }
+        }
+        else
+        {
+            yield return new KeyWordPathElement
+            {
+                Value = (KeyWordPathElement.KeyWord)context.keyword.Type,
+            };
+        }
+    }
+
+    public override object VisitFunctionCall([NotNull] Interlis24Parser.FunctionCallContext context)
+    {
+        return new FunctionCall
+        {
+            FunctionDef = CreateReference<FunctionDef>(context.definitionRef()),
+            Arguments = { context.argument().Select(VisitArgument) },
+        };
+    }
+
+    public override IExpression VisitArgument([NotNull] Interlis24Parser.ArgumentContext context)
+    {
+        if (context.expression() != null)
+        {
+            return (IExpression)Visit(context.expression());
+        }
+        else
+        {
+            return new AllExpression
+            {
+                Restriction = context.restrictedDefinitionRef() != null ? VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()) : null,
+            };
+        }
     }
 }
