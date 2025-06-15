@@ -31,7 +31,7 @@ public class InterlisReaderInterlisFileTest
                 {
                     {
                         "ModelName",
-                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } } }
+                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, InternalModel.Interlis) } } }
                     },
                 }
             });
@@ -58,7 +58,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                            Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                             DocComments = { "/** I am a doc comment */" }
                         }
                     }
@@ -91,7 +91,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                            Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                             Content =
                             {
                                 { "ClassName", new ClassDef { Name = "ClassName" } },
@@ -191,7 +191,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "Model",
                         URI = "foo.test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                         Content =
                         {
                             { "BaseTopic", baseTopic },
@@ -440,7 +440,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                         Content =
                         {
                             { "text", textDomain },
@@ -589,7 +589,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new TypeRef
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Extends = new Reference<DomainDef> { Target = (DomainDef)Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["HALIGNMENT"], Path = { "INTERLIS", "HALIGNMENT" } },
+                                                                Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["HALIGNMENT"], Path = { "INTERLIS", "HALIGNMENT" } },
                                                             },
                                                         }
                                                     },
@@ -601,7 +601,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new TypeRef
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Extends = new Reference<DomainDef> { Target = (DomainDef)Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["VALIGNMENT"], Path = { "INTERLIS", "VALIGNMENT" } },
+                                                                Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["VALIGNMENT"], Path = { "INTERLIS", "VALIGNMENT" } },
                                                             },
                                                         }
                                                     },
@@ -700,7 +700,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                         Content =
                         {
                             { "Length", lengthUnit },
@@ -733,7 +733,7 @@ public class InterlisReaderInterlisFileTest
             Name = "Model_A",
             URI = "foo:test",
             Version = "123",
-            Imports = { { "INTERLIS", (true, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+            Imports = { { "INTERLIS", (true, InternalModel.Interlis) } },
             Content = { }
         };
 
@@ -742,7 +742,7 @@ public class InterlisReaderInterlisFileTest
             Name = "Model_B",
             URI = "foo:test",
             Version = "123",
-            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+            Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
             Content = { }
         };
 
@@ -760,7 +760,7 @@ public class InterlisReaderInterlisFileTest
                         URI = "foo:test",
                         Version = "123",
                         Imports = {
-                            { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) },
+                            { "INTERLIS", (false, InternalModel.Interlis) },
                             { "Model_A", (false, modelA) },
                             { "Model_B", (true, modelB) },
                             { "Unknown_Model", (false, null) },
@@ -849,7 +849,7 @@ public class InterlisReaderInterlisFileTest
                             { "Format", formattedDomain },
                             { "Format2", formattedDomain2 },
                         },
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                     }
                 }
             }
@@ -872,7 +872,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithDateTime()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
 
         var expected = new InterlisEnvironment
         {
@@ -956,7 +956,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithViews()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
 
         var expected = new InterlisEnvironment
         {
@@ -1031,7 +1031,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReferenceResolutionModelTopiClassSameName()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
         var nameClass = new ClassDef { Name = "Name" };
         var association = new AssociationDef
         {
@@ -1144,7 +1144,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithFunctionCall()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
 
         var functionDef = new FunctionDef
         {
