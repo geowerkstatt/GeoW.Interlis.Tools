@@ -3,6 +3,7 @@
 public sealed class ModelDef : IDocumentation, IInterlisDefinitionContainer
 {
     public required string Name { get; init; }
+    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
     public IInterlisDefinitionContainer? Parent { get; set; }
 
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();

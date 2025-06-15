@@ -13,6 +13,7 @@ public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
     /// This name is used to reference the unit.
     /// </summary>
     public required string Name { get; init; }
+    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
     public IInterlisDefinitionContainer? Parent { get; set; }
 
     public Reference<UnitDef>? Extends { get; set; }

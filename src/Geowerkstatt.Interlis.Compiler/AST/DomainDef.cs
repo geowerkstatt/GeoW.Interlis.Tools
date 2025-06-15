@@ -8,6 +8,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST;
 public class DomainDef : IInterlisDefinition, IDocumentation
 {
     public required string Name { get; init; }
+    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
     public IInterlisDefinitionContainer? Parent { get; set; }
 
     public required TypeDef TypeDef { get; init; }

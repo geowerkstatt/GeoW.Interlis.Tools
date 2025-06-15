@@ -5,6 +5,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST;
 public class AssociationDef : IInterlisDefinitionContainer, IExtending<AssociationDef>, IIdentifiable
 {
     public required string Name { get; init; }
+    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
     public IInterlisDefinitionContainer? Parent { get; set; } = null;
 
     public Reference<AssociationDef>? Extends { get; set; }

@@ -1142,7 +1142,8 @@ public class InterlisReaderInterlisFileTest
     {
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
-        AssertDeepEqual(expected, actual);
+        AssertDeepEqual(expected, actual, deepEqual => deepEqual
+                .IgnoreProperty<IInterlisDefinition>(p => p.NameLocations)); // Ignore NameLocations because it adds too much clutter in tests for whole interlis files
     }
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
@@ -1170,16 +1171,22 @@ public class InterlisReaderInterlisFileTest
         return logProvider.GetMessages();
     }
 
-    private static void AssertDeepEqual(object expected, object actual)
+    private static void AssertDeepEqual(object expected, object actual, Func<CompareSyntax<object, object>, CompareSyntax<object, object>>? configureDeepEqual = null)
     {
-        expected.WithDeepEqual(actual)
+        var deepEqualAssert = expected.WithDeepEqual(actual)
             .IgnoreProperty<IInterlisDefinition>(d => d.Parent) // Ignore parent property to break circular references
             .IgnoreProperty(p => p.DeclaringType.IsGenericType
                     && typeof(Reference<object>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
                     && (nameof(Reference<object>.Source).Equals(p.Name) // Ignore reference source to break circular references
                         || nameof(Reference<object>.MapTarget).Equals(p.Name))) // Ignore Func property
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
-            .IgnoreCircularReferences()
-            .Assert();
+            .IgnoreCircularReferences();
+
+        if (configureDeepEqual != null)
+        {
+            deepEqualAssert = configureDeepEqual(deepEqualAssert);
+        }
+
+        deepEqualAssert.Assert();
     }
 }

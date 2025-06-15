@@ -13,7 +13,12 @@ public class InterlisReaderDomainDefTest
         AssertReadRule("""
             text = TEXT * 12;
             """,
-            new DomainDef { Name = "text", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } } } );
+            new DomainDef
+            {
+                Name = "text",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
+                TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } }
+            });
     }
 
     [TestMethod]
@@ -29,6 +34,7 @@ public class InterlisReaderDomainDefTest
             new DomainDef
             {
                 Name = "text",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
                 TypeDef = new TextType
                 {
                     Length = 12,

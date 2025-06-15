@@ -61,6 +61,19 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     }
 
     /// <summary>
+    /// Create a <see cref="RangePosition"/> from the given <paramref name="token"/>.
+    /// </summary>
+    /// <remarks>Only works correctly if the <paramref name="token"/> does not span multiple lines.</remarks>
+    private RangePosition GetRange(IToken token)
+    {
+        return new RangePosition
+        {
+            Start = new Position { Line = token.Line - 1, Character = token.Column },
+            End = new Position { Line = token.Line - 1, Character = token.Column + token.Text.Length },
+        };
+    }
+
+    /// <summary>
     /// Create a meta-attribute dictionary from the meta comments preceding the specified <paramref name="context"/>.
     /// </summary>
     public Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context)
@@ -131,6 +144,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         var modelDef = new ModelDef
         {
             Name = context.name.Text,
+            NameLocations = { GetRange(context.name), GetRange(context.endName) },
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             Language = context.language?.Text,
@@ -176,6 +190,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         var topicDef = new TopicDef
         {
             Name = context.name.Text,
+            NameLocations = { GetRange(context.name), GetRange(context.endName) },
             Extends = CreateReference<TopicDef>(context.extends),
             OidType = CreateReference(context.oid, e => (e as DomainDef)?.TypeDef),
             BasketOidType = CreateReference(context.basketOid, e => (e as DomainDef)?.TypeDef),
@@ -211,6 +226,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         var classDef = new ClassDef
         {
             Name = context.name.Text,
+            NameLocations = { GetRange(context.name), GetRange(context.endName) },
             IsStructure = context.STRUCTURE() != null,
             Extends = CreateReference<ClassDef>(context.extends),
             DocComments = { GetDocComments(context) },
@@ -260,6 +276,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         var associationDef = new AssociationDef
         {
             Name = name,
+            NameLocations = { new [] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
             Extends = CreateReference<AssociationDef>(context.extends),
             Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.Unbound },
             Properties = { properties },
@@ -317,6 +334,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new AttributeDef
         {
             Name = context.name.Text,
+            NameLocations = { GetRange(context.name) },
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = target,
@@ -365,6 +383,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new AttributeDef
         {
             Name = context.name.Text,
+            NameLocations = { GetRange(context.name) },
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = VisitAttrTypeDef(context.attrTypeDef()),
@@ -601,6 +620,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         var unit = new UnitDef
         {
             Name = shortName ?? term,
+            NameLocations = { GetRange(context.unitShortName == null ? context.unitTerm : context.unitShortName) },
             Extends = CreateReference<UnitDef>(context.extends),
             Term = term,
             DocComments = { GetDocComments(context) },
@@ -630,6 +650,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new DomainDef
         {
             Name = context.name.Text,
+            NameLocations = { GetRange(context.name) },
             TypeDef = type,
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },

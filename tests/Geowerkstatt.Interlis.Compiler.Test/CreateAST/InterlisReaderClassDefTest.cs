@@ -14,7 +14,15 @@ public class InterlisReaderClassDefTest
             CLASS Test =
             END Test;
             """,
-            new ClassDef { Name = "Test" });
+            new ClassDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
+                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } },
+                },
+            });
     }
 
     [TestMethod]
@@ -30,6 +38,11 @@ public class InterlisReaderClassDefTest
             new ClassDef
             {
                 Name = "Test_A",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 2, Character = 6 }, End = new Position { Line = 2, Character = 12 } },
+                    new RangePosition { Start = new Position { Line = 4, Character = 4 }, End = new Position { Line = 4, Character = 10 } },
+                },
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
                 Extends = new Reference<ClassDef> { Path = { "Test_B" } },
@@ -50,10 +63,31 @@ public class InterlisReaderClassDefTest
             new ClassDef
             {
                 Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
+                    new RangePosition { Start = new Position { Line = 3, Character = 4 }, End = new Position { Line = 3, Character = 8 } }
+                },
                 Content =
                 {
-                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
-                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                    {
+                        "Attr",
+                        new AttributeDef
+                        {
+                            Name = "Attr",
+                            NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } } },
+                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } }
+                        }
+                    },
+                    {
+                        "Other",
+                        new AttributeDef
+                        {
+                            Name = "Other",
+                            NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 9 } } },
+                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                        }
+                    },
                 }
             });
     }
@@ -70,11 +104,32 @@ public class InterlisReaderClassDefTest
             new ClassDef
             {
                 Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 0, Character = 10 }, End = new Position { Line = 0, Character = 14 } },
+                    new RangePosition { Start = new Position { Line = 3, Character = 4 }, End = new Position { Line = 3, Character = 8 } },
+                },
                 IsStructure = true,
                 Content =
                 {
-                    { "Attr", new AttributeDef { Name = "Attr", TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } } } },
-                    { "Other", new AttributeDef { Name = "Other", TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } } } },
+                    {
+                        "Attr",
+                        new AttributeDef
+                        {
+                            Name = "Attr",
+                            NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } } },
+                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } }
+                        }
+                    },
+                    {
+                        "Other",
+                        new AttributeDef
+                        {
+                            Name = "Other",
+                            NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 9 } } },
+                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                        }
+                    },
                 }
             });
     }

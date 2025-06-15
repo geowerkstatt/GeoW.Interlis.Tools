@@ -13,6 +13,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Length",
                 Term = "Length",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 6 } } },
                 Properties = { Property.Abstract },
             });
     }
@@ -25,6 +26,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "m",
                 Term = "Meter",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 7 }, End = new Position { Line = 0, Character = 8 } } },
                 Extends = new Reference<UnitDef> { Path = { "Length" } },
             });
     }
@@ -37,6 +39,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Area",
                 Term = "Area",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
                 Properties = { Property.Abstract },
             });
     }
@@ -49,6 +52,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "m2",
                 Term = "SquareMeter",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 13 }, End = new Position { Line = 0, Character = 15 } } },
                 Extends = new Reference<UnitDef> { Path = { "Area" } },
             });
     }
@@ -61,6 +65,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "AngleDegree",
                 Term = "AngleDegree",
+                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 11 } } },
             });
     }
 
@@ -76,6 +81,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Temperature",
                 Term = "Temperature",
+                NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 0 }, End = new Position { Line = 2, Character = 11 } } },
                 Properties = { Property.Abstract },
                 DocComments = { "/** Base unit for all temperatures. */" },
                 MetaAttributes = { { "meta", "value" } },

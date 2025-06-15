@@ -1,12 +1,5 @@
-﻿using DeepEqual.Syntax;
-using Geowerkstatt.Interlis.Compiler;
-using Geowerkstatt.Interlis.Compiler.AST;
+﻿using Geowerkstatt.Interlis.Compiler.AST;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -17,35 +10,48 @@ public class InterlisReaderTopicDefTest
     public void ReadTopicDef()
     {
         AssertReadRule("""
-                TOPIC Test =
-                END Test;
-                """,
-                new TopicDef { Name = "Test" });
+            TOPIC Test =
+            END Test;
+            """,
+            new TopicDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
+                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } }
+                },
+            });
     }
 
     [TestMethod]
     public void ReadTopicDefComplete()
     {
         AssertReadRule("""
-                /** Doc-Comment */
-                !!@ key=value
-                VIEW TOPIC Test_A (ABSTRACT, FINAL) EXTENDS Test_B =
-                    BASKET OID AS oidDomain;
-                    OID AS INTERLIS.UUIDOID;
-                    DEPENDS ON Test_C, Test_D;
-                    DEFERRED GENERICS genericA, genericB;
-                END Test_A;
-                """,
-                new TopicDef
+            /** Doc-Comment */
+            !!@ key=value
+            VIEW TOPIC Test_A (ABSTRACT, FINAL) EXTENDS Test_B =
+                BASKET OID AS oidDomain;
+                OID AS INTERLIS.UUIDOID;
+                DEPENDS ON Test_C, Test_D;
+                DEFERRED GENERICS genericA, genericB;
+            END Test_A;
+            """,
+            new TopicDef
+            {
+                Name = "Test_A",
+                NameLocations =
                 {
-                    Name = "Test_A",
-                    DocComments = { "/** Doc-Comment */" },
-                    MetaAttributes = { { "key", "value" } },
-                    Extends = new Reference<TopicDef> { Path = { "Test_B" } },
-                    OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
-                    BasketOidType = new Reference<TypeDef> { Path = { "oidDomain" } },
-                    Properties = { Property.Abstract, Property.Final }
-                });
+                    new RangePosition { Start = new Position { Line = 2, Character = 11 }, End = new Position { Line = 2, Character = 17 } },
+                    new RangePosition { Start = new Position { Line = 7, Character = 4 }, End = new Position { Line = 7, Character = 10 } }
+                },
+                DocComments = { "/** Doc-Comment */" },
+                MetaAttributes = { { "key", "value" } },
+                Extends = new Reference<TopicDef> { Path = { "Test_B" } },
+                OidType = new Reference<TypeDef> { Path = { "INTERLIS", "UUIDOID" } },
+                BasketOidType = new Reference<TypeDef> { Path = { "oidDomain" } },
+                Properties = { Property.Abstract, Property.Final }
+            });
     }
 
     private void AssertReadRule(string input, object? expected)
