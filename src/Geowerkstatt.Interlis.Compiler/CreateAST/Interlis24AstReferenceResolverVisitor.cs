@@ -1,4 +1,5 @@
-﻿using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
@@ -29,36 +30,246 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
         var unitSolidAngle = new UnitDef { Name = "SOLID_ANGLE", Term = "SOLID_ANGLE", Properties = { Property.Abstract } };
         var unitLuminousIntensity = new UnitDef { Name = "LUMINOUS_INTENSITY", Term = "LUMINOUS_INTENSITY", Properties = { Property.Abstract } };
 
+        var unitSecond = new UnitDef { Name = "s", Term = "SECOND", Extends = new Reference<UnitDef> { Target = unitTime } };
+        var unitMinute = new UnitDef
+        {
+            Name = "min",
+            Term = "Minute",
+            Expression = new Multiplication
+            {
+                FirstOperand = new NumericConstant { Value = 60 },
+                SecondOperand = new PathExpression { Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Target = unitSecond } } } }
+            },
+        };
+        var unitHour = new UnitDef
+        {
+            Name = "h",
+            Term = "Hour",
+            Expression = new Multiplication
+            {
+                FirstOperand = new NumericConstant { Value = 60 },
+                SecondOperand = new PathExpression { Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Target = unitMinute } } } }
+            },
+        };
+        var unitDay = new UnitDef
+        {
+            Name = "d",
+            Term = "Day",
+            Expression = new Multiplication
+            {
+                FirstOperand = new NumericConstant { Value = 24 },
+                SecondOperand = new PathExpression { Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Target = unitHour } } } }
+            },
+        };
+        var unitMonth = new UnitDef { Name = "M", Term = "Month", Extends = new Reference<UnitDef> { Target = unitTime } };
+        var unitYear = new UnitDef { Name = "Y", Term = "Year", Extends = new Reference<UnitDef> { Target = unitTime } };
+
         var timeOfDay = new ClassDef
         {
             Name = "TimeOfDay",
             IsStructure = true,
+            Content =
+            {
+                {
+                    "Hours",
+                    new AttributeDef
+                    {
+                        Name = "Hours",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 23,
+                            Precision = 0,
+                            Unit = new Reference<UnitDef> { Target = unitHour },
+                            Circular = true,
+                        },
+                    }
+                },
+                {
+                    "Minutes",
+                    new AttributeDef
+                    {
+                        Name = "Minutes",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 59,
+                            Precision = 0,
+                            Unit = new Reference<UnitDef> { Target = unitMinute },
+                            Circular = true,
+                        },
+                    }
+                },
+                {
+                    "Seconds",
+                    new AttributeDef
+                    {
+                        Name = "Seconds",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 59.999,
+                            Precision = -3,
+                            Unit = new Reference<UnitDef> { Target = unitSecond },
+                            Circular = true,
+                        },
+                    }
+                },
+            }
         };
         var utc = new ClassDef
         {
             Name = "UTC",
             IsStructure = true,
             Extends = new Reference<ClassDef> { Target = timeOfDay },
+            Content =
+            {
+                {
+                    "Hours",
+                    new AttributeDef
+                    {
+                        Name = "Hours",
+                        Properties = { Property.Extended },
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 23,
+                            Precision = 0,
+                        },
+                    }
+                },
+            }
+        };
+        var gregorianYear = new DomainDef
+        {
+            Name = "GregorianYear",
+            TypeDef = new NumericType
+            {
+                Cardinality = new Cardinality { Min = 0, Max = 1 },
+                Min = 1582,
+                Max = 2999,
+                Unit = new Reference<UnitDef> { Target = unitYear },
+            },
         };
         var gregorianDate = new ClassDef
         {
             Name = "GregorianDate",
             IsStructure = true,
+            Content =
+            {
+                {
+                    "Year",
+                    new AttributeDef
+                    {
+                        Name = "Year",
+                        TypeDef = new ReferenceType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = gregorianYear } },
+                        }
+                    }
+                },
+                {
+                    "Month",
+                    new AttributeDef
+                    {
+                        Name = "Month",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 1,
+                            Max = 12,
+                            Precision = 0,
+                            Unit = new Reference<UnitDef> { Target = unitMonth },
+                        }
+                    }
+                },
+                {
+                    "Day",
+                    new AttributeDef
+                    {
+                        Name = "Day",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 1,
+                            Max = 31,
+                            Precision = 0,
+                            Unit = new Reference<UnitDef> { Target = unitDay },
+                        }
+                    }
+                },
+            }
         };
         var gregorianDateTime = new ClassDef
         {
             Name = "GregorianDateTime",
             IsStructure = true,
             Extends = new Reference<ClassDef> { Target = gregorianDate },
+            Content =
+            {
+                {
+                    "Hours",
+                    new AttributeDef
+                    {
+                        Name = "Hours",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 23,
+                            Precision = 0,
+                            Unit = new Reference<UnitDef> { Target = unitHour },
+                            Circular = true,
+                        },
+                    }
+                },
+                {
+                    "Minutes",
+                    new AttributeDef
+                    {
+                        Name = "Minutes",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 59,
+                            Precision = 0,
+                            Unit = new Reference<UnitDef> { Target = unitMinute },
+                            Circular = true,
+                        },
+                    }
+                },
+                {
+                    "Seconds",
+                    new AttributeDef
+                    {
+                        Name = "Seconds",
+                        TypeDef = new NumericType
+                        {
+                            Cardinality = new Cardinality { Min = 0, Max = 1 },
+                            Min = 0,
+                            Max = 59.999,
+                            Precision = -3,
+                            Unit = new Reference<UnitDef> { Target = unitSecond },
+                            Circular = true,
+                        },
+                    }
+                },
+            }
         };
 
-        var xmlDate = new FormattedType
-        {
-            BasedOn = new Reference<ClassDef> { Target = gregorianDate },
-        };
         var xmlTime = new FormattedType
         {
             BasedOn = new Reference<ClassDef> { Target = utc },
+        };
+        var xmlDate = new FormattedType
+        {
+            BasedOn = new Reference<ClassDef> { Target = gregorianDate },
         };
         var xmlDateTime = new FormattedType
         {
@@ -86,7 +297,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
 
                 { "m", new UnitDef { Name = "m", Term = "METER", Extends = new Reference<UnitDef> { Target = unitLength } } },
                 { "kg", new UnitDef { Name = "kg", Term = "KILOGRAM", Extends = new Reference<UnitDef> { Target = unitMass } } },
-                { "s", new UnitDef { Name = "s", Term = "SECOND", Extends = new Reference<UnitDef> { Target = unitTime } } },
+                { "s", unitSecond },
                 { "A", new UnitDef { Name = "A", Term = "AMPERE", Extends = new Reference<UnitDef> { Target = unitElectricCurrent } } },
                 { "K", new UnitDef { Name = "K", Term = "DEGREE_KELVIN", Extends = new Reference<UnitDef> { Target = unitTemperature } } },
                 { "mol", new UnitDef { Name = "mol", Term = "MOLE", Extends = new Reference<UnitDef> { Target = unitAmountOfMatter } } },
@@ -190,11 +401,11 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory,
                         },
                     }
                 },
-                { "min", new UnitDef { Name = "min", Term = "Minute" } },
-                { "h", new UnitDef { Name = "h", Term = "Hour" } },
-                { "d", new UnitDef { Name = "d", Term = "Day" } },
-                { "M", new UnitDef { Name = "M", Term = "Month" } },
-                { "Y", new UnitDef { Name = "Y", Term = "Year" } },
+                { "min", unitMinute },
+                { "h", unitHour },
+                { "d", unitDay },
+                { "M", unitMonth },
+                { "Y", unitYear },
                 { "TimeOfDay", timeOfDay },
                 { "UTC", utc },
                 { "GregorianDate", gregorianDate },
