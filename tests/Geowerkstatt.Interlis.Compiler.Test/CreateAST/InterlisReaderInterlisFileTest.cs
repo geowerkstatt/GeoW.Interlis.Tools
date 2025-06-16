@@ -4,6 +4,7 @@ using Geowerkstatt.Interlis.Compiler.CreateAST;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
 using Compiler.Test.CreateAST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -13,7 +14,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileNoModels()
     {
-        AssertReadFile("INTERLIS 2.4;", new InterlisFile());
+        AssertReadFile("INTERLIS 2.4;", new InterlisEnvironment { Version = 2.4 });
     }
 
     [TestMethod]
@@ -24,13 +25,14 @@ public class InterlisReaderInterlisFileTest
             MODEL ModelName AT "foo.test" VERSION "123" =
             END ModelName.
             """,
-            new InterlisFile
+            new InterlisEnvironment
             {
+                Version = 2.4,
                 Content =
                 {
                     {
                         "ModelName",
-                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } } }
+                        new ModelDef { Name = "ModelName", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, InternalModel.Interlis) } } }
                     },
                 }
             });
@@ -46,8 +48,9 @@ public class InterlisReaderInterlisFileTest
             MODEL ModelName AT "foo.test" VERSION "123" =
             END ModelName.
             """,
-            new InterlisFile
+            new InterlisEnvironment
             {
+                Version = 2.4,
                 Content =
                 {
                     {
@@ -57,7 +60,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                            Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                             DocComments = { "/** I am a doc comment */" }
                         }
                     }
@@ -79,8 +82,9 @@ public class InterlisReaderInterlisFileTest
                 END TopicName;
             END ModelName.
             """,
-            new InterlisFile
+            new InterlisEnvironment
             {
+                Version = 2.4,
                 Content =
                 {
                     {
@@ -90,7 +94,7 @@ public class InterlisReaderInterlisFileTest
                             Name = "ModelName",
                             URI = "foo.test",
                             Version = "123",
-                            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                            Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                             Content =
                             {
                                 { "ClassName", new ClassDef { Name = "ClassName" } },
@@ -179,8 +183,9 @@ public class InterlisReaderInterlisFileTest
             Name = "BaseTopic",
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -190,7 +195,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "Model",
                         URI = "foo.test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                         Content =
                         {
                             { "BaseTopic", baseTopic },
@@ -267,7 +272,7 @@ public class InterlisReaderInterlisFileTest
             Name = "text2",
             TypeDef = new TypeRef
             {
-                Extends = new Reference<TypeDef> { Target = textDomain.TypeDef, Path = { "text" } },
+                Extends = new Reference<DomainDef> { Target = textDomain, Path = { "text" } },
                 Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound },
             },
         };
@@ -296,7 +301,7 @@ public class InterlisReaderInterlisFileTest
             Name = "basket_id",
             TypeDef = new OidType
             {
-                Extends = new Reference<TypeDef> { Target = yoloOidDomain.TypeDef, Path = { "yoloOid" } },
+                Extends = new Reference<DomainDef> { Target = yoloOidDomain, Path = { "yoloOid" } },
                 TypeDef = new TextType { Length = 6 },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
             }
@@ -322,7 +327,7 @@ public class InterlisReaderInterlisFileTest
             Name = "enhancedColor",
             TypeDef = new EnumerationType
             {
-                Extends = new Reference<TypeDef> { Target = colorDomain.TypeDef, Path = { "color" } },
+                Extends = new Reference<DomainDef> { Target = colorDomain, Path = { "color" } },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                 Values =
                 {
@@ -355,7 +360,7 @@ public class InterlisReaderInterlisFileTest
             Name = "superEnhancedColor",
             TypeDef = new EnumerationType
             {
-                Extends = new Reference<TypeDef> { Target = enhancedColorDomain.TypeDef, Path = { "enhancedColor" } },
+                Extends = new Reference<DomainDef> { Target = enhancedColorDomain, Path = { "enhancedColor" } },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                 Values =
                 {
@@ -398,7 +403,7 @@ public class InterlisReaderInterlisFileTest
             TypeDef = new EnumerationAllOfType
             {
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                TargetEnumeration = new Reference<EnumerationType> { Target = (EnumerationType)superEnhancedColorDomain.TypeDef, Path = { "superEnhancedColor" } },
+                TargetEnumeration = new Reference<DomainDef> { Target = superEnhancedColorDomain, Path = { "superEnhancedColor" } },
             }
         };
 
@@ -417,7 +422,7 @@ public class InterlisReaderInterlisFileTest
             Name = "surface",
             TypeDef = new SurfaceType
             {
-                VertexType = new Reference<TypeDef> { Target = point3dDomain.TypeDef, Path = { "point3d" } },
+                VertexType = new Reference<DomainDef> { Target = point3dDomain, Path = { "point3d" } },
                 OverlapTolerance = 0.0,
                 LineForm = { "STRAIGHTS" },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
@@ -428,8 +433,9 @@ public class InterlisReaderInterlisFileTest
         var structType = new ClassDef { Name = "structType", IsStructure = true };
         var person = new ClassDef { Name = "Person" };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -439,7 +445,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                         Content =
                         {
                             { "text", textDomain },
@@ -460,8 +466,8 @@ public class InterlisReaderInterlisFileTest
                                 new TopicDef
                                 {
                                     Name = "TopicName",
-                                    BasketOidType = new Reference<TypeDef> { Target = basketIdDomain.TypeDef, Path = { "basket_id" } },
-                                    OidType = new Reference<TypeDef> { Target = itemIdDomain.TypeDef, Path = { "item_id" } },
+                                    BasketOidType = new Reference<DomainDef> { Target = basketIdDomain, Path = { "basket_id" } },
+                                    OidType = new Reference<DomainDef> { Target = itemIdDomain, Path = { "item_id" } },
                                     Content =
                                     {
                                         { "point3d", point3dDomain },
@@ -472,7 +478,7 @@ public class InterlisReaderInterlisFileTest
                                             new ClassDef
                                             {
                                                 Name = "ClassName",
-                                                OidType = new Reference<TypeDef> { Target = itemIdDomain.TypeDef, Path = { "item_id" } },
+                                                OidType = new Reference<DomainDef> { Target = itemIdDomain, Path = { "item_id" } },
                                                 Content =
                                                 {
                                                     {
@@ -508,7 +514,7 @@ public class InterlisReaderInterlisFileTest
                                                             {
                                                                 IsMultiGeometry = true,
                                                                 IsDirected = true,
-                                                                VertexType = new Reference<TypeDef> { Target = point3dDomain.TypeDef, Path = { "point3d" } },
+                                                                VertexType = new Reference<DomainDef> { Target = point3dDomain, Path = { "point3d" } },
                                                                 OverlapTolerance = 0.01,
                                                                 LineForm = { "STRAIGHTS", "ARCS" },
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -588,7 +594,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new TypeRef
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Extends = new Reference<TypeDef> { Target = ((DomainDef)Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["HALIGNMENT"]).TypeDef, Path = { "INTERLIS", "HALIGNMENT" } },
+                                                                Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["HALIGNMENT"], Path = { "INTERLIS", "HALIGNMENT" } },
                                                             },
                                                         }
                                                     },
@@ -600,7 +606,7 @@ public class InterlisReaderInterlisFileTest
                                                             TypeDef = new TypeRef
                                                             {
                                                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                Extends = new Reference<TypeDef> { Target = ((DomainDef)Interlis24AstReferenceResolverVisitor.InternalInterlisModel.Content["VALIGNMENT"]).TypeDef, Path = { "INTERLIS", "VALIGNMENT" } },
+                                                                Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["VALIGNMENT"], Path = { "INTERLIS", "VALIGNMENT" } },
                                                             },
                                                         }
                                                     },
@@ -688,8 +694,9 @@ public class InterlisReaderInterlisFileTest
             }
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -699,7 +706,7 @@ public class InterlisReaderInterlisFileTest
                         Name = "ModelName",
                         URI = "foo:test",
                         Version = "123",
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                         Content =
                         {
                             { "Length", lengthUnit },
@@ -732,7 +739,7 @@ public class InterlisReaderInterlisFileTest
             Name = "Model_A",
             URI = "foo:test",
             Version = "123",
-            Imports = { { "INTERLIS", (true, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+            Imports = { { "INTERLIS", (true, InternalModel.Interlis) } },
             Content = { }
         };
 
@@ -741,12 +748,13 @@ public class InterlisReaderInterlisFileTest
             Name = "Model_B",
             URI = "foo:test",
             Version = "123",
-            Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+            Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
             Content = { }
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 { "Model_A", modelA },
@@ -759,7 +767,7 @@ public class InterlisReaderInterlisFileTest
                         URI = "foo:test",
                         Version = "123",
                         Imports = {
-                            { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) },
+                            { "INTERLIS", (false, InternalModel.Interlis) },
                             { "Model_A", (false, modelA) },
                             { "Model_B", (true, modelB) },
                             { "Unknown_Model", (false, null) },
@@ -807,24 +815,33 @@ public class InterlisReaderInterlisFileTest
             }
         };
 
-        var formattedType = new FormattedType
+        var formattedDomain = new DomainDef
         {
-            Min = "[000]",
-            Max = "[090]",
-            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-            BasedOn = new Reference<ClassDef> { Target = structure, Path = { "Struct" } },
+            Name = "Format",
+            TypeDef = new FormattedType
+            {
+                Min = "[000]",
+                Max = "[090]",
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                BasedOn = new Reference<ClassDef> { Target = structure, Path = { "Struct" } },
+            }
         };
 
-        var formattedType2 = new FormattedType
+        var formattedDomain2 = new DomainDef
         {
-            Min = "[012]",
-            Max = "[034]",
-            Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-            FormatBaseType = new Reference<FormattedType> { Target = formattedType, Path = { "Format" } },
+            Name = "Format2",
+            TypeDef = new FormattedType
+            {
+                Min = "[012]",
+                Max = "[034]",
+                Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                FormatBaseType = new Reference<DomainDef> { Target = formattedDomain, Path = { "Format" } },
+            }
         };
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -837,16 +854,10 @@ public class InterlisReaderInterlisFileTest
                         Content =
                         {
                             { "Struct", structure },
-                            {
-                                "Format",
-                                new DomainDef { Name = "Format", TypeDef = formattedType }
-                            },
-                            {
-                                "Format2",
-                                new DomainDef { Name = "Format2", TypeDef = formattedType2 }
-                            },
+                            { "Format", formattedDomain },
+                            { "Format2", formattedDomain2 },
                         },
-                        Imports = { { "INTERLIS", (false, Interlis24AstReferenceResolverVisitor.InternalInterlisModel) } },
+                        Imports = { { "INTERLIS", (false, InternalModel.Interlis) } },
                     }
                 }
             }
@@ -869,10 +880,11 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithDateTime()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -899,7 +911,7 @@ public class InterlisReaderInterlisFileTest
                                                 Name = "Date",
                                                 TypeDef = new TypeRef
                                                 {
-                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDate"]).TypeDef, Path = { "INTERLIS", "XMLDate" } },
+                                                    Extends = new Reference<DomainDef> { Target = (DomainDef)interlis.Content["XMLDate"], Path = { "INTERLIS", "XMLDate" } },
                                                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                 },
                                             }
@@ -911,7 +923,7 @@ public class InterlisReaderInterlisFileTest
                                                 Name = "Time",
                                                 TypeDef = new TypeRef
                                                 {
-                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLTime"]).TypeDef, Path = { "INTERLIS", "XMLTime" } },
+                                                    Extends = new Reference<DomainDef> { Target = (DomainDef)interlis.Content["XMLTime"], Path = { "INTERLIS", "XMLTime" } },
                                                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                 },
                                             }
@@ -923,7 +935,7 @@ public class InterlisReaderInterlisFileTest
                                                 Name = "DateTime",
                                                 TypeDef = new TypeRef
                                                 {
-                                                    Extends = new Reference<TypeDef> { Target = ((DomainDef)interlis.Content["XMLDateTime"]).TypeDef, Path = { "INTERLIS", "XMLDateTime" } },
+                                                    Extends = new Reference<DomainDef> { Target = (DomainDef)interlis.Content["XMLDateTime"], Path = { "INTERLIS", "XMLDateTime" } },
                                                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                 },
                                             }
@@ -953,10 +965,11 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReadFileWithViews()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -1028,7 +1041,7 @@ public class InterlisReaderInterlisFileTest
     [TestMethod]
     public void ReferenceResolutionModelTopiClassSameName()
     {
-        var interlis = Interlis24AstReferenceResolverVisitor.InternalInterlisModel;
+        var interlis = InternalModel.Interlis;
         var nameClass = new ClassDef { Name = "Name" };
         var association = new AssociationDef
         {
@@ -1065,8 +1078,9 @@ public class InterlisReaderInterlisFileTest
 
         nameClass.AssociationAccess.Add("AssociationName", association);
 
-        var expected = new InterlisFile
+        var expected = new InterlisEnvironment
         {
+            Version = 2.4,
             Content =
             {
                 {
@@ -1138,17 +1152,118 @@ public class InterlisReaderInterlisFileTest
         Assert.AreEqual("Ambiguous 'reference 'Name' from Name.Name' could be resolved to multiple targets: Name.Name.Name, OtherName.Name", logProvider.GetMessages().FirstOrDefault());
     }
 
-    internal static void AssertReadFile(string input, InterlisFile expected)
+    [TestMethod]
+    public void ReadFileWithFunctionCall()
+    {
+        var interlis = InternalModel.Interlis;
+
+        var functionDef = new FunctionDef
+        {
+            Name = "endsWith",
+            ReturnType = new BooleanType { Cardinality = new Cardinality { Min = 0, Max = 1 } },
+        };
+
+        var functionModel = new ModelDef
+        {
+            Name = "Text_V2",
+            URI = "http://www.interlis.ch/models",
+            Version = "2023-05-25",
+            Language = "en",
+            Imports = { { "INTERLIS", (false, interlis) } },
+            Content = { { "endsWith", functionDef } }
+        };
+
+        var expected = new InterlisEnvironment
+        {
+            Version = 2.4,
+            Content =
+            {
+                { "Text_V2", functionModel },
+                {
+                    "ModelName",
+                    new ModelDef
+                    {
+                        Name = "ModelName",
+                        URI = "foo:test",
+                        Version = "123",
+                        Imports =
+                        {
+                            { "INTERLIS", (false, interlis) },
+                            { "Text_V2", (true, functionModel) },
+                        },
+                        Content =
+                        {
+                            {
+                                "specialText",
+                                new DomainDef
+                                {
+                                    Name = "specialText",
+                                    TypeDef = new TextType
+                                    {
+                                        Length = 12,
+                                        Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                                        Constraints =
+                                        {
+                                            new DomainConstraint
+                                            {
+                                                Name = "EndsWithPoint",
+                                                Condition = new FunctionCall
+                                                {
+                                                    FunctionDef = new Reference<FunctionDef> { Target = functionDef, Path = { "endsWith" } },
+                                                    Arguments =
+                                                    {
+                                                        new PathExpression
+                                                        {
+                                                            Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This } },
+                                                        },
+                                                        new TextConstant
+                                                        {
+                                                            Value = ".",
+                                                            ReturnType = new TextType(),
+                                                        }
+                                                    },
+                                                }
+                                            },
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                    }
+                }
+            },
+        };
+
+        AssertReadFile("""
+            INTERLIS 2.4;
+
+            TYPE MODEL Text_V2 (en) AT "http://www.interlis.ch/models" VERSION "2023-05-25" =
+                FUNCTION endsWith(val: TEXT; suffix: TEXT): BOOLEAN;
+            END Text_V2.
+
+            MODEL ModelName AT "foo:test" VERSION "123" =
+                IMPORTS UNQUALIFIED Text_V2;
+                DOMAIN specialText = TEXT*12 CONSTRAINTS EndsWithPoint : endsWith(THIS, ".");
+            END ModelName.
+            """, expected);
+    }
+
+    internal static void AssertReadFile(string input, InterlisEnvironment expected)
     {
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
-        AssertDeepEqual(expected, actual);
+        AssertDeepEqual(expected, actual, deepEqual => deepEqual
+                .IgnoreProperty<IInterlisDefinition>(p => p.NameLocations) // Ignore NameLocations because it adds too much clutter in tests for whole interlis files
+                .IgnoreProperty(p => p.DeclaringType.IsGenericType
+                    && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
+                    && nameof(Reference<IInterlisDefinition>.ReferenceLocation).Equals(p.Name))
+                );
     }
 
     internal static void AssertReadRule<TResult>(string input, object? expected, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule)
     {
         var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
-        var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
+        var actual = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
         Assert.IsInstanceOfType(actual, expected?.GetType());
         AssertDeepEqual(expected, actual);
     }
@@ -1160,7 +1275,7 @@ public class InterlisReaderInterlisFileTest
 
         try
         {
-            var (actual, _) = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
+            var actual = new InterlisReader(loggerFactory).ReadRule(new StringReader(input), parseRule);
         }
         catch (Exception ex)
         {
@@ -1170,16 +1285,24 @@ public class InterlisReaderInterlisFileTest
         return logProvider.GetMessages();
     }
 
-    private static void AssertDeepEqual(object expected, object actual)
+    private static void AssertDeepEqual(object expected, object actual, Func<CompareSyntax<object, object>, CompareSyntax<object, object>>? configureDeepEqual = null)
     {
-        expected.WithDeepEqual(actual)
+        var deepEqualAssert = expected.WithDeepEqual(actual)
             .IgnoreProperty<IInterlisDefinition>(d => d.Parent) // Ignore parent property to break circular references
             .IgnoreProperty(p => p.DeclaringType.IsGenericType
-                    && typeof(Reference<object>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
-                    && (nameof(Reference<object>.Source).Equals(p.Name) // Ignore reference source to break circular references
-                        || nameof(Reference<object>.MapTarget).Equals(p.Name))) // Ignore Func property
+                    && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
+                    && (nameof(Reference<IInterlisDefinition>.Source).Equals(p.Name) // Ignore reference source to break circular references
+                        || nameof(Reference<IInterlisDefinition>.MapTarget).Equals(p.Name) // Ignore Func property
+                        || nameof(Reference<IInterlisDefinition>.OnResolved).Equals(p.Name))) // Ignore Callback property
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
-            .IgnoreCircularReferences()
-            .Assert();
+            .IgnoreProperty<IInterlisDefinitionContainer>(d => d.ContainerReferences) // Easy access collection for references
+            .IgnoreCircularReferences();
+
+        if (configureDeepEqual != null)
+        {
+            deepEqualAssert = configureDeepEqual(deepEqualAssert);
+        }
+
+        deepEqualAssert.Assert();
     }
 }

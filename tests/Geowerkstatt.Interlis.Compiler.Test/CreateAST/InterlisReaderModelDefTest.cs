@@ -13,7 +13,19 @@ public class InterlisReaderModelDefTest
         AssertReadRule("""
             MODEL Test AT "foo.test" VERSION "123" =
             END Test.
-            """, new ModelDef { Name = "Test", URI = "foo.test", Version = "123", Imports = { { "INTERLIS", (false, null) } } });
+            """,
+            new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
+                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } }
+                },
+                URI = "foo.test",
+                Version = "123",
+                Imports = { { "INTERLIS", (false, null) } }
+            });
     }
 
     [TestMethod]
@@ -32,6 +44,11 @@ public class InterlisReaderModelDefTest
             new ModelDef
             {
                 Name = "Test_A",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 2, Character = 22 }, End = new Position { Line = 2, Character = 28 } },
+                    new RangePosition { Start = new Position { Line = 7, Character = 4 }, End = new Position { Line = 7, Character = 10 } }
+                },
                 DocComments = { "/** A model with all optional fields set */" },
                 MetaAttributes = { { "EPSG", "2056" } },
                 Language = "en",
@@ -55,6 +72,11 @@ public class InterlisReaderModelDefTest
             new ModelDef
             {
                 Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 3, Character = 6 }, End = new Position { Line = 3, Character = 10 } },
+                    new RangePosition { Start = new Position { Line = 4, Character = 4 }, End = new Position { Line = 4, Character = 8 } }
+                },
                 DocComments = { string.Join(Environment.NewLine, "/**", " * Documentation String", " */") },
                 URI = "foo.test",
                 Version = "123",
@@ -73,6 +95,11 @@ public class InterlisReaderModelDefTest
             new ModelDef
             {
                 Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition { Start = new Position { Line = 1, Character = 6 }, End = new Position { Line = 1, Character = 10 } },
+                    new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 8 } }
+                },
                 MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ ø \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
                 URI = "foo.test",
                 Version = "123",

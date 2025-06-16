@@ -11,6 +11,11 @@ public interface IInterlisDefinition : IAstElement
     public string Name { get; init; }
 
     /// <summary>
+    /// The Locations of the <see cref="Name"/> in the INTERLIS source file.
+    /// </summary>
+    public ICollection<RangePosition> NameLocations { get; }
+
+    /// <summary>
     /// The parent <see cref="IInterlisDefinitionContainer"/> or <c>null</c> if this definition has no parent.
     /// </summary>
     public IInterlisDefinitionContainer? Parent { get; set; }
