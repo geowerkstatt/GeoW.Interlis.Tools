@@ -16,10 +16,12 @@ public interface IRepositoryCrawler
     Task<IDictionary<string, Repository>> CrawlModelRepositories(RepositoryCrawlerOptions options);
 
     /// <summary>
-    /// Fetches the INTERLIS files from the <paramref name="repositories"/>. Files are identified by their MD5 hash and only downloaded if not already contained in <paramref name="existingFiles"/>.
-    /// If a <see cref="Model"/> is missing the <see cref="Model.MD5"/> property, it is set according to the downloaded file.
+    /// Fetches the INTERLIS file for a single <paramref name="model"/>. The <see cref="Model.FileContent"/> of the found <see cref="Model"/>s is either populated from the
+    /// <paramref name="getCachedFile"/> or fetched from the repository.
+    /// If the <paramref name="model"/> is missing the <see cref="Model.MD5"/> property, it is set according to the downloaded file.
     /// </summary>
-    /// <param name="existingFiles">The <see cref="InterlisFile"/>s previously fetched.</param>
-    /// <param name="repositories">The repositories to fetch the files for.</param>
-    Task FetchInterlisFiles(IEnumerable<InterlisFile> existingFiles, IEnumerable<Repository> repositories);
+    /// <param name="getCachedFile">Get an <see cref="InterlisFile"/> previously fetched by its <see cref="InterlisFile.MD5"/> key.</param>
+    /// <param name="model">The model to fetch the INTERLIS file for.</param>
+    /// <returns>The <see cref="InterlisFile"/> for the model or <see langword="null"/> if it was not available.</returns>
+    Task<InterlisFile?> FetchInterlisFile(Model model, Func<string, InterlisFile?> getCachedFile);
 }

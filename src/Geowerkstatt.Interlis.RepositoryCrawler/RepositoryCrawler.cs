@@ -9,51 +9,45 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler;
 /// <inheritdoc cref="IRepositoryCrawler"/>
 public class RepositoryCrawler : IRepositoryCrawler
 {
-    private readonly ILogger<RepositoryCrawler> logger;
+    private readonly ILogger logger;
     private readonly HttpClient httpClient;
 
-    public RepositoryCrawler(ILogger<RepositoryCrawler> logger, IHttpClientFactory httpClientFactory)
+    public RepositoryCrawler(ILoggerFactory loggerFactory, HttpClient httpClient)
     {
-        this.logger = logger;
-        httpClient = httpClientFactory.CreateClient();
+        logger = loggerFactory.CreateLogger(GetType());
+        this.httpClient = httpClient;
     }
 
-    /// <inheritdoc />
-    public async Task FetchInterlisFiles(IEnumerable<InterlisFile> existingFiles, IEnumerable<Repository> repositories)
+    public async Task<InterlisFile?> FetchInterlisFile(Model model, Func<string, InterlisFile?> getCachedFile)
     {
-        var allFiles = existingFiles.ToDictionary(f => f.MD5, StringComparer.OrdinalIgnoreCase);
-        foreach (var repository in repositories)
+        // Check cache
+        InterlisFile? file = string.IsNullOrEmpty(model.MD5) ? null : getCachedFile(model.MD5);
+        if (file != null)
         {
-            foreach (var model in repository.Models)
+            model.FileContent = file;
+            return file;
+        }
+
+        // Fetch file from repository
+        if (model.Uri != null)
+        {
+            file = await FetchInterlisFile(model.Uri).ConfigureAwait(false);
+        }
+
+        if (file != null)
+        {
+            model.FileContent = file;
+            if (string.IsNullOrEmpty(model.MD5))
             {
-                InterlisFile? file;
-                if (!string.IsNullOrEmpty(model.MD5) && allFiles.TryGetValue(model.MD5, out file))
-                {
-                    model.FileContent = file;
-                    continue;
-                }
-
-                var modelFileUrl = repository.Uri.Append(model.File);
-                file = await FetchInterlisFile(modelFileUrl).ConfigureAwait(false);
-                if (file != null)
-                {
-                    if (!allFiles.TryAdd(file.MD5, file))
-                    {
-                        file = allFiles[file.MD5];
-                    }
-
-                    model.FileContent = file;
-                    if (string.IsNullOrEmpty(model.MD5))
-                    {
-                        model.MD5 = file.MD5;
-                    }
-                    else if (!model.MD5.Equals(file.MD5, StringComparison.OrdinalIgnoreCase))
-                    {
-                        logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, modelFileUrl, file.MD5);
-                    }
-                }
+                model.MD5 = file.MD5;
+            }
+            else if (!model.MD5.Equals(file.MD5, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, model.Uri, file.MD5);
             }
         }
+
+        return file;
     }
 
     /// <inheritdoc />
