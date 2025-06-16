@@ -5,6 +5,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST;
 public sealed class AttributeDef : IInterlisDefinition, IDocumentation
 {
     public required string Name { get; init; }
+    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
     public string FullyQualifiedName => Parent != null ? $"{Parent.FullyQualifiedName} -> {Name}" : Name;
     public IInterlisDefinitionContainer? Parent { get; set; } = null;
 

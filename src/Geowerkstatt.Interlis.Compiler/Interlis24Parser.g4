@@ -327,11 +327,11 @@ unitTypeDef
     ;
 
 derivedUnit
-    : (decConst ( ( '*' | '/') decConst)* | FUNCTION EXPLANATION)? '[' definitionRef ']'
+    : (decConst ( op+=( '*' | '/') decConst)* | FUNCTION EXPLANATION)? '[' definitionRef ']'
     ;
 
 composedUnit
-    : '(' definitionRef (( '*' | '/') definitionRef)* ')'
+    : '(' definitionRef (op+=( '*' | '/') definitionRef)* ')'
     ;
 
 metaDataBasketDef
@@ -401,7 +401,7 @@ uniqueEl
 localUniqueness
     : '(' LOCAL ')' structureAttribute=IDENTIFIER ('->' structureAttribute=IDENTIFIER)* ':' attributeName=IDENTIFIER (
         ',' attributeName=IDENTIFIER
-    )
+    )*
     ;
 
 setConstraint
@@ -423,9 +423,9 @@ expression
     ;
 
 factor
-    : objectOrAttributePath
+    : functionCall
+    | objectOrAttributePath
     | (inspection | INSPECTION definitionRef) (OF objectOrAttributePath)?
-    | functionCall
     | PARAMETER definitionRef
     | constant
     ;
@@ -435,22 +435,9 @@ objectOrAttributePath
     ;
 
 pathEl
-    : THIS
-    | THISAREA
-    | THATAREA
-    | PARENT
-    | IDENTIFIER ('[' IDENTIFIER ']')?
-    | associationPath
-    | attributeRef
-    ;
-
-associationPath
-    : BACKSLASH? IDENTIFIER
-    ;
-
-attributeRef
-    : attribute=IDENTIFIER ('[' ( FIRST | LAST | axisListIndex=POS_NUMBER) ']')?
-    | AGGREGATES
+    : keyword=(THIS | THISAREA | THATAREA | PARENT | AGGREGATES)
+    | BACKSLASH name=IDENTIFIER
+    | name=IDENTIFIER ('[' detail=( FIRST | LAST | POS_NUMBER | IDENTIFIER) ']')?
     ;
 
 functionCall
@@ -465,16 +452,15 @@ argument
 functionDef
     : FUNCTION name=IDENTIFIER '(' (
         argumentName=IDENTIFIER ':' argumentType (
-            SEMICOLON argumentName=IDENTIFIER ':' IDENTIFIER
+            SEMICOLON argumentName=IDENTIFIER ':' argumentType
         )*
-    )? ')' ':' argumentType EXPLANATION? SEMICOLON
+    )? ')' ':' returnType=argumentType EXPLANATION? SEMICOLON
     ;
 
 argumentType
     : attrTypeDef
     | (OBJECT | OBJECTS) OF (restrictedDefinitionRef | definitionRef)
-    | ENUMVAL
-    | ENUMTREEVAL
+    | (ENUMVAL | ENUMTREEVAL)
     ;
 
 viewDef

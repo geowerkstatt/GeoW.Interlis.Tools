@@ -1,4 +1,4 @@
-﻿using Antlr4.Runtime.Misc;
+using Geowerkstatt.Interlis.Compiler.AST;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 
 namespace Geowerkstatt.Interlis.Compiler;
@@ -104,6 +104,23 @@ public class InterlisReaderNumericType
     {
         var logs = GetLogMessages("999 .. 000");
         Assert.AreEqual("Compile error at line 1:0 Number minimum <999> must be smaller than maximum <0>.", logs.FirstOrDefault());
+    }
+
+    [TestMethod]
+    public void ReadNumericWithUnit()
+    {
+        AssertReadRule("0 .. 100 [INTERLIS.m]",
+            new NumericType
+            {
+                Min = 0,
+                Max = 100,
+                Precision = 0,
+                Unit = new Reference<UnitDef>
+                {
+                    Path = { "INTERLIS", "m" },
+                    ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 10 }, End = new Position { Line = 0, Character = 20 } },
+                },
+            });
     }
 
     private void AssertReadRule(string input, object? expected)

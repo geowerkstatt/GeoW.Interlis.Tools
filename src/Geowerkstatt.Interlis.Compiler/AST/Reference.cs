@@ -1,6 +1,10 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
-public class Reference<T> : IUnresolvedReference where T : class
+/// <summary>
+/// A reference to another Definition in the interlis file.
+/// </summary>
+/// <typeparam name="T">The type of the target.</typeparam>
+public class Reference<T> : IReference where T : class, IInterlisDefinition
 {
     /// <summary>
     /// The resolved object.
@@ -15,8 +19,18 @@ public class Reference<T> : IUnresolvedReference where T : class
     /// </summary>
     public Func<IInterlisDefinition, T?> MapTarget { get; init; } = element => element as T;
 
+    /// <summary>
+    /// A function that is called when the target is resolved.
+    /// </summary>
+    public Action<T>? OnResolved;
+
     /// <inheritdoc />
     public List<string> Path { get; } = new List<string>();
+
+    /// <summary>
+    /// The location of this reference in the INTERLIS source file.
+    /// </summary>
+    public RangePosition? ReferenceLocation { get; init; }
 
     /// <inheritdoc />
     public bool CanAccept(IInterlisDefinition potentialTarget)
@@ -28,10 +42,16 @@ public class Reference<T> : IUnresolvedReference where T : class
     public void SetTarget(IInterlisDefinition target)
     {
         Target = MapTarget(target);
+        OnResolved?.Invoke(Target!);
     }
 
     public override string ToString()
     {
         return $"reference '{(Path.Any() ? string.Join(".", Path) : (Target as IInterlisDefinition)?.FullyQualifiedName)}'{(Source == null ? "" : " from " + Source.FullyQualifiedName)}";
+    }
+
+    public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
+    {
+        return visitor.VisitReference(this);
     }
 }

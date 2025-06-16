@@ -14,7 +14,7 @@ public class XtfReader
 
     private GeometryFactory factory = new GeometryFactory();
 
-    public InterlisFile? InterlisEnvironment { get; set; }
+    public InterlisEnvironment? InterlisEnvironment { get; set; }
 
     public IEnumerable<InterlisObject> ReadXtf(TextReader textReader)
     {

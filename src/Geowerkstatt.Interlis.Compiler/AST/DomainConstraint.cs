@@ -1,6 +1,6 @@
 ﻿using Geowerkstatt.Interlis.Compiler.AST.Expression;
 
-namespace Geowerkstatt.Interlis.Compiler.AST.Types;
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 public class DomainConstraint
 {

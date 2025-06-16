@@ -5,6 +5,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST;
 public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDefinitionContainer, IIdentifiable
 {
     public required string Name { get; init; }
+    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
     public IInterlisDefinitionContainer? Parent { get; set; }
 
     public IList<string> DocComments { get; } = new List<string>();
@@ -21,7 +22,9 @@ public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDe
 
     public bool IsStructure { get; init; }
 
-    public Reference<TypeDef>? OidType { get; set; }
+    public Reference<DomainDef>? OidType { get; set; }
+
+    public ICollection<IReference> ContainerReferences { get; } = new List<IReference>();
 
     public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
     {

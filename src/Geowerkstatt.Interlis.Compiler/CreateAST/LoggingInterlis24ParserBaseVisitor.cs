@@ -48,11 +48,6 @@ public class LoggingInterlis24ParserBaseVisitor<TResult>(ILoggerFactory loggerFa
         return LogNotImplementedWarning(context);
     }
 
-    public virtual TResult VisitAssociationPath([NotNull] Interlis24Parser.AssociationPathContext context)
-    {
-        return LogNotImplementedWarning(context);
-    }
-
     public virtual TResult VisitAttributeDef([NotNull] Interlis24Parser.AttributeDefContext context)
     {
         return LogNotImplementedWarning(context);
@@ -64,11 +59,6 @@ public class LoggingInterlis24ParserBaseVisitor<TResult>(ILoggerFactory loggerFa
     }
 
     public virtual TResult VisitAttributePathType([NotNull] Interlis24Parser.AttributePathTypeContext context)
-    {
-        return LogNotImplementedWarning(context);
-    }
-
-    public virtual TResult VisitAttributeRef([NotNull] Interlis24Parser.AttributeRefContext context)
     {
         return LogNotImplementedWarning(context);
     }

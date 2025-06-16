@@ -6,6 +6,8 @@ public class NumericConstant : ConstantExpression
 {
     public required double Value { get; init; }
 
+    public Reference<UnitDef>? Unit { get; init; }
+
     public NumericConstant() : base(new NumericType())
     {
     }
