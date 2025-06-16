@@ -1184,6 +1184,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
         else
         {
+            // ENUMVAL or ENUMTREEVAL
             return new EnumerationType();
         }
     }
