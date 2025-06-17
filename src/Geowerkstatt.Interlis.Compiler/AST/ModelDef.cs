@@ -11,7 +11,7 @@ public sealed class ModelDef : IDocumentation, IInterlisDefinitionContainer
     public IList<string> DocComments { get; } = new List<string>();
     public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
-    public IDictionary<string, (bool IsUnqualifiedAllowed, ModelDef? ModelDef)> Imports { get; } = new Dictionary<string, (bool, ModelDef?)>();
+    public IList<(bool IsUnqualifiedAllowed, Reference<ModelDef> ModelDef)> Imports { get; } = new List<(bool, Reference<ModelDef>)>();
 
     public string? Language { get; set; }
     public string? URI { get; set; }

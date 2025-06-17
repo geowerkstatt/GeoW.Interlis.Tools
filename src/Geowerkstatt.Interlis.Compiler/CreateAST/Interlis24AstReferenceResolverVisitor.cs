@@ -1,4 +1,4 @@
-using Geowerkstatt.Interlis.Compiler.AST;
+﻿using Geowerkstatt.Interlis.Compiler.AST;
 using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 using Microsoft.Extensions.Logging;
@@ -12,6 +12,7 @@ namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory) : Interlis24AstBaseVisitor<bool>
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24AstReferenceResolverVisitor>();
+    private readonly Scope<InterlisEnvironment> currentEnvironment = new();
 
     /// <summary>
     /// Resolves the reference. If successful, the <see cref="Reference{T}.Target"/> is set accordingly.
@@ -66,17 +67,27 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             }
 
             // search in imports fully qualified
-            if (model.Imports.TryGetValue(reference.Path[0], out var importedModel))
+            var import = model.Imports.FirstOrDefault(m => m.ModelDef.Path[0] == reference.Path[0]);
+            if (import.ModelDef != null)
             {
-                potentialTargets.AddIfNotNull(ResolveAbsolute(reference, importedModel.ModelDef));
+                // import already resolved
+                if (import.ModelDef.Target != null)
+                {
+                    potentialTargets.AddIfNotNull(ResolveAbsolute(reference, import.ModelDef.Target));
+                }
+                else if (reference.Path.Count == 1 && currentEnvironment.Value != null)
+                {
+                    // resolve model import
+                    potentialTargets.AddIfNotNull(currentEnvironment.Value.Content.GetValueOrDefault(reference.Path[0]));
+                }
             }
 
             // search in imports unqualified
             if (reference.Path.Count == 1)
             {
-                foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
+                foreach (var unqualifiedImport in model.Imports.Where(m => m.IsUnqualifiedAllowed))
                 {
-                    if (unqualifiedImport.ModelDef?.Content.TryGetValue(reference.Path[0], out var element) == true)
+                    if (unqualifiedImport.ModelDef?.Target?.Content.TryGetValue(reference.Path[0], out var element) == true)
                     {
                         potentialTargets.Add(element);
                     }
@@ -127,27 +138,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     public override bool VisitInterlisEnvironment([NotNull] InterlisEnvironment interlisEnvironment)
     {
-        // resolve model imports
-        var modelDefs = interlisEnvironment.Content.Values.OfType<ModelDef>().ToList();
-        var availableModels = modelDefs.ToDictionary(m => m.Name);
-        availableModels["INTERLIS"] = InternalModel.Interlis;
-
-        foreach (var model in modelDefs)
-        {
-            foreach (var import in model.Imports)
-            {
-                if (availableModels.TryGetValue(import.Key, out var importedModel))
-                {
-                    model.Imports[import.Key] = (import.Value.IsUnqualifiedAllowed, importedModel);
-                }
-                else
-                {
-                    logger.LogError("Could not resolve import '{Import}' in model '{Model}'", import.Key, model.Name);
-                }
-            }
-        }
-
-        // visit children
+        using var scopeFrame = currentEnvironment.NewFrame(interlisEnvironment);
         return base.VisitInterlisEnvironment(interlisEnvironment);
     }
 

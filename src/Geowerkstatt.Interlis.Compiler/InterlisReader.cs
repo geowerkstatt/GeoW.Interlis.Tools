@@ -26,7 +26,10 @@ public class InterlisReader
         var interlisFile = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()));
         foreach (var model in interlisFile.Content.Values)
         {
-            model.SourceUri = sourceUri;
+            if (model != InternalModel.Interlis)
+            {
+                model.SourceUri = sourceUri;
+            }
         }
 
         var referenceResolver = new Interlis24AstReferenceResolverVisitor(loggerFactory);
