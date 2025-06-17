@@ -90,7 +90,7 @@ var astCreator = new Interlis24Visitor(loggerFactory, tokenStream);
 var abstractSyntaxTree = (InterlisEnvironment)parseTree.Accept(astCreator);
 
 // resolve references
-var referenceResolver = new new Interlis24AstReferenceResolverVisitor(loggerFactory);
+var referenceResolver = new Interlis24AstReferenceResolverVisitor(loggerFactory);
 abstractSyntaxTree.Accept(referenceResolver);
 ```
 
