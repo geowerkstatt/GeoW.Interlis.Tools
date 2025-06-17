@@ -19,8 +19,8 @@ public class InterlisReaderModelDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
-                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } }
+                    new RangePosition(0, 6, 0, 10),
+                    new RangePosition(1, 4, 1, 8)
                 },
                 URI = "foo.test",
                 Version = "123",
@@ -46,8 +46,8 @@ public class InterlisReaderModelDefTest
                 Name = "Test_A",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 2, Character = 22 }, End = new Position { Line = 2, Character = 28 } },
-                    new RangePosition { Start = new Position { Line = 7, Character = 4 }, End = new Position { Line = 7, Character = 10 } }
+                    new RangePosition(2, 22, 2, 28),
+                    new RangePosition(7, 4, 7, 10)
                 },
                 DocComments = { "/** A model with all optional fields set */" },
                 MetaAttributes = { { "EPSG", "2056" } },
@@ -74,8 +74,8 @@ public class InterlisReaderModelDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 3, Character = 6 }, End = new Position { Line = 3, Character = 10 } },
-                    new RangePosition { Start = new Position { Line = 4, Character = 4 }, End = new Position { Line = 4, Character = 8 } }
+                    new RangePosition(3, 6, 3, 10),
+                    new RangePosition(4, 4, 4, 8)
                 },
                 DocComments = { string.Join(Environment.NewLine, "/**", " * Documentation String", " */") },
                 URI = "foo.test",
@@ -97,8 +97,8 @@ public class InterlisReaderModelDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 1, Character = 6 }, End = new Position { Line = 1, Character = 10 } },
-                    new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 8 } }
+                    new RangePosition(1, 6, 1, 10),
+                    new RangePosition(2, 4, 2, 8)
                 },
                 MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ ø \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
                 URI = "foo.test",

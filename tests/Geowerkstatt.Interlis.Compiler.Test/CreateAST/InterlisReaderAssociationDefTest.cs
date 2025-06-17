@@ -19,8 +19,8 @@ public class InterlisReaderAssociationDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 12 }, End = new Position { Line = 0, Character = 16 } },
-                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } },
+                    new RangePosition(0, 12, 0, 16),
+                    new RangePosition(1, 4, 1, 8),
                 },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
             });
@@ -41,12 +41,12 @@ public class InterlisReaderAssociationDefTest
                 Name = "Test_A",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 12 }, End = new Position { Line = 0, Character = 18 } },
-                    new RangePosition { Start = new Position { Line = 4, Character = 4 }, End = new Position { Line = 4, Character = 10 } },
+                    new RangePosition(0, 12, 0, 18),
+                    new RangePosition(4, 4, 4, 10),
                 },
                 Cardinality = new Cardinality { Min = 5, Max = 42 },
-                Extends = new Reference<AssociationDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 48 }, End = new Position { Line = 0, Character = 54 } } },
-                OidType = new Reference<DomainDef> { Path = { "oidType" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 1, Character = 11 }, End = new Position { Line = 1, Character = 18 } } },
+                Extends = new Reference<AssociationDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition(0, 48, 0, 54) },
+                OidType = new Reference<DomainDef> { Path = { "oidType" }, ReferenceLocation = new RangePosition(1, 11, 1, 18) },
                 Properties = { Property.Abstract, Property.Extended },
             });
     }
@@ -72,11 +72,11 @@ public class InterlisReaderAssociationDefTest
                         new AttributeDef
                         {
                             Name = "Document",
-                            NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 12 } } },
+                            NameLocations = { new RangePosition(1, 4, 1, 12) },
                             TypeDef = new RoleType
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "DocumentClass" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 1, Character = 16 }, End = new Position { Line = 1, Character = 29 } } } } },
+                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "DocumentClass" }, ReferenceLocation = new RangePosition(1, 16, 1, 29) } } },
                             }
                         }
                     },
@@ -85,11 +85,11 @@ public class InterlisReaderAssociationDefTest
                         new AttributeDef
                         {
                             Name = "Action",
-                            NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 10 } } },
+                            NameLocations = { new RangePosition(2, 4, 2, 10) },
                             TypeDef = new RoleType
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ActionClass" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 2, Character = 14 }, End = new Position { Line = 2, Character = 25 } } } } },
+                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ActionClass" }, ReferenceLocation = new RangePosition(2, 14, 2, 25) } } },
                             }
                         }
                     },

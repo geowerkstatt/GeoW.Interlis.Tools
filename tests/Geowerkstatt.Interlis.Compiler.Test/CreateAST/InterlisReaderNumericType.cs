@@ -124,7 +124,7 @@ public class InterlisReaderNumericType
                 Unit = new Reference<UnitDef>
                 {
                     Path = { "INTERLIS", "m" },
-                    ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 10 }, End = new Position { Line = 0, Character = 20 } },
+                    ReferenceLocation = new RangePosition(0, 10, 0, 20),
                 },
                 SourceRange = new RangePosition(0, 0, 0, 21),
             });
