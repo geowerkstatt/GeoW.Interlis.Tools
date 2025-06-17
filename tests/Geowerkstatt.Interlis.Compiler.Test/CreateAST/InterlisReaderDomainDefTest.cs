@@ -17,7 +17,7 @@ public class InterlisReaderDomainDefTest
             {
                 Name = "text",
                 NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
-                TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound } }
+                TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }, SourceRange = new RangePosition(0, 7, 0, 16), }
             });
     }
 
@@ -39,6 +39,7 @@ public class InterlisReaderDomainDefTest
                 {
                     Length = 12,
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
+                    SourceRange = new RangePosition(0, 7, 0, 16),
                     Constraints =
                     {
                         new DomainConstraint

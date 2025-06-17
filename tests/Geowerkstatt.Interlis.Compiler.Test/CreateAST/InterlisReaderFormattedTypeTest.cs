@@ -14,6 +14,7 @@ public class InterlisReaderFormattedTypeTest
             {
                 Min = "00",
                 Max = "99",
+                SourceRange = new RangePosition(0, 0, 0, 10),
             });
     }
 
@@ -26,6 +27,7 @@ public class InterlisReaderFormattedTypeTest
                 Min = "2000-01-01T00:00:00.000",
                 Max = "2000-12-31T23:59:59.999",
                 FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 7 }, End = new Position { Line = 0, Character = 27 } } },
+                SourceRange = new RangePosition(0, 0, 0, 82),
             });
     }
 
@@ -36,6 +38,7 @@ public class InterlisReaderFormattedTypeTest
             new FormattedType
             {
                 BasedOn = new Reference<ClassDef> { Path = { "GregorianDate" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 16 }, End = new Position { Line = 0, Character = 29 } } },
+                SourceRange = new RangePosition(0, 0, 0, 62),
             });
     }
 

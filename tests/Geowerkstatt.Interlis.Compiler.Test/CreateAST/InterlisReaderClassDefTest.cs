@@ -76,7 +76,7 @@ public class InterlisReaderClassDefTest
                         {
                             Name = "Attr",
                             NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } } },
-                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } }
+                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 }, SourceRange = new RangePosition(1, 21, 1, 28), }
                         }
                     },
                     {
@@ -85,7 +85,7 @@ public class InterlisReaderClassDefTest
                         {
                             Name = "Other",
                             NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 9 } } },
-                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 }, SourceRange = new RangePosition(2, 12, 2, 20), }
                         }
                     },
                 }
@@ -118,7 +118,7 @@ public class InterlisReaderClassDefTest
                         {
                             Name = "Attr",
                             NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } } },
-                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } }
+                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 }, SourceRange = new RangePosition(1, 21, 1, 28), }
                         }
                     },
                     {
@@ -127,7 +127,7 @@ public class InterlisReaderClassDefTest
                         {
                             Name = "Other",
                             NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 9 } } },
-                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 }, SourceRange = new RangePosition(2, 12, 2, 20), }
                         }
                     },
                 }
