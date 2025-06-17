@@ -383,6 +383,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         {
             Target = VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()),
             Properties = { properties },
+            SourceRange = GetRange(context),
         };
     }
 
@@ -466,6 +467,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             return new ReferenceType
             {
                 Target = VisitRestrictedDefinitionRef(restrictedDefinitonRef),
+                SourceRange = GetRange(context),
             };
         }
         else
@@ -492,11 +494,12 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             {
                 Length = context.maxLength != null ? int.Parse(context.maxLength.Text) : null,
                 IsMText = context.MTEXT() != null,
+                SourceRange = GetRange(context),
             };
         }
         else
         {
-            return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", context.GetText()]) };
+            return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", context.GetText()]), SourceRange = GetRange(context), };
         }
     }
 
@@ -506,6 +509,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         {
             Circular = context.CIRCULAR() != null,
             Unit = CreateReference<UnitDef>(context.unit),
+            SourceRange = GetRange(context),
         };
 
         if (context.min != null)
@@ -547,6 +551,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Max = context.max == null ? null : VisitString(context.max),
             BasedOn = CreateReference<ClassDef>(context.basedOn),
             FormatBaseType = CreateReference<DomainDef>(context.domainRef),
+            SourceRange = GetRange(context),
         };
     }
 
@@ -601,7 +606,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
 
     public override BooleanType VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)
     {
-        return new BooleanType();
+        return new BooleanType
+        {
+            SourceRange = GetRange(context),
+        };
     }
 
     public override CoordType VisitCoordinateType([NotNull] Interlis24Parser.CoordinateTypeContext context)
@@ -620,6 +628,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         {
             IsMultiGeometry = context.MULTICOORD() != null,
             Axis = { context._axis.Select(VisitNumericType) },
+            SourceRange = GetRange(context),
         };
     }
 
@@ -741,7 +750,8 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         return new OidType
         {
-            TypeDef = context.ANY() != null ? new OidAnyType() : (TypeDef)VisitChildren(context),
+            TypeDef = context.ANY() != null ? new OidAnyType { SourceRange = GetRange(context) } : (TypeDef)VisitChildren(context),
+            SourceRange = GetRange(context),
         };
     }
 
@@ -750,6 +760,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new BlackboxType
         {
             Kind = context.XML() != null ? BlackboxType.BlackboxTypeKind.Xml : BlackboxType.BlackboxTypeKind.Binary,
+            SourceRange = GetRange(context),
         };
     }
 
@@ -772,6 +783,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
                 OverlapTolerance = overlap,
                 LineForm = { lineForm },
                 VertexType = CreateReference<DomainDef>(context.vertexType),
+                SourceRange = GetRange(context),
             };
         }
         else
@@ -783,6 +795,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
                 OverlapTolerance = overlap,
                 LineForm = { lineForm },
                 VertexType = CreateReference<DomainDef>(context.vertexType),
+                SourceRange = GetRange(context),
             };
         }
     }
@@ -804,6 +817,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new EnumerationAllOfType
         {
             TargetEnumeration = CreateReference<DomainDef>(context.definitionRef()),
+            SourceRange = GetRange(context),
         };
     }
 
@@ -813,6 +827,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         {
             Sequencing = (EnumerationType.Sequencings)(context.sequencing?.Type ?? 0),
             Values = { VisitEnumeration(context.enumeration()) },
+            SourceRange = GetRange(context),
         };
     }
 
@@ -1180,12 +1195,18 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
         else if (context.OBJECT() != null || context.OBJECTS() != null)
         {
-            return new ObjectType();
+            return new ObjectType
+            {
+                SourceRange = GetRange(context),
+            };
         }
         else
         {
             // ENUMVAL or ENUMTREEVAL
-            return new EnumerationType();
+            return new EnumerationType
+            {
+                SourceRange = GetRange(context),
+            };
         }
     }
 
