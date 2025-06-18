@@ -62,7 +62,7 @@ public class InterlisReaderModelDefTest
                 Imports =
                 {
                     { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name }, ReferenceLocation = null }) }, // Implicit import
-                    { "Test_C", (true, new Reference<ModelDef> { Path = { "Test_C" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 6, Character = 24 }, End = new Position { Line = 6, Character = 30 } } }) }
+                    { "Test_C", (true, new Reference<ModelDef> { Path = { "Test_C" }, ReferenceLocation = new RangePosition(6, 24, 6, 30) }) }
                 },
             });
     }
