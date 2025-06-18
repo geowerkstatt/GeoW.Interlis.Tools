@@ -1254,6 +1254,7 @@ public class InterlisReaderInterlisFileTest
         var actual = new InterlisReader(loggerFactory).ReadFile(new StringReader(input));
         AssertDeepEqual(expected, actual, deepEqual => deepEqual
                 .IgnoreProperty<IInterlisDefinition>(p => p.NameLocations) // Ignore NameLocations because it adds too much clutter in tests for whole interlis files
+                .IgnoreProperty<ISourceRange>(p => p.SourceRange)
                 .IgnoreProperty(p => p.DeclaringType.IsGenericType
                     && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
                     && nameof(Reference<IInterlisDefinition>.ReferenceLocation).Equals(p.Name))
