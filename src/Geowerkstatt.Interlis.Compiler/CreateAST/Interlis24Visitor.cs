@@ -159,6 +159,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         var interlisFile = new InterlisEnvironment
         {
             Version = version,
+            Content = { { InternalModel.Interlis.Name, InternalModel.Interlis } },
         };
 
         if (version != 2.4)
@@ -186,18 +187,20 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Xmlns = context.xmlns == null ? null : VisitString(context.xmlns),
         };
 
+        using var scopeFrame = CurrentScope.NewFrame(modelDef);
+        var importedModels = new HashSet<string>();
         foreach (var import in context._imports)
         {
-            if (!modelDef.Imports.TryAdd(import.name.Text, (import.UNQUALIFIED() != null, null)))
+            var importModelName = import.name.Text;
+            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], GetRange(import.name)))))
             {
-                ReportError(import.name, $"Duplicate import {import.name.Text}");
+                ReportError(import.name, $"Duplicate import {importModelName}");
             }
         }
 
         // Add default INTERLIS import
-        modelDef.Imports.TryAdd("INTERLIS", (false, null));
+        modelDef.Imports.TryAdd(InternalModel.Interlis.Name, (false, CreateReference<ModelDef>([InternalModel.Interlis.Name])));
 
-        using var scopeFrame = CurrentScope.NewFrame(modelDef);
         var elements = context
             .modelContents()
             .SelectMany(c =>

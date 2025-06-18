@@ -1,6 +1,7 @@
-using Antlr4.Runtime.Misc;
+﻿using Antlr4.Runtime.Misc;
 using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.CreateAST;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -24,7 +25,10 @@ public class InterlisReaderModelDefTest
                 },
                 URI = "foo.test",
                 Version = "123",
-                Imports = { { "INTERLIS", (false, null) } }
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                },
             });
     }
 
@@ -55,7 +59,11 @@ public class InterlisReaderModelDefTest
                 URI = "foo.test",
                 Version = "123",
                 Xmlns = "http://www.interlis.test",
-                Imports = { { "INTERLIS", (false, null) }, { "Test_C", (true, null) } },
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name }, ReferenceLocation = null }) }, // Implicit import
+                    { "Test_C", (true, new Reference<ModelDef> { Path = { "Test_C" }, ReferenceLocation = new RangePosition(6, 24, 6, 30) }) }
+                },
             });
     }
 
@@ -80,7 +88,10 @@ public class InterlisReaderModelDefTest
                 DocComments = { string.Join(Environment.NewLine, "/**", " * Documentation String", " */") },
                 URI = "foo.test",
                 Version = "123",
-                Imports = { { "INTERLIS", (false, null) } },
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                },
             });
     }
 
@@ -103,7 +114,10 @@ public class InterlisReaderModelDefTest
                 MetaAttributes = { { "key1", "value with spaces and escapes: \" \\ ø \U0001F60E" }, { "key2", "#ff1234/256.0e-10" } },
                 URI = "foo.test",
                 Version = "123",
-                Imports = { { "INTERLIS", (false, null) } },
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                },
             });
     }
 
