@@ -194,7 +194,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             var importModelName = import.name.Text;
             if (importedModels.Add(importModelName))
             {
-                modelDef.Imports.Add((import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName])));
+                modelDef.Imports.Add((import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], GetRange(import.name))));
             }
             else
             {
