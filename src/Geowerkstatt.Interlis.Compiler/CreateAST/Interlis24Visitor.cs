@@ -199,7 +199,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
 
         // Add default INTERLIS import
-        modelDef.Imports.TryAdd("INTERLIS", (false, CreateReference<ModelDef>(["INTERLIS"])));
+        modelDef.Imports.TryAdd(InternalModel.Interlis.Name, (false, CreateReference<ModelDef>([InternalModel.Interlis.Name])));
 
         var elements = context
             .modelContents()
