@@ -67,14 +67,14 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             }
 
             // search in imports fully qualified
-            var import = model.Imports.FirstOrDefault(m => m.ModelDef.Path[0] == reference.Path[0]);
-            if (import.ModelDef != null)
+            if (model.Imports.TryGetValue(reference.Path[0], out var import))
             {
                 // import already resolved
                 if (import.ModelDef.Target != null)
                 {
                     potentialTargets.AddIfNotNull(ResolveAbsolute(reference, import.ModelDef.Target));
                 }
+                // a fully qualified path with 1 element references a model (used in import statements)
                 else if (reference.Path.Count == 1 && currentEnvironment.Value != null)
                 {
                     // resolve model import
@@ -85,7 +85,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             // search in imports unqualified
             if (reference.Path.Count == 1)
             {
-                foreach (var unqualifiedImport in model.Imports.Where(m => m.IsUnqualifiedAllowed))
+                foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
                 {
                     if (unqualifiedImport.ModelDef?.Target?.Content.TryGetValue(reference.Path[0], out var element) == true)
                     {

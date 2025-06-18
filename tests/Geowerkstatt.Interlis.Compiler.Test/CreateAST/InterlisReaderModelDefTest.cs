@@ -27,7 +27,7 @@ public class InterlisReaderModelDefTest
                 Version = "123",
                 Imports =
                 {
-                    (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } })
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
                 },
             });
     }
@@ -61,8 +61,8 @@ public class InterlisReaderModelDefTest
                 Xmlns = "http://www.interlis.test",
                 Imports =
                 {
-                    (true, new Reference<ModelDef> { Path = { "Test_C" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 6, Character = 24 }, End = new Position { Line = 6, Character = 30 } } }),
-                    (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name }, ReferenceLocation = null }), // Implicit import
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name }, ReferenceLocation = null }) }, // Implicit import
+                    { "Test_C", (true, new Reference<ModelDef> { Path = { "Test_C" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 6, Character = 24 }, End = new Position { Line = 6, Character = 30 } } }) }
                 },
             });
     }
@@ -90,7 +90,7 @@ public class InterlisReaderModelDefTest
                 Version = "123",
                 Imports =
                 {
-                    (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } })
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
                 },
             });
     }
@@ -116,7 +116,7 @@ public class InterlisReaderModelDefTest
                 Version = "123",
                 Imports =
                 {
-                    (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } })
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
                 },
             });
     }

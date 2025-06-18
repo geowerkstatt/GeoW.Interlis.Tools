@@ -40,7 +40,7 @@ public class InterlisReaderInterlisFileTest
                             Version = "123",
                             Imports =
                             {
-                                (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                             }
                         }
                     },
@@ -73,7 +73,7 @@ public class InterlisReaderInterlisFileTest
                             Version = "123",
                             Imports =
                             {
-                                (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                             },
                             DocComments = { "/** I am a doc comment */" }
                         }
@@ -111,7 +111,7 @@ public class InterlisReaderInterlisFileTest
                             Version = "123",
                             Imports =
                             {
-                                (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                             },
                             Content =
                             {
@@ -216,7 +216,7 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                         Content =
                         {
@@ -470,7 +470,7 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                         Content =
                         {
@@ -735,7 +735,7 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                         Content =
                         {
@@ -771,7 +771,7 @@ public class InterlisReaderInterlisFileTest
             Version = "123",
             Imports =
             {
-                (true, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                { InternalModel.Interlis.Name, (true, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
             },
             Content = { }
         };
@@ -783,7 +783,7 @@ public class InterlisReaderInterlisFileTest
             Version = "123",
             Imports =
             {
-                (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
             },
             Content = { }
         };
@@ -805,10 +805,10 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }),
-                            (false, new Reference<ModelDef> { Target = modelA, Path = { "Model_A" } }),
-                            (true, new Reference<ModelDef> { Target = modelB, Path = { "Model_B" } }),
-                            (false, new Reference<ModelDef> { Target = null, Path = { "Unknown_Model" } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) },
+                            { "Model_A", (false, new Reference<ModelDef> { Target = modelA, Path = { "Model_A" } }) },
+                            { "Model_B", (true, new Reference<ModelDef> { Target = modelB, Path = { "Model_B" } }) },
+                            { "Unknown_Model", (false, new Reference<ModelDef> { Target = null, Path = { "Unknown_Model" } }) }
                         },
                         Content = {}
                     }
@@ -898,7 +898,7 @@ public class InterlisReaderInterlisFileTest
                         },
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                     }
                 }
@@ -989,7 +989,7 @@ public class InterlisReaderInterlisFileTest
                         },
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                     }
                 }
@@ -1062,7 +1062,7 @@ public class InterlisReaderInterlisFileTest
                         },
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                     }
                 }
@@ -1158,7 +1158,7 @@ public class InterlisReaderInterlisFileTest
                         },
                         Imports =
                         {
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
                         },
                     }
                 },
@@ -1223,7 +1223,7 @@ public class InterlisReaderInterlisFileTest
             Language = "en",
             Imports =
             {
-                (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } })
+                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
             },
             Content = { { "endsWith", functionDef } }
         };
@@ -1244,8 +1244,8 @@ public class InterlisReaderInterlisFileTest
                         Version = "123",
                         Imports =
                         {
-                            (true, new Reference<ModelDef> { Target = functionModel, Path = { "Text_V2" } }),
-                            (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }),
+                            { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) },
+                            { "Text_V2", (true, new Reference<ModelDef> { Target = functionModel, Path = { "Text_V2" } }) }
                         },
                         Content =
                         {

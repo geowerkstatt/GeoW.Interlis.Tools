@@ -192,21 +192,14 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         foreach (var import in context._imports)
         {
             var importModelName = import.name.Text;
-            if (importedModels.Add(importModelName))
-            {
-                modelDef.Imports.Add((import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], GetRange(import.name))));
-            }
-            else
+            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], GetRange(import.name)))))
             {
                 ReportError(import.name, $"Duplicate import {importModelName}");
             }
         }
 
         // Add default INTERLIS import
-        if (!importedModels.Contains("INTERLIS"))
-        {
-            modelDef.Imports.Add((false, CreateReference<ModelDef>(["INTERLIS"])));
-        }
+        modelDef.Imports.TryAdd("INTERLIS", (false, CreateReference<ModelDef>(["INTERLIS"])));
 
         var elements = context
             .modelContents()
