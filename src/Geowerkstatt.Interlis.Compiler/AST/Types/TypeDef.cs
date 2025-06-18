@@ -1,4 +1,3 @@
-﻿
 namespace Geowerkstatt.Interlis.Compiler.AST.Types;
 
 public abstract class TypeDef : IExtending<DomainDef>, ISourceRange
