@@ -9,7 +9,7 @@ public class InterlisReaderNumericType
     [TestMethod]
     public void ReadNumericAbstract()
     {
-        AssertReadRule("NUMERIC", new NumericType());
+        AssertReadRule("NUMERIC", new NumericType { SourceRange = new RangePosition(0, 0, 0, 7) });
     }
 
     [TestMethod]
@@ -21,6 +21,7 @@ public class InterlisReaderNumericType
                 Min = 0,
                 Max = 999,
                 Precision = 0,
+                SourceRange = new RangePosition(0, 0, 0, 8),
             });
     }
 
@@ -34,6 +35,7 @@ public class InterlisReaderNumericType
                 Max = 999,
                 Precision = 0,
                 Circular = true,
+                SourceRange = new RangePosition(0, 0, 0, 17),
             });
     }
 
@@ -46,6 +48,7 @@ public class InterlisReaderNumericType
                 Min = 0.001,
                 Max = 0.02,
                 Precision = -3,
+                SourceRange = new RangePosition(0, 0, 0, 17),
             });
     }
 
@@ -58,6 +61,7 @@ public class InterlisReaderNumericType
                 Min = -1.5,
                 Max = 10,
                 Precision = -2,
+                SourceRange = new RangePosition(0, 0, 0, 14),
             });
     }
 
@@ -77,6 +81,7 @@ public class InterlisReaderNumericType
                 Min = 0.001,
                 Max = 1,
                 Precision = -3,
+                SourceRange = new RangePosition(0, 0, 0, 15),
             });
     }
 
@@ -96,6 +101,7 @@ public class InterlisReaderNumericType
                 Min = 0,
                 Max = 100000000000000,
                 Precision = -1,
+                SourceRange = new RangePosition(0, 0, 0, 24),
             });
     }
 
@@ -118,8 +124,9 @@ public class InterlisReaderNumericType
                 Unit = new Reference<UnitDef>
                 {
                     Path = { "INTERLIS", "m" },
-                    ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 10 }, End = new Position { Line = 0, Character = 20 } },
+                    ReferenceLocation = new RangePosition(0, 10, 0, 20),
                 },
+                SourceRange = new RangePosition(0, 0, 0, 21),
             });
     }
 

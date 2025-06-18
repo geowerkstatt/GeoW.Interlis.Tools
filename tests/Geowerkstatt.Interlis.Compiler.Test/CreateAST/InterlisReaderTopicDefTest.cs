@@ -18,8 +18,8 @@ public class InterlisReaderTopicDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
-                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } }
+                    new RangePosition(0, 6, 0, 10),
+                    new RangePosition(1, 4, 1, 8)
                 },
             });
     }
@@ -42,14 +42,14 @@ public class InterlisReaderTopicDefTest
                 Name = "Test_A",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 2, Character = 11 }, End = new Position { Line = 2, Character = 17 } },
-                    new RangePosition { Start = new Position { Line = 7, Character = 4 }, End = new Position { Line = 7, Character = 10 } }
+                    new RangePosition(2, 11, 2, 17),
+                    new RangePosition(7, 4, 7, 10)
                 },
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
-                Extends = new Reference<TopicDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 2, Character = 44 }, End = new Position { Line = 2, Character = 50 } } },
-                BasketOidType = new Reference<DomainDef> { Path = { "oidDomain" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 3, Character = 18 }, End = new Position { Line = 3, Character = 27 } } },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 4, Character = 11 }, End = new Position { Line = 4, Character = 27 } } },
+                Extends = new Reference<TopicDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition(2, 44, 2, 50) },
+                BasketOidType = new Reference<DomainDef> { Path = { "oidDomain" }, ReferenceLocation = new RangePosition(3, 18, 3, 27) },
+                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, ReferenceLocation = new RangePosition(4, 11, 4, 27) },
                 Properties = { Property.Abstract, Property.Final }
             });
     }

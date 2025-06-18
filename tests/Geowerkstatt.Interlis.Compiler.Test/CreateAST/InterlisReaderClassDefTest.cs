@@ -19,8 +19,8 @@ public class InterlisReaderClassDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
-                    new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } },
+                    new RangePosition(0, 6, 0, 10),
+                    new RangePosition(1, 4, 1, 8),
                 },
             });
     }
@@ -40,13 +40,13 @@ public class InterlisReaderClassDefTest
                 Name = "Test_A",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 2, Character = 6 }, End = new Position { Line = 2, Character = 12 } },
-                    new RangePosition { Start = new Position { Line = 4, Character = 4 }, End = new Position { Line = 4, Character = 10 } },
+                    new RangePosition(2, 6, 2, 12),
+                    new RangePosition(4, 4, 4, 10),
                 },
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
-                Extends = new Reference<ClassDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 2, Character = 42 }, End = new Position { Line = 2, Character = 48 } } },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 3, Character = 11 }, End = new Position { Line = 3, Character = 27 } } },
+                Extends = new Reference<ClassDef> { Path = { "Test_B" }, ReferenceLocation = new RangePosition(2, 42, 2, 48) },
+                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, ReferenceLocation = new RangePosition(3, 11, 3, 27) },
                 Properties = { Property.Abstract, Property.Extended },
             });
     }
@@ -65,8 +65,8 @@ public class InterlisReaderClassDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 6 }, End = new Position { Line = 0, Character = 10 } },
-                    new RangePosition { Start = new Position { Line = 3, Character = 4 }, End = new Position { Line = 3, Character = 8 } }
+                    new RangePosition(0, 6, 0, 10),
+                    new RangePosition(3, 4, 3, 8)
                 },
                 Content =
                 {
@@ -75,8 +75,8 @@ public class InterlisReaderClassDefTest
                         new AttributeDef
                         {
                             Name = "Attr",
-                            NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } } },
-                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } }
+                            NameLocations = { new RangePosition(1, 4, 1, 8) },
+                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 }, SourceRange = new RangePosition(1, 21, 1, 28), }
                         }
                     },
                     {
@@ -84,8 +84,8 @@ public class InterlisReaderClassDefTest
                         new AttributeDef
                         {
                             Name = "Other",
-                            NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 9 } } },
-                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                            NameLocations = { new RangePosition(2, 4, 2, 9) },
+                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 }, SourceRange = new RangePosition(2, 12, 2, 20), }
                         }
                     },
                 }
@@ -106,8 +106,8 @@ public class InterlisReaderClassDefTest
                 Name = "Test",
                 NameLocations =
                 {
-                    new RangePosition { Start = new Position { Line = 0, Character = 10 }, End = new Position { Line = 0, Character = 14 } },
-                    new RangePosition { Start = new Position { Line = 3, Character = 4 }, End = new Position { Line = 3, Character = 8 } },
+                    new RangePosition(0, 10, 0, 14),
+                    new RangePosition(3, 4, 3, 8),
                 },
                 IsStructure = true,
                 Content =
@@ -117,8 +117,8 @@ public class InterlisReaderClassDefTest
                         new AttributeDef
                         {
                             Name = "Attr",
-                            NameLocations = { new RangePosition { Start = new Position { Line = 1, Character = 4 }, End = new Position { Line = 1, Character = 8 } } },
-                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 } }
+                            NameLocations = { new RangePosition(1, 4, 1, 8) },
+                            TypeDef = new TextType { Length = 12, Cardinality = new Cardinality { Min = 1, Max = 1 }, SourceRange = new RangePosition(1, 21, 1, 28), }
                         }
                     },
                     {
@@ -126,8 +126,8 @@ public class InterlisReaderClassDefTest
                         new AttributeDef
                         {
                             Name = "Other",
-                            NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 4 }, End = new Position { Line = 2, Character = 9 } } },
-                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 } }
+                            NameLocations = { new RangePosition(2, 4, 2, 9) },
+                            TypeDef = new NumericType { Min = 0, Max = 100, Precision = 0, Cardinality = new Cardinality { Min = 0, Max = 1 }, SourceRange = new RangePosition(2, 12, 2, 20), }
                         }
                     },
                 }

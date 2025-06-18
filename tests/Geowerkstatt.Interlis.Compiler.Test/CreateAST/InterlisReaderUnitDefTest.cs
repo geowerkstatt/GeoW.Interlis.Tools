@@ -14,7 +14,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Length",
                 Term = "Length",
-                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 6 } } },
+                NameLocations = { new RangePosition(0, 0, 0, 6) },
                 Properties = { Property.Abstract },
             });
     }
@@ -27,8 +27,8 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "m",
                 Term = "Meter",
-                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 7 }, End = new Position { Line = 0, Character = 8 } } },
-                Extends = new Reference<UnitDef> { Path = { "Length" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 18 }, End = new Position { Line = 0, Character = 24 } } },
+                NameLocations = { new RangePosition(0, 7, 0, 8) },
+                Extends = new Reference<UnitDef> { Path = { "Length" }, ReferenceLocation = new RangePosition(0, 18, 0, 24) },
             });
     }
 
@@ -40,17 +40,17 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Area",
                 Term = "Area",
-                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 4 } } },
+                NameLocations = { new RangePosition(0, 0, 0, 4) },
                 Properties = { Property.Abstract },
                 Expression = new Multiplication
                 {
                     FirstOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 19 }, End = new Position { Line = 0, Character = 25 } } } } }
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" }, ReferenceLocation = new RangePosition(0, 19, 0, 25) } } }
                     },
                     SecondOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 28 }, End = new Position { Line = 0, Character = 34 } } } } },
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "Length" }, ReferenceLocation = new RangePosition(0, 28, 0, 34) } } },
                     }
                 }
             });
@@ -64,17 +64,17 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "kmh",
                 Term = "KilometersPerHour",
-                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 19 }, End = new Position { Line = 0, Character = 22 } } },
-                Extends = new Reference<UnitDef> { Path = { "Speed" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 32 }, End = new Position { Line = 0, Character = 37 } } },
+                NameLocations = { new RangePosition(0, 19, 0, 22) },
+                Extends = new Reference<UnitDef> { Path = { "Speed" }, ReferenceLocation = new RangePosition(0, 32, 0, 37) },
                 Expression = new Division
                 {
                     FirstOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "km" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 41 }, End = new Position { Line = 0, Character = 43 } } } } }
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "km" }, ReferenceLocation = new RangePosition(0, 41, 0, 43) } } }
                     },
                     SecondOperand = new PathExpression
                     {
-                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "h" }, ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 46 }, End = new Position { Line = 0, Character = 47 } } } } },
+                        Path = { new ReferencePathElement { Value = new Reference<IInterlisDefinition> { Path = { "h" }, ReferenceLocation = new RangePosition(0, 46, 0, 47) } } },
                     }
                 }
             });
@@ -88,7 +88,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "AngleDegree",
                 Term = "AngleDegree",
-                NameLocations = { new RangePosition { Start = new Position { Line = 0, Character = 0 }, End = new Position { Line = 0, Character = 11 } } },
+                NameLocations = { new RangePosition(0, 0, 0, 11) },
                 Expression = new Multiplication
                 {
                     FirstOperand = new NumericConstant
@@ -104,7 +104,7 @@ public class InterlisReaderUnitDefTest
                                 Value = new Reference<IInterlisDefinition>
                                 {
                                     Path = { "AngleRad" },
-                                    ReferenceLocation = new RangePosition { Start = new Position { Line = 0, Character = 28 }, End = new Position { Line = 0, Character = 36 } }
+                                    ReferenceLocation = new RangePosition(0, 28, 0, 36)
                                 }
                             }
                         },
@@ -125,7 +125,7 @@ public class InterlisReaderUnitDefTest
             {
                 Name = "Temperature",
                 Term = "Temperature",
-                NameLocations = { new RangePosition { Start = new Position { Line = 2, Character = 0 }, End = new Position { Line = 2, Character = 11 } } },
+                NameLocations = { new RangePosition(2, 0, 2, 11) },
                 Properties = { Property.Abstract },
                 DocComments = { "/** Base unit for all temperatures. */" },
                 MetaAttributes = { { "meta", "value" } },
