@@ -1,8 +1,7 @@
-﻿using Geowerkstatt.Interlis.Compiler.AST;
-using Geowerkstatt.Interlis.Compiler.AST.Expression;
+﻿using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 
-namespace Geowerkstatt.Interlis.Compiler.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
 /// Internal INTERLIS model.
