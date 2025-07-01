@@ -1,7 +1,6 @@
 ﻿using Antlr4.Runtime.Misc;
 using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Compiler.AST;
-using Geowerkstatt.Interlis.Compiler.CreateAST;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
