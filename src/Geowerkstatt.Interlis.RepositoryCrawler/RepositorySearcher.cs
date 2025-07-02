@@ -20,8 +20,6 @@ public class RepositorySearcher
     private readonly RepositoryCrawlerOptions options;
     private readonly DbContextOptions<RepositoryCrawlerContext> contextOptions;
 
-    private DateTime lastCrawlTime = DateTime.MinValue;
-
     /// <summary>
     /// Create a new <see cref="RepositorySearcher"/>.
     /// </summary>
@@ -99,10 +97,14 @@ public class RepositorySearcher
         using var context = new RepositoryCrawlerContext(contextOptions);
         context.Database.EnsureCreated();
 
+        var lastCrawl = context.CrawlInformations
+            .OrderByDescending(ci => ci.CrawlTime)
+            .FirstOrDefault();
+        var lastCrawlTime = lastCrawl?.CrawlTime ?? DateTime.MinValue;
+
         var now = DateTime.Now;
         if (!context.Repositories.Any() || now > lastCrawlTime + options.StaleTime) {
             await UpdateRepositoryTree(context).ConfigureAwait(false);
-            lastCrawlTime = now;
         }
 
         var models = context.Models
@@ -134,9 +136,14 @@ public class RepositorySearcher
             context.Catalogs.ExecuteDelete();
             context.Models.ExecuteDelete();
             context.Repositories.ExecuteDelete();
+            context.CrawlInformations.ExecuteDelete();
             context.SaveChanges();
 
             context.Repositories.AddRange(repositories.Values);
+            context.CrawlInformations.Add(new CrawlInformation
+            {
+                CrawlTime = DateTime.Now,
+            });
             context.SaveChanges();
 
             transaction.Commit();
