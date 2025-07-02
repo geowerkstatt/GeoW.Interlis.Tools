@@ -38,9 +38,10 @@ public class RepositorySearchTest
     }
 
     [TestCleanup]
-    public void TestCleanup()
+    public async Task TestCleanup()
     {
         mockHttp.Dispose();
+        await repositorySearch.DeleteCacheDatabase();
     }
 
     [TestMethod]

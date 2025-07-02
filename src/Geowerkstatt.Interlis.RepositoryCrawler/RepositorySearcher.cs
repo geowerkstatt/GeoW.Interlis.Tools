@@ -154,4 +154,10 @@ public class RepositorySearcher
             logger.LogError(ex, "Unable to update ModelRepoDatabase");
         }
     }
+
+    internal async Task DeleteCacheDatabase()
+    {
+        using var context = new RepositoryCrawlerContext(contextOptions);
+        await context.Database.EnsureDeletedAsync();
+    }
 }
