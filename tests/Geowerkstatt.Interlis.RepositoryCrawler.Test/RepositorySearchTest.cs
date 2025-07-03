@@ -1,4 +1,5 @@
-﻿using Geowerkstatt.Interlis.RepositoryCrawler.TestHelpers;
+﻿using Geowerkstatt.Interlis.RepositoryCrawler.Models;
+using Geowerkstatt.Interlis.RepositoryCrawler.TestHelpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,7 +12,8 @@ public class RepositorySearchTest
 {
     private RepositorySearcher repositorySearch;
     private MockHttpMessageHandler mockHttp;
-    private Mock<ILogger> logger;
+    private ILoggerFactory loggerFactory;
+    private IConfigurationRoot configuration;
 
     [TestInitialize]
     public void TestInitialize()
@@ -21,10 +23,9 @@ public class RepositorySearchTest
         var httpClient = mockHttp.ToHttpClient();
 
         var loggerProvider = new MockLoggerProvider();
-        logger = loggerProvider.LoggerMock;
-        var loggerFactory = LoggerFactory.Create(b => b.AddConsole().AddProvider(loggerProvider));
+        loggerFactory = LoggerFactory.Create(b => b.AddConsole().AddProvider(loggerProvider));
 
-        var configuration = new ConfigurationBuilder()
+        configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 {"RepositoryCrawler:RootRepositoryUri", "https://models.interlis.testdata/"},
@@ -37,9 +38,10 @@ public class RepositorySearchTest
     }
 
     [TestCleanup]
-    public void TestCleanup()
+    public async Task TestCleanup()
     {
         mockHttp.Dispose();
+        await repositorySearch.DeleteCacheDatabase();
     }
 
     [TestMethod]
@@ -62,5 +64,29 @@ public class RepositorySearchTest
     {
         var models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_4");
         models.AssertItems(_ => true, m => Assert.AreEqual("ili2_4", m.SchemaLanguage), 35);
+    }
+
+    [TestMethod]
+    public async Task SearchModelsFromCache()
+    {
+        // Populate the cache with the repository crawler
+        var models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        models.AssertItems(_ => true, m => Assert.AreEqual("ili2_4", m.SchemaLanguage), 35);
+
+        // New instance reuses the cache
+        var crawler = new Mock<IRepositoryCrawler>(MockBehavior.Strict);
+        crawler
+            .Setup(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()))
+            .ReturnsAsync((Model model, Func<string, InterlisFile?> getCachedFile) =>
+            {
+                Assert.IsNotNull(model.MD5);
+                return getCachedFile(model.MD5);
+            });
+        var searcher = new RepositorySearcher(crawler.Object, configuration, loggerFactory);
+
+        models = await searcher.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        models.AssertItems(_ => true, m => Assert.AreEqual("ili2_4", m.SchemaLanguage), 35);
+
+        crawler.VerifyAll();
     }
 }

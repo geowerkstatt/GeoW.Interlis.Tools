@@ -20,8 +20,6 @@ public class RepositorySearcher
     private readonly RepositoryCrawlerOptions options;
     private readonly DbContextOptions<RepositoryCrawlerContext> contextOptions;
 
-    private DateTime lastCrawlTime = DateTime.MinValue;
-
     /// <summary>
     /// Create a new <see cref="RepositorySearcher"/>.
     /// </summary>
@@ -99,10 +97,13 @@ public class RepositorySearcher
         using var context = new RepositoryCrawlerContext(contextOptions);
         context.Database.EnsureCreated();
 
-        var now = DateTime.Now;
-        if (!context.Repositories.Any() || now > lastCrawlTime + options.StaleTime) {
+        var lastCrawl = context.CrawlInformations
+            .OrderByDescending(ci => ci.CrawlTime)
+            .FirstOrDefault();
+        var lastCrawlTime = lastCrawl?.CrawlTime ?? DateTime.MinValue;
+
+        if (!context.Repositories.Any() || DateTime.Now > lastCrawlTime + options.StaleTime) {
             await UpdateRepositoryTree(context).ConfigureAwait(false);
-            lastCrawlTime = now;
         }
 
         var models = context.Models
@@ -112,11 +113,19 @@ public class RepositorySearcher
             .OrderByDescending(m => m.Version)
             .ToList();
 
+        // Multiple models can be in the same file and fetched files are not available in context.InterlisFiles until SaveChanges is called.
+        var fetchedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var model in models)
         {
-            await repositoryCrawler.FetchInterlisFile(
+            var file = await repositoryCrawler.FetchInterlisFile(
                 model,
-                md5 => context.InterlisFiles.Where(f => EF.Functions.Collate(f.MD5, "NOCASE") == md5).FirstOrDefault());
+                md5 => fetchedFiles.TryGetValue(md5, out var file) ? file : context.InterlisFiles.Where(f => EF.Functions.Collate(f.MD5, "NOCASE") == md5).FirstOrDefault());
+
+            if (file?.MD5 != null)
+            {
+                fetchedFiles[file.MD5] = file;
+            }
         }
 
         context.SaveChanges();
@@ -134,9 +143,14 @@ public class RepositorySearcher
             context.Catalogs.ExecuteDelete();
             context.Models.ExecuteDelete();
             context.Repositories.ExecuteDelete();
+            context.CrawlInformations.ExecuteDelete();
             context.SaveChanges();
 
             context.Repositories.AddRange(repositories.Values);
+            context.CrawlInformations.Add(new CrawlInformation
+            {
+                CrawlTime = DateTime.Now,
+            });
             context.SaveChanges();
 
             transaction.Commit();
@@ -146,5 +160,11 @@ public class RepositorySearcher
         {
             logger.LogError(ex, "Unable to update ModelRepoDatabase");
         }
+    }
+
+    internal async Task DeleteCacheDatabase()
+    {
+        using var context = new RepositoryCrawlerContext(contextOptions);
+        await context.Database.EnsureDeletedAsync();
     }
 }
