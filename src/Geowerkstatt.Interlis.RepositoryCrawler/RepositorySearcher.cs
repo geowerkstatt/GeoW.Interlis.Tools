@@ -102,8 +102,7 @@ public class RepositorySearcher
             .FirstOrDefault();
         var lastCrawlTime = lastCrawl?.CrawlTime ?? DateTime.MinValue;
 
-        var now = DateTime.Now;
-        if (!context.Repositories.Any() || now > lastCrawlTime + options.StaleTime) {
+        if (!context.Repositories.Any() || DateTime.Now > lastCrawlTime + options.StaleTime) {
             await UpdateRepositoryTree(context).ConfigureAwait(false);
         }
 
