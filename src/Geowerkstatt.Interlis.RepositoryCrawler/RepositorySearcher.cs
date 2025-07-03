@@ -114,11 +114,19 @@ public class RepositorySearcher
             .OrderByDescending(m => m.Version)
             .ToList();
 
+        // Multiple models can be in the same file and fetched files are not available in context.InterlisFiles until SaveChanges is called.
+        var fetchedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var model in models)
         {
-            await repositoryCrawler.FetchInterlisFile(
+            var file = await repositoryCrawler.FetchInterlisFile(
                 model,
-                md5 => context.InterlisFiles.Where(f => EF.Functions.Collate(f.MD5, "NOCASE") == md5).FirstOrDefault());
+                md5 => fetchedFiles.TryGetValue(md5, out var file) ? file : context.InterlisFiles.Where(f => EF.Functions.Collate(f.MD5, "NOCASE") == md5).FirstOrDefault());
+
+            if (file?.MD5 != null)
+            {
+                fetchedFiles[file.MD5] = file;
+            }
         }
 
         context.SaveChanges();
