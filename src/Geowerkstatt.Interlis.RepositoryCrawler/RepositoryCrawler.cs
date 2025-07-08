@@ -36,15 +36,22 @@ public class RepositoryCrawler : IRepositoryCrawler
 
         if (file != null)
         {
+            if (!file.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
+            {
+                // Reuse file from cache instead of trying to add the same file as a new entity with the same primary key
+                file = getCachedFile(file.MD5) ?? file;
+
+                if (string.IsNullOrEmpty(model.MD5))
+                {
+                    model.MD5 = file.MD5;
+                }
+                else
+                {
+                    logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, model.Uri, file.MD5);
+                }
+            }
+
             model.FileContent = file;
-            if (string.IsNullOrEmpty(model.MD5))
-            {
-                model.MD5 = file.MD5;
-            }
-            else if (!model.MD5.Equals(file.MD5, StringComparison.OrdinalIgnoreCase))
-            {
-                logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, model.Uri, file.MD5);
-            }
         }
 
         return file;
