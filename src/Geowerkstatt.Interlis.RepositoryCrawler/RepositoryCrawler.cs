@@ -38,7 +38,7 @@ public class RepositoryCrawler : IRepositoryCrawler
         {
             if (!file.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
             {
-                // Reuse file from cache instead of adding a new one with the same MD5 hash
+                // Reuse file from cache instead of trying to add the same file as a new entity with the same primary key
                 file = getCachedFile(file.MD5) ?? file;
 
                 if (string.IsNullOrEmpty(model.MD5))
