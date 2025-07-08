@@ -91,25 +91,25 @@ public class RepositorySearchTest
     }
 
     [TestMethod]
-    public async Task SearchModelsWithInvalidHash()
+    public async Task SearchModelsWithWrongHash()
     {
-        configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                {"RepositoryCrawler:RootRepositoryUri", "https://models.multiparent.testdata/"},
-                {"RepositoryCrawler:CacheDbFolder", Path.Combine(Path.GetTempPath(), "Geowerkstatt.Interlis.Test")},
-            })
-            .Build();
-
-        var repositoryCrawler = new RepositoryCrawler(loggerFactory, mockHttp.ToHttpClient());
-        repositorySearch = new RepositorySearcher(repositoryCrawler, configuration, loggerFactory);
-
-        // Populate the cache with the repository crawler
-        var models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_3");
+        var models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_3" && m.ModelRepository != null && m.ModelRepository.HostNameId == "https://models.multiparent.testdata/");
         models.AssertItems(_ => true, m => Assert.AreEqual("ili2_3", m.SchemaLanguage), 5);
+    }
 
-        // Search again, files are already in cache with their correct hash
-        models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_3");
-        models.AssertItems(_ => true, m => Assert.AreEqual("ili2_3", m.SchemaLanguage), 5);
+    [TestMethod]
+    public async Task SearchModelWithWrongHashMultipleTimes()
+    {
+        const string modelName = "Test_Model_With_Wrong_MD5";
+
+        // Add the model with a wrong hash in ilimodels.xml to the cache
+        var uncachedModel = await repositorySearch.SearchModel(modelName);
+        Assert.IsNotNull(uncachedModel?.FileContent);
+
+        // Search again, file is already in cache with the correct hash
+        var cachedModel = await repositorySearch.SearchModel(modelName);
+        Assert.IsNotNull(cachedModel?.FileContent);
+
+        Assert.AreEqual(uncachedModel?.FileContent?.MD5, cachedModel?.FileContent?.MD5);
     }
 }
