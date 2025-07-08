@@ -133,6 +133,37 @@ public class InterlisReaderModelDefTest
         Assert.AreEqual("Compile error at line 3:0 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.", logs.FirstOrDefault());
     }
 
+    [TestMethod]
+    public void ReadModelDefWithUnclosedMetaComment()
+    {
+        const string input = """
+            !!@ key = "value
+            MODEL Test AT "foo.test" VERSION "123" =
+            END Test.
+            """;
+
+        var logs = GetLogMessages(input);
+        Assert.AreEqual(1, logs.Count);
+        StringAssert.StartsWith(logs.FirstOrDefault(), "Compile error at line 1:16 extraneous input");
+
+        AssertReadRule(input, new ModelDef
+        {
+            Name = "Test",
+            NameLocations =
+            {
+                new RangePosition(1, 6, 1, 10),
+                new RangePosition(2, 4, 2, 8)
+            },
+            MetaAttributes = { { "key", "value" } },
+            URI = "foo.test",
+            Version = "123",
+            Imports =
+            {
+                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+            },
+        });
+    }
+
     private void AssertReadRule(string input, object? expected)
         => InterlisReaderInterlisFileTest.AssertReadRule(input, expected, (p, v) => v.VisitModelDef(p.modelDef()));
 

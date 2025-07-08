@@ -250,7 +250,8 @@ UNKNOWN_ESCAPE     : '\\' .;
 // Same as string literals but on other channel
 mode MetaCommentStringLiteral;
 META_STR_DOUBLE_QUOTE_CLOSE : '"'                                       -> channel(META_COMMENT), type(DOUBLE_QUOTE_CLOSE), popMode;
-META_STR_LITERAL_TEXT       : ~["\\]+                                   -> channel(META_COMMENT), type(LITERAL_TEXT);
+META_STR_UNCLOSED_NEWLINE   : NEWLINE                                   -> channel(META_COMMENT), type(META_COMMENT_CLOSE), popMode, popMode; // pop string and meta comment mode on newline
+META_STR_LITERAL_TEXT       : ~["\\\r\n]+                               -> channel(META_COMMENT), type(LITERAL_TEXT);
 META_STR_BACKSLASH          : '\\\\'                                    -> channel(META_COMMENT), type(BACKSLASH);
 META_STR_DOUBLE_QUOTE       : '\\"'                                     -> channel(META_COMMENT), type(DOUBLE_QUOTE);
 META_STR_UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT -> channel(META_COMMENT), type(UNICODE);
