@@ -67,6 +67,7 @@ definitionRef
         | HALIGNMENT
         | VALIGNMENT
         | METAOBJECT
+        | REFSYSTEM
     )
     ;
 
