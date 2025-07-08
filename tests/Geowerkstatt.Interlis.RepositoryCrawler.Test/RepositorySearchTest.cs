@@ -89,4 +89,27 @@ public class RepositorySearchTest
 
         crawler.VerifyAll();
     }
+
+    [TestMethod]
+    public async Task SearchModelsWithInvalidHash()
+    {
+        configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                {"RepositoryCrawler:RootRepositoryUri", "https://models.multiparent.testdata/"},
+                {"RepositoryCrawler:CacheDbFolder", Path.Combine(Path.GetTempPath(), "Geowerkstatt.Interlis.Test")},
+            })
+            .Build();
+
+        var repositoryCrawler = new RepositoryCrawler(loggerFactory, mockHttp.ToHttpClient());
+        repositorySearch = new RepositorySearcher(repositoryCrawler, configuration, loggerFactory);
+
+        // Populate the cache with the repository crawler
+        var models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_3");
+        models.AssertItems(_ => true, m => Assert.AreEqual("ili2_3", m.SchemaLanguage), 5);
+
+        // Search again, files are already in cache with their correct hash
+        models = await repositorySearch.SearchModels(m => m.SchemaLanguage == "ili2_3");
+        models.AssertItems(_ => true, m => Assert.AreEqual("ili2_3", m.SchemaLanguage), 5);
+    }
 }
