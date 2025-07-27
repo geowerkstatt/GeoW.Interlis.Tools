@@ -188,8 +188,8 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         };
 
         using var scopeFrame = CurrentScope.NewFrame(modelDef);
-        var importedModels = new HashSet<string>();
-        foreach (var import in context._imports)
+
+        foreach (var import in context.modelImport())
         {
             var importModelName = import.name.Text;
             if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], GetRange(import.name)))))
