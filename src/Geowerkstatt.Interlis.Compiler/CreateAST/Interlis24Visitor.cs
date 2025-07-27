@@ -259,6 +259,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         CheckStartAndEndName(context.endName, context.name.Text, context.endName.Text);
         var properties = VisitProperties(context.properties(), [Interlis24Parser.ABSTRACT, Interlis24Parser.EXTENDED, Interlis24Parser.FINAL]);
 
+        var attributeDefs = context.attributeDef().Select(VisitAttributeDef).Cast<IInterlisDefinition>();
+        var constraintDefs = context.constraintDef().Select(VisitConstraintDef).Cast<IInterlisDefinition>();
+        // var parameterDefs = context.parameterDef() == null ? null : VisitParameterDef(context.parameterDef());
+
         var classDef = new ClassDef
         {
             Name = context.name.Text,
@@ -284,18 +288,9 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             classDef.OidType = CreateReference<DomainDef>(["INTERLIS", "NOOID"]);
         }
 
-        SetContentDictionary(classDef, classDef, context.name, VisitClassContent(context.classContent()));
+        SetContentDictionary(classDef, classDef, context.name, attributeDefs.Concat(constraintDefs)/*.Concat(parameterDefs)*/);
 
         return classDef;
-    }
-
-    public override List<IInterlisDefinition> VisitClassContent([NotNull] Interlis24Parser.ClassContentContext context)
-    {
-        var constraints = context.constraintDef().Select(VisitConstraintDef).Cast<IInterlisDefinition>();
-        var attributes = context.attributeDef().Select(VisitAttributeDef).Cast<IInterlisDefinition>();
-        var parameters = context.parameterDef() == null ? null : VisitParameterDef(context.parameterDef());
-
-        return attributes.Concat(constraints).ToList();
     }
 
     public override AssociationDef VisitAssociationDef([NotNull] Interlis24Parser.AssociationDefContext context)

@@ -74,11 +74,9 @@ definitionRef
 classDef
     : (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
-    )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? classContent END endName=IDENTIFIER SEMICOLON
-    ;
-
-classContent
-    : ATTRIBUTE? attributeDef* constraintDef* (PARAMETER parameterDef)?
+    )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? ATTRIBUTE? attributeDef* constraintDef* (
+        PARAMETER parameterDef
+    )? END endName=IDENTIFIER SEMICOLON
     ;
 
 attributeDef
