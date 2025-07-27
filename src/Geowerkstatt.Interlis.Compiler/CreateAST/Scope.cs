@@ -1,10 +1,15 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 
-internal sealed class Scope<T> where T : class
+/// <summary>
+/// Encapsulates a generic value. The value can only be changed by calling <see cref="NewFrame(T?)"/>.
+/// When the frame returned by <see cref="NewFrame(T?)"/> gets disposed, the value is reverted back to the value when the frame was created.
+/// </summary>
+/// <typeparam name="T">The type of the value.</typeparam>
+internal sealed class Scope<T>
 {
     public T? Value { get; private set; }
 
-    public Scope(T? initial = null)
+    public Scope(T? initial = default)
     {
         Value = initial;
     }
