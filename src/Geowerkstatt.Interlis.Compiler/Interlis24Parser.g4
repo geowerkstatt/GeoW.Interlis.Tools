@@ -17,7 +17,7 @@ modelDef
     )? NOINCREMENTALTRANSFER? AT uri=string VERSION modelVersion=string EXPLANATION? (
         TRANSLATION OF translationOf=IDENTIFIER '[' translationOfVersion=string ']'
     )? EQUAL_SIGN (CHARSET charsetName=string SEMICOLON)? (XMLNS xmlns=string SEMICOLON)? (
-        IMPORTS imports+=modelImport (',' imports+=modelImport)* SEMICOLON
+        IMPORTS modelImport (',' modelImport)* SEMICOLON
     )* modelContents* END endName=IDENTIFIER '.'
     ;
 
@@ -74,11 +74,9 @@ definitionRef
 classDef
     : (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
-    )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? classContent END endName=IDENTIFIER SEMICOLON
-    ;
-
-classContent
-    : ATTRIBUTE? attributeDef* constraintDef* (PARAMETER parameterDef)?
+    )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? ATTRIBUTE? attributeDef* constraintDef* (
+        PARAMETER parameterDef
+    )? END endName=IDENTIFIER SEMICOLON
     ;
 
 attributeDef
@@ -350,7 +348,7 @@ metaObjectRef
     ;
 
 parameterDef
-    : arameter=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ ':' (
+    : parameter=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ ':' (
         attrTypeDef
         | METAOBJECT (OF metaObject=definitionRef)?
     ) SEMICOLON
@@ -511,7 +509,7 @@ viewAttributes
     : ATTRIBUTE? (
         ALL OF base=IDENTIFIER SEMICOLON
         | attributeDef
-        | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON
+        | attribute+=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON
     )*
     ;
 

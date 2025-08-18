@@ -113,11 +113,6 @@ public class LoggingInterlis24ParserBaseVisitor<TResult>(ILoggerFactory loggerFa
         return LogNotImplementedWarning(context);
     }
 
-    public virtual TResult VisitClassContent([NotNull] Interlis24Parser.ClassContentContext context)
-    {
-        return LogNotImplementedWarning(context);
-    }
-
     public virtual TResult VisitClassType([NotNull] Interlis24Parser.ClassTypeContext context)
     {
         return LogNotImplementedWarning(context);
