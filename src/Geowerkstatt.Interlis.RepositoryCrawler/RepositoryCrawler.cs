@@ -177,30 +177,29 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private async Task<ISet<Catalog>> CrawlIlidata(Uri repositoryUri)
     {
-        var ilidataUri = GetIlidataUrl(repositoryUri);
         try
         {
-            using (var ilidataStream = await GetStreamFromUrl(ilidataUri).ConfigureAwait(false))
-            {
-                return RepositoryFilesDeserializer.ParseIliData(ilidataStream)
-                    .Select(m => new Catalog
-                    {
-                        Identifier = m.id,
-                        Version = m.version,
-                        PublishingDate = DateTime.SpecifyKind(m.publishingDate.Date, DateTimeKind.Utc),
-                        PrecursorVersion = m.precursorVersion,
-                        Owner = m.owner,
-                        Title = m.GetTitle(),
-                        File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
-                        ReferencedModels = m.GetReferencedModels(),
-                    })
-                    .RemovePrecursorCatalogVersions()
-                    .ToHashSet();
-            }
+            var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
+            var iliData = await repositoryReader.ReadIliData().ConfigureAwait(false);
+
+            return iliData
+                .Select(m => new Catalog
+                {
+                    Identifier = m.id,
+                    Version = m.version,
+                    PublishingDate = DateTime.SpecifyKind(m.publishingDate.Date, DateTimeKind.Utc),
+                    PrecursorVersion = m.precursorVersion,
+                    Owner = m.owner,
+                    Title = m.GetTitle(),
+                    File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
+                    ReferencedModels = m.GetReferencedModels(),
+                })
+                .RemovePrecursorCatalogVersions()
+                .ToHashSet();
         }
-        catch (Exception ex) when (ex is HttpRequestException || ex is OperationCanceledException)
+        catch (Exception ex) when (ex is RepositoryReaderException || ex is OperationCanceledException)
         {
-            logger.LogWarning(ex, "Could not analyse {IliDataUri}.", ilidataUri);
+            logger.LogWarning(ex, "Could not analyse ilidata.xml in repository {RepositoryUri}.", repositoryUri);
         }
 
         return new HashSet<Catalog>();
@@ -317,6 +316,4 @@ public class RepositoryCrawler : IRepositoryCrawler
     private static Uri GetIlisiteUrl(Uri baseUri) => baseUri.Append("/ilisite.xml");
 
     private static Uri GetIlimodelsUrl(Uri baseUri) => baseUri.Append("/ilimodels.xml");
-
-    private static Uri GetIlidataUrl(Uri baseUri) => baseUri.Append("/ilidata.xml");
 }

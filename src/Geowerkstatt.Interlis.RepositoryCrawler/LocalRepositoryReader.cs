@@ -7,7 +7,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
     /// </summary>
     public class LocalRepositoryReader : RepositoryReader
     {
-        private string repositoryDir;
+        private readonly string repositoryDir;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalRepositoryReader"/> for the specified local repository.

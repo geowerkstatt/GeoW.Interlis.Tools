@@ -7,8 +7,8 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
     /// </summary>
     public class HttpRepositoryReader : RepositoryReader
     {
-        private Uri repositoryUri;
-        private HttpClient httpClient;
+        private readonly Uri repositoryUri;
+        private readonly HttpClient httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpRepositoryReader"/> for the repository at the specified HTTP(s) URL.
