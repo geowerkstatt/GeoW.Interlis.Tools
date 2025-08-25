@@ -19,21 +19,19 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         }
 
         /// <inheritdoc />
-        public override Task<IEnumerable<DatasetMetadata>> ReadIliData()
+        public override Task<Stream> GetRepositoryFileStream(string filePath)
         {
             try
             {
-                var ilidataFilePath = Path.Combine(repositoryDir, IliDataFileName);
-                if (!File.Exists(ilidataFilePath))
-                    throw new FileNotFoundException($"File not found: {ilidataFilePath}");
+                var fullFilePath = Path.Combine(repositoryDir, filePath);
+                if (!File.Exists(fullFilePath))
+                    throw new FileNotFoundException($"File not found <{fullFilePath}>");
 
-                var result = ReadIliData(File.OpenRead(ilidataFilePath));
-
-                return Task.FromResult(result);
-            }
-            catch (Exception ex) when (ex is not RepositoryReaderException)
+                Stream stream = File.OpenRead(fullFilePath);
+                return Task.FromResult(stream);
+            } catch (Exception ex)
             {
-                throw new RepositoryReaderException($"Error reading from local repository: {repositoryDir}", ex);
+                throw new RepositoryReaderException($"Error reading file <{filePath}> from local repository <{repositoryDir}>", ex);
             }
         }
     }

@@ -168,7 +168,7 @@ public class RepositoryCrawler : IRepositoryCrawler
 
             return (repository, subsidiaryRepositories);
         }
-        catch (Exception ex) when (ex is HttpRequestException || ex is InvalidOperationException || ex is OperationCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException || ex is InvalidOperationException || ex is OperationCanceledException || ex is RepositoryReaderException)
         {
             logger.LogError(ex, "Analysis of {Repository} failed.", repositoryUri);
             return (null, Enumerable.Empty<Uri>());
@@ -235,11 +235,8 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private async Task<Site?> ParseIlisite(Uri repositoryUri)
     {
-        var ilisiteUri = GetIlisiteUrl(repositoryUri);
-        using (var ilisiteStream = await GetStreamFromUrl(ilisiteUri).ConfigureAwait(false))
-        {
-            return RepositoryFilesDeserializer.ParseIliSite(ilisiteStream);
-        }
+        var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
+        return await repositoryReader.ReadIliSite().ConfigureAwait(false);
     }
 
     private async Task<InterlisFile?> FetchInterlisFile(Uri fileUri)

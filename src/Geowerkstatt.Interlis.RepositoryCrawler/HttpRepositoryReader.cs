@@ -22,22 +22,20 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         }
 
         /// <inheritdoc />
-        public async override Task<IEnumerable<DatasetMetadata>> ReadIliData()
+        public async override Task<Stream> GetRepositoryFileStream(string filePath)
         {
             try
             {
-                var ilidataUri = new Uri(repositoryUri, IliDataFileName);
+                var fullFilePath = new Uri(repositoryUri, filePath);
 
-                var response = await httpClient.GetAsync(ilidataUri).ConfigureAwait(false);
+                var response = await httpClient.GetAsync(fullFilePath).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 var content = response.Content;
-                await using var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
 
-                return ReadIliData(stream);
-            }
-            catch (Exception ex)
+                return await content.ReadAsStreamAsync().ConfigureAwait(false);
+            } catch (Exception ex)
             {
-                throw new RepositoryReaderException($"Error reading from HTTP repository: {repositoryUri}", ex);
+                throw new RepositoryReaderException($"Error reading file <{filePath}> from HTTP repository <{repositoryUri}>", ex);
             }
         }
     }
