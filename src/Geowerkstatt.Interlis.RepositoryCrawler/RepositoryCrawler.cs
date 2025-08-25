@@ -207,30 +207,26 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private async Task<ISet<Model>> CrawlIlimodels(Uri repositoryUri)
     {
-        var ilimodelsUri = GetIlimodelsUrl(repositoryUri);
-        using (var ilimodelsStream = await GetStreamFromUrl(ilimodelsUri).ConfigureAwait(false))
-        {
-            var models = RepositoryFilesDeserializer.ParseIliModels(ilimodelsStream)
-                .Select(model => new Model
-                {
-                    Name = model.Name,
-                    SchemaLanguage = model.SchemaLanguage,
-                    File = model.File,
-                    Version = model.Version,
-                    PublishingDate = model.publishingDate?.ToUniversalTime(),
-                    DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
-                    ShortDescription = model.shortDescription,
-                    Title = model.Title,
-                    Issuer = model.Issuer,
-                    TechnicalContact = model.technicalContact,
-                    FurtherInformation = model.furtherInformation,
-                    MD5 = model.md5,
-                    Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
-                })
-                .ToHashSet();
+        var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
+        var modelMetadatas = await repositoryReader.ReadIliModels().ConfigureAwait(false);
 
-            return models;
-        }
+        return modelMetadatas.Select(model => new Model
+        {
+            Name = model.Name,
+            SchemaLanguage = model.SchemaLanguage,
+            File = model.File,
+            Version = model.Version,
+            PublishingDate = model.publishingDate?.ToUniversalTime(),
+            DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
+            ShortDescription = model.shortDescription,
+            Title = model.Title,
+            Issuer = model.Issuer,
+            TechnicalContact = model.technicalContact,
+            FurtherInformation = model.furtherInformation,
+            MD5 = model.md5,
+            Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
+        })
+        .ToHashSet();
     }
 
     private async Task<Site?> ParseIlisite(Uri repositoryUri)
@@ -309,8 +305,4 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private static string AddUrlPathSeparator(string urlPath)
         => urlPath.EndsWith('/') ? urlPath : urlPath + '/';
-
-    private static Uri GetIlisiteUrl(Uri baseUri) => baseUri.Append("/ilisite.xml");
-
-    private static Uri GetIlimodelsUrl(Uri baseUri) => baseUri.Append("/ilimodels.xml");
 }

@@ -12,6 +12,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         /// </summary>
         protected const string IliDataFileName = "ilidata.xml";
         protected const string IliSiteFileName = "ilisite.xml";
+        protected const string IliModelsFileName = "ilimodels.xml";
 
         /// <summary>
         /// Opens and returns a stream to read a specific file from the repository.
@@ -30,7 +31,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         {
             try
             {
-                var stream = await GetRepositoryFileStream(IliDataFileName).ConfigureAwait(false);
+                await using var stream = await GetRepositoryFileStream(IliDataFileName).ConfigureAwait(false);
                 return RepositoryFilesDeserializer.ParseIliData(stream);
             }
             catch (Exception ex) when (ex is InvalidOperationException)
@@ -48,12 +49,30 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         {
             try
             {
-                var stream = await GetRepositoryFileStream(IliSiteFileName).ConfigureAwait(false);
+                await using var stream = await GetRepositoryFileStream(IliSiteFileName).ConfigureAwait(false);
                 return RepositoryFilesDeserializer.ParseIliSite(stream);
             }
             catch (Exception ex) when (ex is InvalidOperationException)
             {
                 throw new RepositoryReaderException("Error parsing ilisite.xml content.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Reads and parses the ilimodels.xml file from the repository.
+        /// </summary>
+        /// <returns>The full content of the ilimodels.xml parsed to a list of <see cref="ModelMetadata"/>.</returns>
+        /// <exception cref="RepositoryReaderException">If the data from the stream could not be parsed.</exception>
+        public async Task<IEnumerable<ModelMetadata>> ReadIliModels()
+        {
+            try
+            {
+                await using var stream = await GetRepositoryFileStream(IliModelsFileName).ConfigureAwait(false);
+                return RepositoryFilesDeserializer.ParseIliModels(stream);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException)
+            {
+                throw new RepositoryReaderException("Error parsing ilimodels.xml content.", ex);
             }
         }
     }

@@ -1,6 +1,4 @@
-﻿using Geowerkstatt.Interlis.RepositoryCrawler.XmlModels;
-
-namespace Geowerkstatt.Interlis.RepositoryCrawler
+﻿namespace Geowerkstatt.Interlis.RepositoryCrawler
 {
     /// <summary>
     /// Provides functionality to read INTERLIS repository data from a repository over HTTP(s).
@@ -15,7 +13,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         /// </summary>
         /// <param name="repositoryUri"></param>
         /// <param name="httpClient"></param>
-        public HttpRepositoryReader(Uri repositoryUri, HttpClient? httpClient)
+        public HttpRepositoryReader(Uri repositoryUri, HttpClient? httpClient = null)
         {
             this.repositoryUri = repositoryUri;
             this.httpClient = httpClient ?? new HttpClient();

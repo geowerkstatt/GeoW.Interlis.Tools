@@ -1,6 +1,4 @@
-﻿using Geowerkstatt.Interlis.RepositoryCrawler.XmlModels;
-
-namespace Geowerkstatt.Interlis.RepositoryCrawler
+﻿namespace Geowerkstatt.Interlis.RepositoryCrawler
 {
     /// <summary>
     /// Provides functionality to read INTERLIS repository data from a local directory.
