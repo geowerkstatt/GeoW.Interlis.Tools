@@ -5,13 +5,13 @@
     /// </summary>
     public class LocalRepositoryReader : RepositoryReader
     {
-        private readonly string repositoryDir;
+        private readonly DirectoryInfo repositoryDir;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalRepositoryReader"/> for the specified local repository.
         /// </summary>
         /// <param name="repositoryDir">Path to the local repository</param>
-        public LocalRepositoryReader(string repositoryDir)
+        public LocalRepositoryReader(DirectoryInfo repositoryDir)
         {
             this.repositoryDir = repositoryDir;
         }
@@ -21,7 +21,7 @@
         {
             try
             {
-                var fullFilePath = Path.Combine(repositoryDir, filePath);
+                var fullFilePath = Path.Combine(repositoryDir.FullName, filePath);
                 if (!File.Exists(fullFilePath))
                     throw new FileNotFoundException($"File not found <{fullFilePath}>");
 
