@@ -66,8 +66,7 @@ internal static class RepositoryFilesDeserializer
 
         var result = dataSection?.DatasetIdx16DataIndex?
                             .Where(x => x?.DatasetMetadata is not null)
-                            .SelectMany(x => x.DatasetMetadata)
-                            .Where(CrawlerHelperExtensions.IsCatalog);
+                            .SelectMany(x => x.DatasetMetadata);
 
         return result ?? Enumerable.Empty<DatasetMetadata>();
     }

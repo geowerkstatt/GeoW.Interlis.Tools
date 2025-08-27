@@ -183,6 +183,7 @@ public class RepositoryCrawler : IRepositoryCrawler
             var iliData = await repositoryReader.ReadIliData().ConfigureAwait(false);
 
             return iliData
+                .Where(CrawlerHelperExtensions.IsCatalog)
                 .Select(m => new Catalog
                 {
                     Identifier = m.id,
