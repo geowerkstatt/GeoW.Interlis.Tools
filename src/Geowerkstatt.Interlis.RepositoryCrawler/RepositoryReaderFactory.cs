@@ -8,6 +8,7 @@
         /// <summary>
         /// Creates a RepositoryReader instance based on the provided repository location.
         /// Supported repository locations are local file paths and HTTP(s) URLs.
+        /// Local paths must point to an existing directory.
         /// </summary>
         /// <param name="repositoryLocation"></param>
         /// <param name="httpClient"></param>
@@ -15,20 +16,23 @@
         /// <exception cref="NotSupportedException">If the provided repository location is not supported.</exception>
         public static RepositoryReader Create(string repositoryLocation, HttpClient? httpClient = null)
         {
-            if (Uri.TryCreate(repositoryLocation, UriKind.Absolute, out var uri))
+            if (string.IsNullOrWhiteSpace(repositoryLocation))
+                throw new RepositoryReaderException("The repository location must not be empty.");
+
+            // Check for valid HTTP/S URI
+            if (Uri.TryCreate(repositoryLocation, UriKind.Absolute, out var uri) &&
+                (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
             {
-                if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-                    return new HttpRepositoryReader(uri, httpClient);
-
-                if(uri.Scheme == Uri.UriSchemeFile)
-                    return new LocalRepositoryReader(new DirectoryInfo(uri.LocalPath));
-
-                // Throw exception for unsupported URI schemes
-                throw new RepositoryReaderException($"The repository location <{repositoryLocation}> is not supported. Only local file paths and HTTP(s) URLs are supported.");
+                return new HttpRepositoryReader(uri, httpClient);
             }
 
-            // Throw exception if the location does not represent any valid type of location
-            throw new RepositoryReaderException($"The repository location <{repositoryLocation}> is not a valid location.");
+            // Check if it's an existing local directory
+            if (Directory.Exists(repositoryLocation))
+            {
+                return new LocalRepositoryReader(new DirectoryInfo(repositoryLocation));
+            }
+
+            throw new RepositoryReaderException($"The repository location <{repositoryLocation}> is not a valid location");
         }
     }
 }

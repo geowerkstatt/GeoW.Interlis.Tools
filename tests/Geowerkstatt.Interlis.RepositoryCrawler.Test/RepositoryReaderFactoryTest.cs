@@ -1,43 +1,18 @@
-﻿namespace Geowerkstatt.Interlis.RepositoryCrawler
+﻿using System.Reflection.PortableExecutable;
+
+namespace Geowerkstatt.Interlis.RepositoryCrawler
 {
     [TestClass]
     public class RepositoryReaderFactoryTest
     {
-        private void AssertReaderTypeForPathVariants(string basePath, Type expectedType)
-        {
-            var reader = RepositoryReaderFactory.Create(basePath);
-            var readerTrailing = RepositoryReaderFactory.Create(
-                basePath.EndsWith("/") || basePath.EndsWith("\\") ? basePath : basePath + (basePath.Contains("/") ? "/" : "\\")
-            );
-
-            Assert.IsInstanceOfType(reader, expectedType);
-            Assert.IsInstanceOfType(readerTrailing, expectedType);
-        }
-
-        [TestMethod]
-        public void CreateLocalRepositoryReaders()
-        {
-            AssertReaderTypeForPathVariants("C:\\test\\repository\\path", typeof(LocalRepositoryReader)); // Windows absolute path
-            AssertReaderTypeForPathVariants(".\\test\\repository\\path", typeof(LocalRepositoryReader)); // Windows relative path
-            AssertReaderTypeForPathVariants("\\\\test\\repository\\path", typeof(LocalRepositoryReader)); // Windows UNC path
-            AssertReaderTypeForPathVariants("/test/repository/path", typeof(LocalRepositoryReader)); // Unix absolute path
-            AssertReaderTypeForPathVariants("test/repository/path", typeof(LocalRepositoryReader)); // Unix relative path
-        }
-
         [TestMethod]
         public void CreateHttpRepositoryReaders()
         {
-            AssertReaderTypeForPathVariants("http://example.com/repository/path", typeof(HttpRepositoryReader));
-            AssertReaderTypeForPathVariants("https://example.com/repository/path", typeof(HttpRepositoryReader));
-        }
+            var reader1 = RepositoryReaderFactory.Create("http://example.com/repository/path");
+            Assert.IsInstanceOfType(reader1, typeof(HttpRepositoryReader));
 
-        [TestMethod]
-        public void CreateWithInvalidLocation()
-        {
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(""));
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create("invalid path"));
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create("://invalid/repository/path"));
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create("./invalid/character>"));
+            var reader2 = RepositoryReaderFactory.Create("https://example.com/repository/path");
+            Assert.IsInstanceOfType(reader2, typeof(HttpRepositoryReader));
         }
 
         [TestMethod]
@@ -45,6 +20,36 @@
         {
             Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create("scheme://example.com/repository/path")); // Valid URI but unsupported scheme
             Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create("ftp://example.com/repository/path")); // FTP not supported (yet)
+        }
+
+        [TestMethod]
+        public void CreateWithEmptyString()
+        {
+            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(string.Empty));
+        }
+
+        [TestMethod]
+        public void CreateLocalRepositoryReader()
+        {
+            var existingPath = "./";
+            var reader = RepositoryReaderFactory.Create(existingPath);
+            Assert.IsInstanceOfType(reader, typeof(LocalRepositoryReader));
+        }
+
+        [TestMethod]
+        public void CreateWithNonExistingPath()
+        {
+            var nonExistingPath = $"./nonexistent_{Guid.NewGuid()}";
+            Assert.IsFalse(Directory.Exists(nonExistingPath));
+            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(nonExistingPath));
+        }
+
+        [TestMethod]
+        public void CreateWithInvalidPath()
+        {
+            var invalidPath = $"<invalid path>";
+            Assert.IsFalse(Directory.Exists(invalidPath));
+            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(invalidPath));
         }
     }
 }
