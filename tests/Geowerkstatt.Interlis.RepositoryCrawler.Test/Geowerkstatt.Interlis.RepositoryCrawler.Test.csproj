@@ -35,6 +35,9 @@
     <None Update="Testdata\models.geo.admin.testdata\ilisite.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Testdata\models.geo.admin.testdata\ARE\SectoralPlans_Catalogues_V1_4.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Testdata\models.interlis.testdata\ilimodels.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

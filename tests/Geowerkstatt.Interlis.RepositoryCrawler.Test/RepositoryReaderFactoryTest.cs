@@ -25,13 +25,22 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         [TestMethod]
         public void CreateWithEmptyString()
         {
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(string.Empty));
+            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(string.Empty));
+            Assert.AreEqual("The repository location must not be empty.", ex.Message);
+        }
+
+        [TestMethod]
+        public void CreateWithWhitespaceString()
+        {
+            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create("  "));
+            Assert.AreEqual("The repository location must not be empty.", ex.Message);
         }
 
         [TestMethod]
         public void CreateLocalRepositoryReader()
         {
             var existingPath = "./";
+            Assert.IsTrue(Directory.Exists(existingPath));
             var reader = RepositoryReaderFactory.Create(existingPath);
             Assert.IsInstanceOfType(reader, typeof(LocalRepositoryReader));
         }
@@ -41,7 +50,8 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         {
             var nonExistingPath = $"./nonexistent_{Guid.NewGuid()}";
             Assert.IsFalse(Directory.Exists(nonExistingPath));
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(nonExistingPath));
+            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(nonExistingPath));
+            Assert.AreEqual("The repository location <" + nonExistingPath + "> is not a valid location", ex.Message);
         }
 
         [TestMethod]
@@ -49,7 +59,8 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         {
             var invalidPath = $"<invalid path>";
             Assert.IsFalse(Directory.Exists(invalidPath));
-            Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(invalidPath));
+            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(invalidPath));
+            Assert.AreEqual("The repository location <" + invalidPath + "> is not a valid location", ex.Message);
         }
     }
 }

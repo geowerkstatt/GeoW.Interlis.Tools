@@ -17,7 +17,9 @@
         public static RepositoryReader Create(string repositoryLocation, HttpClient? httpClient = null)
         {
             if (string.IsNullOrWhiteSpace(repositoryLocation))
+            {
                 throw new RepositoryReaderException("The repository location must not be empty.");
+            }
 
             // Check for valid HTTP/S URI
             if (Uri.TryCreate(repositoryLocation, UriKind.Absolute, out var uri) &&
@@ -29,7 +31,7 @@
             // Check if it's an existing local directory
             if (Directory.Exists(repositoryLocation))
             {
-                return new LocalRepositoryReader(new DirectoryInfo(repositoryLocation));
+                return new LocalRepositoryReader(repositoryLocation);
             }
 
             throw new RepositoryReaderException($"The repository location <{repositoryLocation}> is not a valid location");
