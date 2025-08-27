@@ -12,18 +12,25 @@ public static class MockHttpMessageHandlerExtensions
     public static Dictionary<string, MockedRequest> SetupHttpMockForTestdataFiles(this MockHttpMessageHandler mockHttp)
     {
         var mockRequests = new Dictionary<string, MockedRequest>();
-        foreach (var dir in Directory.GetDirectories("./Testdata"))
-        {
-            foreach (var file in Directory.GetFiles(dir))
-            {
-                var url = $"https://{Path.GetFileName(dir)}/{Path.GetFileName(file)}";
-                mockRequests.Add(url, mockHttp
-                    .When(url)
-                    .Respond("application/xml", new FileStream(file, FileMode.Open, FileAccess.Read)));
-            }
+        var testdataRoot = "./Testdata";
 
+        foreach (var file in Directory.EnumerateFiles(testdataRoot, "*.*", SearchOption.AllDirectories))
+        {
+            // Build URL based on relative path from Testdata folder, using '/' as separator
+            var relativePath = Path.GetRelativePath(testdataRoot, file).Replace('\\', '/');
+            var url = $"https://{relativePath}";
+
+            mockRequests.Add(url, mockHttp
+                .When(url)
+                .Respond("application/xml", new FileStream(file, FileMode.Open, FileAccess.Read)));
+        }
+
+        // Setup HEAD requests for each top-level directory
+        foreach (var dir in Directory.GetDirectories(testdataRoot))
+        {
+            var dirName = Path.GetFileName(dir);
             mockHttp
-                .When(HttpMethod.Head, $"https://{Path.GetFileName(dir)}/")
+                .When(HttpMethod.Head, $"https://{dirName}/")
                 .Respond(HttpStatusCode.OK);
         }
 
