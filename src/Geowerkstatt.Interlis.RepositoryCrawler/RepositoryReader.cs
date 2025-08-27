@@ -7,9 +7,6 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
     /// </summary>
     public abstract class RepositoryReader
     {
-        /// <summary>
-        /// The default file name for INTERLIS dataset metadata.
-        /// </summary>
         protected const string IliDataFileName = "ilidata.xml";
         protected const string IliSiteFileName = "ilisite.xml";
         protected const string IliModelsFileName = "ilimodels.xml";

@@ -183,7 +183,7 @@ public class RepositoryCrawler : IRepositoryCrawler
             var iliData = await repositoryReader.ReadIliData().ConfigureAwait(false);
 
             return iliData
-                .Where(CrawlerHelperExtensions.IsCatalog)
+                .Where(d => d.IsCatalog())
                 .Select(m => new Catalog
                 {
                     Identifier = m.id,
@@ -191,7 +191,7 @@ public class RepositoryCrawler : IRepositoryCrawler
                     PublishingDate = DateTime.SpecifyKind(m.publishingDate.Date, DateTimeKind.Utc),
                     PrecursorVersion = m.precursorVersion,
                     Owner = m.owner,
-                    Title = m.GetTitle(),
+                    Title = m.GetDefaultTitle(),
                     File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
                     ReferencedModels = m.GetReferencedModels(),
                 })
