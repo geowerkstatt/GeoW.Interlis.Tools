@@ -24,7 +24,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         /// </summary>
         /// <returns>The full content of the ilidata.xml parsed to a list of <see cref="DatasetMetadata"/>.</returns>
         /// <exception cref="RepositoryReaderException">If the data from the stream could not be parsed.</exception>
-        public async Task<IEnumerable<DatasetMetadata>> ReadIliData()
+        public virtual async Task<IEnumerable<DatasetMetadata>> ReadIliData()
         {
             try
             {
@@ -42,7 +42,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         /// </summary>
         /// <returns>The full content of the ilisite.xml parsed to a <see cref="Site"/>.</returns>
         /// <exception cref="RepositoryReaderException">If the data from the stream could not be parsed.</exception>
-        public async Task<Site?> ReadIliSite()
+        public virtual async Task<Site?> ReadIliSite()
         {
             try
             {
@@ -60,7 +60,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         /// </summary>
         /// <returns>The full content of the ilimodels.xml parsed to a list of <see cref="ModelMetadata"/>.</returns>
         /// <exception cref="RepositoryReaderException">If the data from the stream could not be parsed.</exception>
-        public async Task<IEnumerable<ModelMetadata>> ReadIliModels()
+        public virtual async Task<IEnumerable<ModelMetadata>> ReadIliModels()
         {
             try
             {
