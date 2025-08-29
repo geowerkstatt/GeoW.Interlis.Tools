@@ -72,7 +72,7 @@ public class RepositoryCrawlerTest
             .AssertContains("https://models.multiparent.testdata/")
             .AssertContains("https://models.geo.admin.testdata/")
             .AssertCount(3);
-        loggerMock.Verify(LogLevel.Warning, "Could not analyse https://models.interlis.testdata/ilidata.xml.", Times.Once());
+        loggerMock.Verify(LogLevel.Warning, "Could not analyse ilidata.xml in repository https://models.interlis.testdata/.", Times.Once());
     }
 
     private void AssertModelsInterlisCh(Repository repository)
@@ -383,7 +383,7 @@ public class RepositoryCrawlerTest
             .AssertContains("https://models.interlis.testdata/")
             .AssertCount(1);
 
-        loggerMock.Verify(LogLevel.Warning, "Could not analyse https://models.interlis.testdata/ilidata.xml.", Times.Once());
+        loggerMock.Verify(LogLevel.Warning, "Could not analyse ilidata.xml in repository https://models.interlis.testdata/.", Times.Once());
         loggerMock.Verify(LogLevel.Error, "Analysis of https://models.geo.admin.testdata/ failed.", Times.Once());
         loggerMock.Verify(LogLevel.Error, "Analysis of https://models.multiparent.testdata/ failed.", Times.Once());
     }

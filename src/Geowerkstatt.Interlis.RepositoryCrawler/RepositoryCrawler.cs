@@ -168,7 +168,7 @@ public class RepositoryCrawler : IRepositoryCrawler
 
             return (repository, subsidiaryRepositories);
         }
-        catch (Exception ex) when (ex is HttpRequestException || ex is InvalidOperationException || ex is OperationCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException || ex is InvalidOperationException || ex is OperationCanceledException || ex is RepositoryReaderException)
         {
             logger.LogError(ex, "Analysis of {Repository} failed.", repositoryUri);
             return (null, Enumerable.Empty<Uri>());
@@ -177,30 +177,30 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private async Task<ISet<Catalog>> CrawlIlidata(Uri repositoryUri)
     {
-        var ilidataUri = GetIlidataUrl(repositoryUri);
         try
         {
-            using (var ilidataStream = await GetStreamFromUrl(ilidataUri).ConfigureAwait(false))
-            {
-                return RepositoryFilesDeserializer.ParseIliData(ilidataStream)
-                    .Select(m => new Catalog
-                    {
-                        Identifier = m.id,
-                        Version = m.version,
-                        PublishingDate = DateTime.SpecifyKind(m.publishingDate.Date, DateTimeKind.Utc),
-                        PrecursorVersion = m.precursorVersion,
-                        Owner = m.owner,
-                        Title = m.GetTitle(),
-                        File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
-                        ReferencedModels = m.GetReferencedModels(),
-                    })
-                    .RemovePrecursorCatalogVersions()
-                    .ToHashSet();
-            }
+            var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
+            var iliData = await repositoryReader.ReadIliData().ConfigureAwait(false);
+
+            return iliData
+                .Where(d => d.IsCatalog())
+                .Select(m => new Catalog
+                {
+                    Identifier = m.id,
+                    Version = m.version,
+                    PublishingDate = DateTime.SpecifyKind(m.publishingDate.Date, DateTimeKind.Utc),
+                    PrecursorVersion = m.precursorVersion,
+                    Owner = m.owner,
+                    Title = m.GetDefaultTitle(),
+                    File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
+                    ReferencedModels = m.GetReferencedModels(),
+                })
+                .RemovePrecursorCatalogVersions()
+                .ToHashSet();
         }
-        catch (Exception ex) when (ex is HttpRequestException || ex is OperationCanceledException)
+        catch (Exception ex) when (ex is RepositoryReaderException || ex is OperationCanceledException)
         {
-            logger.LogWarning(ex, "Could not analyse {IliDataUri}.", ilidataUri);
+            logger.LogWarning(ex, "Could not analyse ilidata.xml in repository {RepositoryUri}.", repositoryUri);
         }
 
         return new HashSet<Catalog>();
@@ -208,39 +208,32 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private async Task<ISet<Model>> CrawlIlimodels(Uri repositoryUri)
     {
-        var ilimodelsUri = GetIlimodelsUrl(repositoryUri);
-        using (var ilimodelsStream = await GetStreamFromUrl(ilimodelsUri).ConfigureAwait(false))
-        {
-            var models = RepositoryFilesDeserializer.ParseIliModels(ilimodelsStream)
-                .Select(model => new Model
-                {
-                    Name = model.Name,
-                    SchemaLanguage = model.SchemaLanguage,
-                    File = model.File,
-                    Version = model.Version,
-                    PublishingDate = model.publishingDate?.ToUniversalTime(),
-                    DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
-                    ShortDescription = model.shortDescription,
-                    Title = model.Title,
-                    Issuer = model.Issuer,
-                    TechnicalContact = model.technicalContact,
-                    FurtherInformation = model.furtherInformation,
-                    MD5 = model.md5,
-                    Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
-                })
-                .ToHashSet();
+        var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
+        var modelMetadatas = await repositoryReader.ReadIliModels().ConfigureAwait(false);
 
-            return models;
-        }
+        return modelMetadatas.Select(model => new Model
+        {
+            Name = model.Name,
+            SchemaLanguage = model.SchemaLanguage,
+            File = model.File,
+            Version = model.Version,
+            PublishingDate = model.publishingDate?.ToUniversalTime(),
+            DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
+            ShortDescription = model.shortDescription,
+            Title = model.Title,
+            Issuer = model.Issuer,
+            TechnicalContact = model.technicalContact,
+            FurtherInformation = model.furtherInformation,
+            MD5 = model.md5,
+            Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
+        })
+        .ToHashSet();
     }
 
     private async Task<Site?> ParseIlisite(Uri repositoryUri)
     {
-        var ilisiteUri = GetIlisiteUrl(repositoryUri);
-        using (var ilisiteStream = await GetStreamFromUrl(ilisiteUri).ConfigureAwait(false))
-        {
-            return RepositoryFilesDeserializer.ParseIliSite(ilisiteStream);
-        }
+        var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
+        return await repositoryReader.ReadIliSite().ConfigureAwait(false);
     }
 
     private async Task<InterlisFile?> FetchInterlisFile(Uri fileUri)
@@ -313,10 +306,4 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private static string AddUrlPathSeparator(string urlPath)
         => urlPath.EndsWith('/') ? urlPath : urlPath + '/';
-
-    private static Uri GetIlisiteUrl(Uri baseUri) => baseUri.Append("/ilisite.xml");
-
-    private static Uri GetIlimodelsUrl(Uri baseUri) => baseUri.Append("/ilimodels.xml");
-
-    private static Uri GetIlidataUrl(Uri baseUri) => baseUri.Append("/ilidata.xml");
 }
