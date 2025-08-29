@@ -31,7 +31,8 @@
                 var content = response.Content;
 
                 return await content.ReadAsStreamAsync().ConfigureAwait(false);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new RepositoryReaderException($"Error reading file <{filePath}> from HTTP repository <{repositoryUri}>", ex);
             }
