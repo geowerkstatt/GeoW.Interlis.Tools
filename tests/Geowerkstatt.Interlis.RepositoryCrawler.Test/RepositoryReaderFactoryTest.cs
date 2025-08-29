@@ -8,11 +8,11 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         [TestMethod]
         public void CreateHttpRepositoryReaders()
         {
-            var reader1 = RepositoryReaderFactory.Create("http://example.com/repository/path");
-            Assert.IsInstanceOfType(reader1, typeof(HttpRepositoryReader));
+            var httpReader = RepositoryReaderFactory.Create("http://example.com/repository/path");
+            Assert.IsInstanceOfType(httpReader, typeof(HttpRepositoryReader));
 
-            var reader2 = RepositoryReaderFactory.Create("https://example.com/repository/path");
-            Assert.IsInstanceOfType(reader2, typeof(HttpRepositoryReader));
+            var httpsReader = RepositoryReaderFactory.Create("https://example.com/repository/path");
+            Assert.IsInstanceOfType(httpsReader, typeof(HttpRepositoryReader));
         }
 
         [TestMethod]
@@ -26,6 +26,13 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         public void CreateWithEmptyString()
         {
             var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(string.Empty));
+            Assert.AreEqual("The repository location must not be empty.", ex.Message);
+        }
+
+        [TestMethod]
+        public void CreateWithNull()
+        {
+            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(null));
             Assert.AreEqual("The repository location must not be empty.", ex.Message);
         }
 
