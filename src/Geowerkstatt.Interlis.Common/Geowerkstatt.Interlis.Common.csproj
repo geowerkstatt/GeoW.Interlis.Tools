@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageDescription>Shared utility extensions used internally by the GeoWerkstatt INTERLIS tools.</PackageDescription>
+    <PackageDescription>Shared utility extensions used internally by the geowerkstatt INTERLIS tools.</PackageDescription>
   </PropertyGroup>
 
 </Project>

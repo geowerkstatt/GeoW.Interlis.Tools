@@ -1,8 +1,8 @@
 [![CI](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/actions/workflows/ci.yml/badge.svg)](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/actions/workflows/ci.yml)
 
-# GeoWerkstatt INTERLIS Tools
+# geowerkstatt INTERLIS Tools
 
-A collection of .NET libraries for working with [INTERLIS](https://www.interlis.ch/), the Swiss standard for geodata modelling and transfer. The libraries cover parsing model definitions, crawling model repositories, and reading transfer files. The Repository is subject to constant changes and does not provide any interface or functional and all functions may be subject to modification or removal without prior notice. The tools are intended as internal utilities for GeoWerkstatt projects, but are published as open source in case they may be useful to others working with INTERLIS in the .NET ecosystem. No guarantees are made regarding the stability of the API or the correctness of the implementations, but contributions and feedback are welcome. No support is provided for production use, but the tools may be used at your own risk.
+A collection of .NET libraries for working with [INTERLIS](https://www.interlis.ch/), the Swiss standard for geodata modelling and transfer. The libraries cover parsing model definitions, crawling model repositories, and reading transfer files. The Repository is subject to constant changes and does not provide any interface or functional and all functions may be subject to modification or removal without prior notice. The tools are intended as internal utilities for geowerkstatt projects, but are published as open source in case they may be useful to others working with INTERLIS in the .NET ecosystem. No guarantees are made regarding the stability of the API or the correctness of the implementations, but contributions and feedback are welcome. No support is provided for production use, but the tools may be used at your own risk.
 
 ## Components
 
