@@ -1,40 +1,33 @@
 [![CI](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/actions/workflows/ci.yml/badge.svg)](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/actions/workflows/ci.yml)
 
-# geowerkstatt Interlis Tools
+# geowerkstatt INTERLIS Tools
 
-## GitHub NuGet Feed
-| NuGet package |
+A collection of .NET libraries for working with [INTERLIS](https://www.interlis.ch/), the Swiss standard for geodata modelling and transfer. The libraries cover parsing model definitions, crawling model repositories, and reading transfer files. The Repository is subject to constant changes and does not provide any interface or functional and all functions may be subject to modification or removal without prior notice. The tools are intended as internal utilities for geowerkstatt projects, but are published as open source in case they may be useful to others working with INTERLIS in the .NET ecosystem. No guarantees are made regarding the stability of the API or the correctness of the implementations, but contributions and feedback are welcome. No support is provided for production use, but the tools may be used at your own risk.
+
+## Components
+
+| Package | Description |
+|-|-|
+| **Geowerkstatt.Interlis.Compiler** | Compiles INTERLIS 2.4 model definition files (`.ili`) into a typed Abstract Syntax Tree (AST) using an ANTLR4-based lexer/parser pipeline. |
+| **Geowerkstatt.Interlis.RepositoryCrawler** | Crawls INTERLIS model repositories (IliSite09 / IliRepository format) recursively via HTTP or the local file system, and caches results in a local SQLite database. Exposes a high-level `RepositorySearcher` API for finding models by name. |
+| **Geowerkstatt.Interlis.XtfReader** | Reads INTERLIS 2.4 transfer files (`.xtf`) and streams the contained objects as `InterlisObject` instances. Geometry types are represented using [NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite). |
+| **Geowerkstatt.Interlis.Common** | Shared utility extensions used internally by the other components. |
+
+## Development Requirements
+
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+The ANTLR4 grammar files in `Geowerkstatt.Interlis.Compiler` are compiled automatically at build time via the `Antlr4BuildTasks` MSBuild package — no separate ANTLR installation is required.
+
+## NuGet Packages
+
+| Package |
 |-|
 | [Geowerkstatt.Interlis.Compiler](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.Compiler) |
 | [Geowerkstatt.Interlis.RepositoryCrawler](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.RepositoryCrawler) |
 | [Geowerkstatt.Interlis.XtfReader](https://github.com/GeoWerkstatt/GeoW.Interlis.Tools/pkgs/nuget/Geowerkstatt.Interlis.XtfReader) |
 
-To authenticate to the geowerkstatt GitHub Packages registry you must use a [personal access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with at least `read:packages` scope to install packages associated with other private repositories.
-Then create a _nuget.config_ file in your project directory specifying GitHub Packages as a source (see example below).
-You must replace:
-
-* `USERNAME` with the name of your personal account on GitHub.
-* `PAT_CLASSIC` with your personal access token (classic).
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-    <add key="github" value="https://nuget.pkg.github.com/GeoWerkstatt/index.json" protocolVersion="3" />
-  </packageSources>
-  <packageSourceCredentials>
-    <github>
-      <add key="Username" value="USERNAME" />
-      <add key="ClearTextPassword" value="PAT_CLASSIC" />
-    </github>
-  </packageSourceCredentials>
-</configuration>
-```
-
-The sample file above is a minimal configuration and also located in the root of this repository.
-
-## Examples
+## Usage Examples
 
 ### Compiler
 

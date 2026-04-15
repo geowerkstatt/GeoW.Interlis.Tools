@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageDescription>Tools to crawl and search model repositories.</PackageDescription>
+    <PackageDescription>Crawls INTERLIS model repositories (IliSite09 / IliRepository format) recursively via HTTP or the local file system, caches results in a local SQLite database, and exposes a high-level RepositorySearcher API for finding models by name.</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
