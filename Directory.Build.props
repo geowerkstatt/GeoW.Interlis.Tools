@@ -6,6 +6,7 @@
     <Authors>geowerkstatt GmbH</Authors>
     <Company>geowerkstatt GmbH</Company>
     <Copyright>© geowerkstatt GmbH</Copyright>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <PackageOutputPath>$(MSBuildThisFileDirectory)/artifacts</PackageOutputPath>
     <PackageProjectUrl>https://github.com/GeoWerkstatt/GeoW.Interlis.Tools</PackageProjectUrl>
     <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
