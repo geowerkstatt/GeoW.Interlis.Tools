@@ -4,7 +4,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 public class UndefinedConstant : ConstantExpression
 {
-    public UndefinedConstant() : base(new ObjectType())
+    public UndefinedConstant() : base(UndefinedType.Instance)
     {
     }
 }

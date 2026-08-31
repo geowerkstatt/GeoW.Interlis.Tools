@@ -4,7 +4,7 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 public abstract class UnaryExpression(TypeDef returnType) : IExpression
 {
-    public TypeDef ReturnType { get; init; } = returnType;
+    public TypeDef ReturnType { get; } = returnType;
 
     public required IExpression Operand { get; init; }
 }

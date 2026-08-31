@@ -1,7 +1,10 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
-/// Defines how many objects are applicable and if they are ordered.
+/// Defines how many objects are applicable and if they are ordered. A pure multiplicity value — what it counts
+/// depends on where it sits: the size of an owned value on attribute types, the link population per source object
+/// on a <see cref="Types.RoleType"/> (RefHB 3.7.3), the size of the denoted set on a computed
+/// <see cref="Types.ObjectType"/>.
 /// </summary>
 public sealed record Cardinality
 {
@@ -10,23 +13,4 @@ public sealed record Cardinality
     public required long? Min { get; init; } = Unbound;
     public required long? Max { get; init; } = Unbound;
     public bool Ordered { get; init; } = false;
-    public RelationshipType Type { get; init; } = RelationshipType.Association;
-
-    public enum RelationshipType
-    {
-        /// <summary>
-        /// Loose connection
-        /// </summary>
-        Association = Interlis24Parser.ASSOCIATION_SYMBOL,
-
-        /// <summary>
-        /// Feeble relationship between the entirety and its parts.
-        /// </summary>
-        Aggregation = Interlis24Parser.AGGREGATION_SYMBOL,
-
-        /// <summary>
-        /// Strong relationship between the entirety and its parts.
-        /// </summary>
-        Composition = Interlis24Parser.COMPOSITION_SYMBOL,
-    }
 }
