@@ -68,6 +68,7 @@ definitionRef
         | VALIGNMENT
         | METAOBJECT
         | REFSYSTEM
+        | SIGN
     )
     ;
 
@@ -75,7 +76,7 @@ classDef
     : (CLASS | STRUCTURE) name=IDENTIFIER properties? /* ABSTRACT,EXTENDED,FINAL */ (
         EXTENDS extends=definitionRef
     )? EQUAL_SIGN ((OID AS oid=definitionRef | NO noOid=OID) SEMICOLON)? ATTRIBUTE? attributeDef* constraintDef* (
-        PARAMETER parameterDef
+        PARAMETER parameterDef*
     )? END endName=IDENTIFIER SEMICOLON
     ;
 
@@ -86,7 +87,8 @@ attributeDef
     ;
 
 attrTypeDef
-    : (MANDATORY? | (BAG | LIST) cardinality? OF) attrType
+    // RefHB 3.6.1-12: AttrType is optional after MANDATORY (only the type-less form in an extension).
+    : (MANDATORY attrType? | (BAG | LIST) cardinality? OF attrType | attrType)
     ;
 
 attrType
@@ -260,13 +262,17 @@ rotationDef
     ;
 
 contextDef
-    : CONTEXT (
-        name=IDENTIFIER EQUAL_SIGN (
-            genericCoordDef=definitionRef EQUAL_SIGN concrete=definitionRef (
-                OR concrete=definitionRef
-            )* SEMICOLON
-        )*
-    )*
+    : CONTEXT contextEntry*
+    ;
+
+contextEntry
+    : name=IDENTIFIER EQUAL_SIGN contextMapping*
+    ;
+
+contextMapping
+    : genericCoordDef=definitionRef EQUAL_SIGN concrete+=definitionRef (
+        OR concrete+=definitionRef
+    )* SEMICOLON
     ;
 
 oidType
@@ -282,7 +288,8 @@ classType
     ;
 
 attributePathType
-    : ATTRIBUTE (OF objectOrAttributePath | '@' argumentName=IDENTIFIER)? (
+    // RefHB 3.8.11-4: the argument form is part of the OF clause — 'ATTRIBUTE' [ 'OF' ( path | '@' Argument ) ].
+    : ATTRIBUTE (OF (objectOrAttributePath | '@' argumentName=IDENTIFIER))? (
         RESTRICTION '(' attrTypeDef (SEMICOLON attrTypeDef)* ')'
     )?
     ;
@@ -335,12 +342,14 @@ composedUnit
 
 metaDataBasketDef
     : (SIGN | REFSYSTEM) BASKET basketName=IDENTIFIER properties? /* FINAL */ (
-        EXTENDS definitionRef
-    )? '~' topic=definitionRef (
-        OBJECTS OF className=IDENTIFIER ':' metaObjectName=IDENTIFIER (
-            ',' metaObjectName=IDENTIFIER
-        )*
-    )* SEMICOLON
+        EXTENDS extends=definitionRef
+    )? '~' topic=definitionRef metaObjectsDef* SEMICOLON
+    ;
+
+metaObjectsDef
+    : OBJECTS OF className=IDENTIFIER ':' metaObjectName+=IDENTIFIER (
+        ',' metaObjectName+=IDENTIFIER
+    )*
     ;
 
 metaObjectRef
@@ -348,9 +357,12 @@ metaObjectRef
     ;
 
 parameterDef
+    // The METAOBJECT alternative must come first: attrTypeDef can also derive a bare METAOBJECT (it is a legal
+    // definitionRef name token), and ANTLR prefers the lowest-numbered alternative on ambiguity — but in parameter
+    // position a bare METAOBJECT is the signature self-reference (RefHB 3.10.2.2-1), not a type reference.
     : parameter=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL */ ':' (
-        attrTypeDef
-        | METAOBJECT (OF metaObject=definitionRef)?
+        METAOBJECT (OF metaObject=definitionRef)?
+        | attrTypeDef
     ) SEMICOLON
     ;
 
@@ -383,14 +395,10 @@ existenceConstraint
     ;
 
 uniquenessConstraint
-    : UNIQUE ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression)? (
-        globalUniqueness
+    : UNIQUE ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression ':')? (
+        uniqueEl
         | localUniqueness
     ) SEMICOLON
-    ;
-
-globalUniqueness
-    : uniqueEl
     ;
 
 uniqueEl
@@ -398,13 +406,13 @@ uniqueEl
     ;
 
 localUniqueness
-    : '(' LOCAL ')' structureAttribute=IDENTIFIER ('->' structureAttribute=IDENTIFIER)* ':' attributeName=IDENTIFIER (
-        ',' attributeName=IDENTIFIER
+    : '(' LOCAL ')' structureAttribute+=IDENTIFIER ('->' structureAttribute+=IDENTIFIER)* ':' attributeName+=IDENTIFIER (
+        ',' attributeName+=IDENTIFIER
     )*
     ;
 
 setConstraint
-    : SET CONSTRAINT ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression)? expression SEMICOLON
+    : SET CONSTRAINT ('(' BASKET ')')? (name=IDENTIFIER ':')? (WHERE expression ':')? expression SEMICOLON
     ;
 
 constraintsDef
@@ -413,8 +421,8 @@ constraintsDef
 
 expression
     : expression binOp=('==' | NOT_EQUAL | '<=' | '>=' | '<' | '>') expression # binaryExpression
-    | expression binOp=(OR | '*' | '/') expression                             # binaryExpression
-    | expression binOp=(AND | '+' | '-') expression                            # binaryExpression
+    | expression binOp=(AND | '*' | '/') expression                            # binaryExpression
+    | expression binOp=(OR | '+' | '-') expression                             # binaryExpression
     | expression binOp='=>' expression                                         # binaryExpression
     | factor                                                                   # factorExpression
     | NOT? '(' expression ')'                                                  # notExpression
@@ -449,23 +457,23 @@ argument
     ;
 
 functionDef
-    : FUNCTION name=IDENTIFIER '(' (
-        argumentName=IDENTIFIER ':' argumentType (
-            SEMICOLON argumentName=IDENTIFIER ':' argumentType
-        )*
-    )? ')' ':' returnType=argumentType EXPLANATION? SEMICOLON
+    : FUNCTION name=IDENTIFIER '(' (functionArgument (SEMICOLON functionArgument)*)? ')' ':' returnType=argumentType EXPLANATION? SEMICOLON
+    ;
+
+functionArgument
+    : argumentName=IDENTIFIER ':' argumentType
     ;
 
 argumentType
     : attrTypeDef
-    | (OBJECT | OBJECTS) OF (restrictedDefinitionRef | definitionRef)
+    | (OBJECT | OBJECTS) OF restrictedDefinitionRef
     | (ENUMVAL | ENUMTREEVAL)
     ;
 
 viewDef
     : VIEW name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ (
         formationDef
-        | EXTENDS definitionRef
+        | EXTENDS extends=definitionRef
     )? (baseExtensionDef)* (selection)* EQUAL_SIGN viewAttributes (constraintDef)* END endName=IDENTIFIER SEMICOLON
     ;
 
@@ -478,7 +486,11 @@ projection
     ;
 
 join
-    : JOIN OF renamedViewableRef (',' renamedViewableRef ( '(' OR NULL ')')?)+
+    : JOIN OF renamedViewableRef (',' joinSource)+
+    ;
+
+joinSource
+    : renamedViewableRef ('(' OR NULL ')')?
     ;
 
 union
@@ -506,17 +518,19 @@ selection
     ;
 
 viewAttributes
-    : ATTRIBUTE? (
-        ALL OF base=IDENTIFIER SEMICOLON
-        | attributeDef
-        | attribute+=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON
-    )*
+    : ATTRIBUTE? viewAttribute*
+    ;
+
+viewAttribute
+    : ALL OF base=IDENTIFIER SEMICOLON                                                                  # allOfViewAttribute
+    | attributeDef                                                                                      # definedViewAttribute
+    | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON # derivedViewAttribute
     ;
 
 graphicDef
-    : GRAPHIC name=IDENTIFIER (EXTENDS definitionRef)? (BASED ON definitionRef)? EQUAL_SIGN (
-        drawingRule
-    )* END endName=IDENTIFIER SEMICOLON
+    : GRAPHIC name=IDENTIFIER properties? /* ABSTRACT, FINAL */ (EXTENDS extends=definitionRef)? (
+        BASED ON basedOn=definitionRef
+    )? EQUAL_SIGN selection* drawingRule* END endName=IDENTIFIER SEMICOLON
     ;
 
 drawingRule
@@ -569,7 +583,15 @@ numeric
     ;
 
 string
-    : DOUBLE_QUOTE_OPEN (LITERAL_TEXT | BACKSLASH | DOUBLE_QUOTE | UNICODE)* DOUBLE_QUOTE_CLOSE
+    : DOUBLE_QUOTE_OPEN (
+        LITERAL_TEXT
+        | BACKSLASH
+        | DOUBLE_QUOTE
+        | UNICODE
+        | INVALID_UNICODE
+        | UNKNOWN_ESCAPE
+        | LITERAL_NEWLINE
+    )* DOUBLE_QUOTE_CLOSE
     ;
 
 /**

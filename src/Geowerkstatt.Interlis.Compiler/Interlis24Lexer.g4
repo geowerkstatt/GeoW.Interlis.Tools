@@ -221,6 +221,7 @@ fragment DIGIT    : [0-9];
 fragment HEXDIGIT : DIGIT | [A-Fa-f];
 fragment LETTER   : [A-Za-z];
 fragment NEWLINE  : '\r'? '\n' | '\r';
+fragment STR_ANY  : ~["\\\r\n];
 
 EXP_NUMBER     : ('+' | '-')? '0.' ([1-9] POS_NUMBER? | '0'+) ('e' | 'E') ( SIGNED_NUMBER | POS_NUMBER);
 DECIMAL_NUMBER : (SIGNED_NUMBER | POS_NUMBER) '.' POS_NUMBER;
@@ -230,34 +231,35 @@ POS_NUMBER     : DIGIT+;
 IDENTIFIER        : LETTER (LETTER | DIGIT | '_')*;
 DOUBLE_QUOTE_OPEN : '"' -> pushMode(StringLiteral);
 EXPLANATION       : '//' .*? '//';
-META_COMMENT_OPEN : '!!@'                    -> channel(META_COMMENT), pushMode(MetaComment);
-LINE_COMMENT      : '!!' (~[@] .*?)? NEWLINE -> channel(HIDDEN);
-DOC_COMMENT       : '/**' .*? '*/'           -> channel(HIDDEN);
-BLOCK_COMMENT     : '/*' .*? '*/'            -> channel(HIDDEN);
-LINEBREAK         : NEWLINE                  -> channel(HIDDEN);
-WHITESPACE        : (' ' | '\t')+            -> channel(HIDDEN);
+META_COMMENT_OPEN : '!!@'                            -> channel(META_COMMENT), pushMode(MetaComment);
+LINE_COMMENT      : '!!' (~[@] .*?)? (NEWLINE | EOF) -> channel(HIDDEN); // a line comment may also end at end-of-file (no trailing newline)
+DOC_COMMENT       : '/**' .*? '*/'                   -> channel(HIDDEN);
+BLOCK_COMMENT     : '/*' (BLOCK_COMMENT | .)*? '*/'  -> channel(HIDDEN); // RefHB 3.2.8.2-1: nested block comments are allowed
+LINEBREAK         : NEWLINE                          -> channel(HIDDEN);
+WHITESPACE        : (' ' | '\t')+                    -> channel(HIDDEN);
 UNEXPECTED        : .;
 
 // Parsing string literal
 mode StringLiteral;
 DOUBLE_QUOTE_CLOSE : '"' -> popMode;
-LITERAL_TEXT       : ~["\\]+;
+LITERAL_NEWLINE    : NEWLINE;
+LITERAL_TEXT       : STR_ANY+;
 BACKSLASH          : '\\\\';
 DOUBLE_QUOTE       : '\\"';
 UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT;
-INVALID_UNICODE    : '\\u' . . . .;
-UNKNOWN_ESCAPE     : '\\' .;
+INVALID_UNICODE    : '\\u' STR_ANY? STR_ANY? STR_ANY? STR_ANY?;
+UNKNOWN_ESCAPE     : '\\' STR_ANY?;
 
 // Same as string literals but on other channel
 mode MetaCommentStringLiteral;
 META_STR_DOUBLE_QUOTE_CLOSE : '"'                                       -> channel(META_COMMENT), type(DOUBLE_QUOTE_CLOSE), popMode;
 META_STR_UNCLOSED_NEWLINE   : NEWLINE                                   -> channel(META_COMMENT), type(META_COMMENT_CLOSE), popMode, popMode; // pop string and meta comment mode on newline
-META_STR_LITERAL_TEXT       : ~["\\\r\n]+                               -> channel(META_COMMENT), type(LITERAL_TEXT);
+META_STR_LITERAL_TEXT       : STR_ANY+                                  -> channel(META_COMMENT), type(LITERAL_TEXT);
 META_STR_BACKSLASH          : '\\\\'                                    -> channel(META_COMMENT), type(BACKSLASH);
 META_STR_DOUBLE_QUOTE       : '\\"'                                     -> channel(META_COMMENT), type(DOUBLE_QUOTE);
 META_STR_UNICODE            : '\\u' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT -> channel(META_COMMENT), type(UNICODE);
-META_STR_INVALID_UNICODE    : '\\u' . . . .                             -> channel(META_COMMENT), type(INVALID_UNICODE);
-META_STR_UNKNOWN_ESCAPE     : '\\' .                                    -> channel(META_COMMENT), type(UNKNOWN_ESCAPE);
+META_STR_INVALID_UNICODE    : '\\u' STR_ANY? STR_ANY? STR_ANY? STR_ANY? -> channel(META_COMMENT), type(INVALID_UNICODE);
+META_STR_UNKNOWN_ESCAPE     : '\\' STR_ANY?                             -> channel(META_COMMENT), type(UNKNOWN_ESCAPE);
 
 // Inside a meta comment
 mode MetaComment;
