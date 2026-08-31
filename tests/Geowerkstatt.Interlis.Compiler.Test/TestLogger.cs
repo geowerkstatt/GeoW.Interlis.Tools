@@ -1,11 +1,10 @@
-﻿using Antlr4.Runtime.Misc;
 using Microsoft.Extensions.Logging;
 
-namespace Compiler.Test.CreateAST;
+namespace Geowerkstatt.Interlis.Compiler.Test;
 
 public class TestLogger() : ILogger
 {
-    public List<string> Messages { get; } = new List<string>();
+    public List<string> Messages { get; } = [];
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
