@@ -35,16 +35,19 @@
   </PropertyGroup>
 
   <!-- Download and extract ili2c bindist from interlis Maven repository -->
-  <Target Name="DownloadIli2cJar" BeforeTargets="Build" Condition="!Exists('$(Ili2cJarPath)')">
+  <Target Name="DownloadIli2cJar" Condition="!Exists('$(Ili2cJarPath)') And '$(DesignTimeBuild)' != 'true'">
     <Message Importance="High" Text="Downloading ili2c-tool v$(Ili2cVersion) bindist from jars.interlis.ch..." />
     <MakeDir Directories="$(Ili2cDownloadPath)" />
     <DownloadFile SourceUrl="$(Ili2cMavenUrl)" DestinationFolder="$(Ili2cDownloadPath)" />
     <Unzip SourceFiles="$(Ili2cDownloadPath)$(Ili2cBindistFileName)" DestinationFolder="$(Ili2cDownloadPath)" />
   </Target>
 
-  <!-- Include JAR in output -->
-  <ItemGroup>
-    <None Include="$(Ili2cJarPath)" CopyToOutputDirectory="PreserveNewest" Link="ili2c.jar" Condition="Exists('$(Ili2cJarPath)')" />
-  </ItemGroup>
+  <!-- Include JAR in output; must run as a target after the download,
+       because a static item would be evaluated before the JAR exists on a fresh build -->
+  <Target Name="IncludeIli2cJar" BeforeTargets="AssignTargetPaths" DependsOnTargets="DownloadIli2cJar">
+    <ItemGroup>
+      <None Include="$(Ili2cJarPath)" CopyToOutputDirectory="PreserveNewest" Link="ili2c.jar" Condition="Exists('$(Ili2cJarPath)')" />
+    </ItemGroup>
+  </Target>
 
 </Project>
