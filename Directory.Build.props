@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <VersionPrefix>2.0</VersionPrefix>
+    <VersionPrefix>3.0</VersionPrefix>
     <Product>geowerkstatt Interlis-Tools</Product>
     <Authors>geowerkstatt GmbH</Authors>
     <Company>geowerkstatt GmbH</Company>
