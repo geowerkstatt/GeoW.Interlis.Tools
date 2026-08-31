@@ -8,7 +8,7 @@ A collection of .NET libraries for working with [INTERLIS](https://www.interlis.
 
 | Package | Description |
 |-|-|
-| **Geowerkstatt.Interlis.Compiler** | Compiles INTERLIS 2.4 model definition files (`.ili`) into a typed Abstract Syntax Tree (AST) using an ANTLR4-based lexer/parser pipeline. |
+| **Geowerkstatt.Interlis.Compiler** | Compiles INTERLIS 2.4 model definition files (`.ili`) into a typed Abstract Syntax Tree (AST) using an ANTLR4-based lexer/parser pipeline, followed by multi-pass name/path resolution and type checking. Imported models can be loaded on demand via `IModelResolver`. |
 | **Geowerkstatt.Interlis.RepositoryCrawler** | Crawls INTERLIS model repositories (IliSite09 / IliRepository format) recursively via HTTP or the local file system, and caches results in a local SQLite database. Exposes a high-level `RepositorySearcher` API for finding models by name. |
 | **Geowerkstatt.Interlis.XtfReader** | Reads INTERLIS 2.4 transfer files (`.xtf`) and streams the contained objects as `InterlisObject` instances. Geometry types are represented using [NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite). |
 | **Geowerkstatt.Interlis.Common** | Shared utility extensions used internally by the other components. |
@@ -43,11 +43,13 @@ flowchart LR
     B[Lexer] -- Token Stream --> C
     C[Parser] -- Parse Tree --> D
     D[AST Creator] -- Abstract Syntax Tree --> E
-    E[Reference Resolver]
+    E[Reference Resolver] -- Resolved AST --> F2
+    F2[Path Resolver] -- Resolved Paths --> G
+    G[Type Checker]
   end
 
   classDef compilerBox fill:#0e3b3f,color:#1affa3,stroke:#1affa3;
-  class B,C,D,E compilerBox;
+  class B,C,D,E,F2,G compilerBox;
 ```
 
 For more details on how to use the Compiler see [InterlisReader](src/Geowerkstatt.Interlis.Compiler/InterlisReader.cs).
@@ -64,6 +66,14 @@ Compile a string containing the INTERLIS source:
 var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
 var reader = new InterlisReader(loggerFactory);
 var interlisFile = reader.ReadFile(new StringReader("INTERLIS 2.4;"));
+```
+
+Compile a model together with its transitive imports by supplying an [IModelResolver](src/Geowerkstatt.Interlis.Compiler/IModelResolver.cs) that provides the source of imported models on demand:
+```cs
+var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+var reader = new InterlisReader(loggerFactory);
+IModelResolver modelResolver = ...; // e.g. look up models in a repository or on the local file system
+var environment = reader.ReadModelWithImports(new StreamReader(@"C:\path\to\model.ili"), modelResolver);
 ```
 
 Get intermediate output from the compiler:
@@ -85,7 +95,13 @@ var abstractSyntaxTree = (InterlisEnvironment)parseTree.Accept(astCreator);
 // resolve references
 var referenceResolver = new Interlis24AstReferenceResolverVisitor(loggerFactory);
 abstractSyntaxTree.Accept(referenceResolver);
+
+// resolve object/attribute paths (requires resolved references)
+var pathResolver = new Interlis24AstPathResolverVisitor(loggerFactory);
+abstractSyntaxTree.Accept(pathResolver);
 ```
+
+The final type-checking pass is internal and runs automatically when using `ReadFile` or `ReadModelWithImports`.
 
 ### Repository Crawler
 
@@ -93,14 +109,14 @@ abstractSyntaxTree.Accept(referenceResolver);
 ```json
 {
   "RepositoryCrawler": {
-    "RootRepositoryUri": "https://models.interlis.ch/",
+    "RootRepositoryUri": "https://models.interlis.ch/"
   }
 }
 ```
 > [!NOTE]
-> The default cache location ist at `%TEMP%/Geowerkstatt.Interlis/`
+> The default cache location is at `%TEMP%/Geowerkstatt.Interlis/`
 
- - Use the [RepositorySearcher](src/Geowerkstatt.Interlis.RepositoryCrawler/RepositorySearcher.cs) to a model from an INTERLIS model repository.
+ - Use the [RepositorySearcher](src/Geowerkstatt.Interlis.RepositoryCrawler/RepositorySearcher.cs) to find a model from an INTERLIS model repository.
 ```cs
 var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
 var searcher = new RepositorySearcher(loggerFactory);
