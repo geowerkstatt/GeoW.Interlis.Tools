@@ -20,35 +20,34 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     public async Task<InterlisFile?> FetchInterlisFile(Model model, Func<string, InterlisFile?> getCachedFile)
     {
-        // Check cache
-        InterlisFile? file = string.IsNullOrEmpty(model.MD5) ? null : getCachedFile(model.MD5);
-        if (file != null)
+        var fileUri = model.Uri;
+        if (fileUri == null)
         {
-            model.FileContent = file;
-            return file;
+            return null;
         }
 
-        // Fetch file from repository
-        if (model.Uri != null)
+        // Reuse a cached file only when it was fetched from this model's exact URL AND its actual content still
+        // matches the hash the catalog declares. Looking up by URL (instead of by the catalog hash) means a wrong
+        // or copy-pasted catalog hash can never substitute another file's content, and a stale or missing catalog
+        // hash re-fetches instead of serving the wrong bytes.
+        var cachedFile = getCachedFile(fileUri.AbsoluteUri);
+        if (cachedFile != null && cachedFile.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
         {
-            file = await FetchInterlisFile(model.Uri).ConfigureAwait(false);
+            model.FileContent = cachedFile;
+            return cachedFile;
         }
 
+        var file = await FetchInterlisFile(fileUri).ConfigureAwait(false);
         if (file != null)
         {
-            if (!file.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(model.MD5))
             {
-                // Reuse file from cache instead of trying to add the same file as a new entity with the same primary key
-                file = getCachedFile(file.MD5) ?? file;
-
-                if (string.IsNullOrEmpty(model.MD5))
-                {
-                    model.MD5 = file.MD5;
-                }
-                else
-                {
-                    logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, model.Uri, file.MD5);
-                }
+                // The catalog did not declare a hash; adopt the one computed from the downloaded file.
+                model.MD5 = file.MD5;
+            }
+            else if (!file.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, fileUri, file.MD5);
             }
 
             model.FileContent = file;

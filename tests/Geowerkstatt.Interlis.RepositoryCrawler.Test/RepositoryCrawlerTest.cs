@@ -252,10 +252,10 @@ public class RepositoryCrawlerTest
         {
             foreach (var model in repository.Models)
             {
-                var file = await repositoryCrawler.FetchInterlisFile(model, md5 => cachedFiles.GetValueOrDefault(md5));
-                if (file != null)
+                var file = await repositoryCrawler.FetchInterlisFile(model, url => cachedFiles.GetValueOrDefault(url));
+                if (file != null && model.Uri != null)
                 {
-                    cachedFiles[file.MD5] = file;
+                    cachedFiles[model.Uri.AbsoluteUri] = file;
                 }
             }
 
@@ -281,10 +281,10 @@ public class RepositoryCrawlerTest
         var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
         foreach (var model in result.Single().Value.Models)
         {
-            var file = await repositoryCrawler.FetchInterlisFile(model, md5 => cachedFiles.GetValueOrDefault(md5));
-            if (file != null)
+            var file = await repositoryCrawler.FetchInterlisFile(model, url => cachedFiles.GetValueOrDefault(url));
+            if (file != null && model.Uri != null)
             {
-                cachedFiles[file.MD5] = file;
+                cachedFiles[model.Uri.AbsoluteUri] = file;
             }
         }
 
@@ -300,11 +300,12 @@ public class RepositoryCrawlerTest
         result.AssertCount(1).Single().Value.Models.AssertCount(7);
 
         var expectedContent = "Expected Content NISECTIOUSIS";
+        var fileUrl = "https://models.multiparent.testdata/TwoModelsInOneFile.ili";
         var md5 = "17DD3681A880848BAEF146904991C36B";
-        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase) { { md5, new InterlisFile { MD5 = md5, Content = expectedContent } } };
+        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase) { { fileUrl, new InterlisFile { MD5 = md5, Content = expectedContent } } };
 
-        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model1"), md5 => cachedFiles.GetValueOrDefault(md5));
-        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model2"), md5 => cachedFiles.GetValueOrDefault(md5));
+        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model1"), url => cachedFiles.GetValueOrDefault(url));
+        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model2"), url => cachedFiles.GetValueOrDefault(url));
         cachedFiles.AssertCount(1, "The cached files dictionary should only contain the initial file.");
 
         Assert.AreEqual(0, mockHttp.GetMatchCount(mockRequests["https://models.multiparent.testdata/TwoModelsInOneFile.ili"]));

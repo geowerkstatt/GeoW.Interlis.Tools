@@ -20,7 +20,11 @@ public interface IRepositoryCrawler
     /// <paramref name="getCachedFile"/> or fetched from the repository.
     /// If the <paramref name="model"/> is missing the <see cref="Model.MD5"/> property, it is set according to the downloaded file.
     /// </summary>
-    /// <param name="getCachedFile">Get an <see cref="InterlisFile"/> previously fetched by its <see cref="InterlisFile.MD5"/> key.</param>
+    /// <param name="getCachedFile">
+    /// Get an <see cref="InterlisFile"/> previously fetched from a given URL. The returned file is only reused when its
+    /// <see cref="InterlisFile.MD5"/> matches the hash the catalog declares for the <paramref name="model"/>; otherwise
+    /// the file is downloaded again.
+    /// </param>
     /// <param name="model">The model to fetch the INTERLIS file for.</param>
     /// <returns>The <see cref="InterlisFile"/> for the model or <see langword="null"/> if it was not available.</returns>
     Task<InterlisFile?> FetchInterlisFile(Model model, Func<string, InterlisFile?> getCachedFile);

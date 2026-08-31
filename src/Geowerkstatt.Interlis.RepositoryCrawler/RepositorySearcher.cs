@@ -108,29 +108,81 @@ public class RepositorySearcher
 
         var models = context.Models
             .Include(m => m.ModelRepository)
-            .Include(m => m.FileContent)
             .Where(predicate)
             .OrderByDescending(m => m.Version)
             .ToList();
 
-        // Multiple models can be in the same file and fetched files are not available in context.InterlisFiles until SaveChanges is called.
-        var fetchedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
-
         foreach (var model in models)
         {
-            var file = await repositoryCrawler.FetchInterlisFile(
-                model,
-                md5 => fetchedFiles.TryGetValue(md5, out var file) ? file : context.InterlisFiles.Where(f => EF.Functions.Collate(f.MD5, "NOCASE") == md5).FirstOrDefault());
-
-            if (file?.MD5 != null)
+            // A model without a resolvable URL cannot have a file fetched for it.
+            var url = model.Uri?.AbsoluteUri;
+            if (url == null)
             {
-                fetchedFiles[file.MD5] = file;
+                continue;
+            }
+
+            // Resolve the URL to the content hash last fetched from it (Find, unlike a LINQ query, also sees rows
+            // added earlier in this loop but not yet saved, so models sharing a file are fetched only once). The
+            // reference is looked up once here and reused for the upsert below.
+            var fileReference = context.InterlisFileReferences.Find(url);
+            var file = await repositoryCrawler
+                .FetchInterlisFile(model, _ => fileReference == null ? null : context.InterlisFiles.Find(fileReference.MD5))
+                .ConfigureAwait(false);
+
+            if (file == null)
+            {
+                continue;
+            }
+
+            // Store the content once, keyed by its hash (shared by every URL that serves byte-identical content) ...
+            if (context.InterlisFiles.Find(file.MD5) == null)
+            {
+                context.InterlisFiles.Add(file);
+            }
+
+            // ... and point this URL at that content.
+            if (fileReference == null)
+            {
+                context.InterlisFileReferences.Add(new InterlisFileReference { SourceUrl = url, MD5 = file.MD5 });
+            }
+            else if (!fileReference.MD5.Equals(file.MD5, StringComparison.OrdinalIgnoreCase))
+            {
+                fileReference.MD5 = file.MD5;
             }
         }
 
         context.SaveChanges();
 
         return models;
+    }
+
+    /// <summary>
+    /// Trims the file cache to the freshly crawled <paramref name="repositories"/> tree, in two steps:
+    /// first drops every <see cref="InterlisFileReference"/> whose URL is no longer served by any model, then drops
+    /// every <see cref="InterlisFile"/> that is left unreferenced. This reclaims content superseded by a changed file
+    /// (its reference was repointed to the new hash) as well as files of models that disappeared from the tree,
+    /// while never removing content that is still reachable from some URL.
+    /// </summary>
+    private static void PruneFileCache(RepositoryCrawlerContext context, IDictionary<string, Repository> repositories)
+    {
+        var activeUrls = repositories.Values
+            .SelectMany(repository => repository.Models)
+            .Select(model => model.Uri?.AbsoluteUri)
+            .OfType<string>()
+            .ToHashSet(StringComparer.Ordinal);
+
+        // Load the references and filter in memory: the active-URL set can be large, so an "IN (...)" translation
+        // could exceed the SQLite parameter limit. The reference table is bounded by the number of cached files.
+        var staleReferences = context.InterlisFileReferences
+            .AsEnumerable()
+            .Where(reference => !activeUrls.Contains(reference.SourceUrl))
+            .ToList();
+        context.InterlisFileReferences.RemoveRange(staleReferences);
+        context.SaveChanges();
+
+        context.InterlisFiles
+            .Where(file => !context.InterlisFileReferences.Any(reference => reference.MD5 == file.MD5))
+            .ExecuteDelete();
     }
 
     private async Task UpdateRepositoryTree(RepositoryCrawlerContext context)
@@ -152,6 +204,9 @@ public class RepositorySearcher
                 CrawlTime = DateTime.Now,
             });
             context.SaveChanges();
+
+            // Now that the current tree is persisted, trim the file cache to the URLs it still serves.
+            PruneFileCache(context, repositories);
 
             transaction.Commit();
             logger.LogInformation("Updating ModelRepoDatabase complete. Inserted {RepositoryCount} repositories.", repositories.Count);

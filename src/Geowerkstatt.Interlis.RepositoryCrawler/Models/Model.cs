@@ -36,8 +36,11 @@ public class Model
     public string? FurtherInformation { get; set; }
 
     /// <summary>
-    /// The actual content of the INTERLIS file.
+    /// The actual content of the INTERLIS file. Populated at runtime by <see cref="IRepositoryCrawler.FetchInterlisFile"/>.
+    /// The file content itself is cached separately (an <see cref="InterlisFile"/> keyed by its content hash, with the
+    /// URL-to-hash mapping held by <see cref="InterlisFileReference"/>), so this navigation is not persisted.
     /// </summary>
+    [NotMapped]
     public InterlisFile? FileContent { get; set; }
 
     [NotMapped]
