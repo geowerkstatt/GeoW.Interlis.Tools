@@ -32,13 +32,13 @@ public class RepositoryIndex20 : RepositoryIndex
 [XmlType(AnonymousType = true)]
 public class ModelMetadata
 {
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public string SchemaLanguage { get; set; }
+    public string? SchemaLanguage { get; set; }
 
-    public string File { get; set; }
+    public string? File { get; set; }
 
-    public string Version { get; set; }
+    public string? Version { get; set; }
 
     [XmlElement(DataType = "date")]
     public DateTime? publishingDate { get; set; }

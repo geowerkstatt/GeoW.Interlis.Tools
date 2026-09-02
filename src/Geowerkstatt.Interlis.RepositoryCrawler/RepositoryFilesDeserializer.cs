@@ -65,8 +65,7 @@ internal static class RepositoryFilesDeserializer
         var dataSection = DeserializeDatasection<IliDataDatasection>(xmlStream);
 
         var result = dataSection?.DatasetIdx16DataIndex?
-                            .Where(x => x?.DatasetMetadata is not null)
-                            .SelectMany(x => x.DatasetMetadata);
+                            .SelectMany(x => x?.DatasetMetadata ?? Array.Empty<DatasetMetadata>());
 
         return result ?? Enumerable.Empty<DatasetMetadata>();
     }

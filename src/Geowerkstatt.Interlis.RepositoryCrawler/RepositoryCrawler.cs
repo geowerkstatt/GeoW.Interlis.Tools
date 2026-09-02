@@ -1,4 +1,5 @@
-﻿using Geowerkstatt.Interlis.RepositoryCrawler.Models;
+﻿using Geowerkstatt.Interlis.Common;
+using Geowerkstatt.Interlis.RepositoryCrawler.Models;
 using Geowerkstatt.Interlis.RepositoryCrawler.XmlModels;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -181,9 +182,15 @@ public class RepositoryCrawler : IRepositoryCrawler
             var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
             var iliData = await repositoryReader.ReadIliData().ConfigureAwait(false);
 
-            return iliData
-                .Where(d => d.IsCatalog())
-                .Select(m => new Catalog
+            Catalog? ToCatalog(DatasetMetadata m)
+            {
+                if (m is not { id: not null, version: not null })
+                {
+                    logger.LogWarning("Skipping a catalog entry of ilidata.xml in repository {RepositoryUri} that has no id or version.", repositoryUri);
+                    return null;
+                }
+
+                return new Catalog
                 {
                     Identifier = m.id,
                     Version = m.version,
@@ -193,7 +200,13 @@ public class RepositoryCrawler : IRepositoryCrawler
                     Title = m.GetDefaultTitle(),
                     File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
                     ReferencedModels = m.GetReferencedModels(),
-                })
+                };
+            }
+
+            return iliData
+                .Where(d => d.IsCatalog())
+                .Select(ToCatalog)
+                .WhereNotNull()
                 .RemovePrecursorCatalogVersions()
                 .ToHashSet();
         }
@@ -210,23 +223,36 @@ public class RepositoryCrawler : IRepositoryCrawler
         var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
         var modelMetadatas = await repositoryReader.ReadIliModels().ConfigureAwait(false);
 
-        return modelMetadatas.Select(model => new Model
+        Model? ToModel(ModelMetadata model)
         {
-            Name = model.Name,
-            SchemaLanguage = model.SchemaLanguage,
-            File = model.File,
-            Version = model.Version,
-            PublishingDate = model.publishingDate?.ToUniversalTime(),
-            DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
-            ShortDescription = model.shortDescription,
-            Title = model.Title,
-            Issuer = model.Issuer,
-            TechnicalContact = model.technicalContact,
-            FurtherInformation = model.furtherInformation,
-            MD5 = model.md5,
-            Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
-        })
-        .ToHashSet();
+            if (model is not { Name: not null, SchemaLanguage: not null, File: not null, Version: not null })
+            {
+                logger.LogWarning("Skipping a model entry of ilimodels.xml in repository {RepositoryUri} that has no name, schema language, file or version.", repositoryUri);
+                return null;
+            }
+
+            return new Model
+            {
+                Name = model.Name,
+                SchemaLanguage = model.SchemaLanguage,
+                File = model.File,
+                Version = model.Version,
+                PublishingDate = model.publishingDate?.ToUniversalTime(),
+                DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
+                ShortDescription = model.shortDescription,
+                Title = model.Title,
+                Issuer = model.Issuer,
+                TechnicalContact = model.technicalContact,
+                FurtherInformation = model.furtherInformation,
+                MD5 = model.md5,
+                Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
+            };
+        }
+
+        return modelMetadatas
+            .Select(ToModel)
+            .WhereNotNull()
+            .ToHashSet();
     }
 
     private async Task<Site?> ParseIlisite(Uri repositoryUri)
