@@ -14,11 +14,21 @@ namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 /// <summary>
 /// Visitor that creates an Abstract-Syntax-Tree (AST) from the output of ANTLR.
 /// </summary>
-/// <param name="loggerFactory">The Factory to create logger instances.</param>
-/// <param name="tokenStream">The <see cref="CommonTokenStream"/> to access hidden tokens.</param>
-public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenStream tokenStream) : LoggingInterlis24ParserBaseVisitor<object?>(loggerFactory)
+public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<object?>
 {
-    private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24Visitor>();
+    private readonly ILogger logger;
+    private readonly ILoggerFactory loggerFactory;
+    private readonly CommonTokenStream tokenStream;
+
+    /// <param name="loggerFactory">The Factory to create logger instances.</param>
+    /// <param name="tokenStream">The <see cref="CommonTokenStream"/> to access hidden tokens.</param>
+    public Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenStream tokenStream)
+        : base(loggerFactory)
+    {
+        logger = loggerFactory.CreateLogger<Interlis24Visitor>();
+        this.loggerFactory = loggerFactory;
+        this.tokenStream = tokenStream;
+    }
 
     private Scope<IInterlisDefinitionContainer> CurrentScope = new Scope<IInterlisDefinitionContainer>();
 
@@ -300,8 +310,14 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             .modelContents()
             .SelectMany(c =>
             {
+                // A child that could not be built (mid-typing input) contributes nothing.
                 var result = Visit(c);
-                return result is IEnumerable collection ? collection.Cast<IInterlisDefinition>() : ([(IInterlisDefinition)result]);
+                if (result is IEnumerable collection)
+                {
+                    return collection.Cast<IInterlisDefinition>();
+                }
+
+                return result is IInterlisDefinition definition ? [definition] : Enumerable.Empty<IInterlisDefinition>();
             });
 
         SetContentDictionary(modelDef, modelDef, context.name, elements);
@@ -349,8 +365,14 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             .Where(c => c.constraintsDef() == null)
             .SelectMany(c =>
             {
+                // A child that could not be built (mid-typing input) contributes nothing.
                 var result = Visit(c);
-                return result is IEnumerable collection ? collection.Cast<IInterlisDefinition>() : ([(IInterlisDefinition)result]);
+                if (result is IEnumerable collection)
+                {
+                    return collection.Cast<IInterlisDefinition>();
+                }
+
+                return result is IInterlisDefinition definition ? [definition] : Enumerable.Empty<IInterlisDefinition>();
             });
 
         // CONSTRAINTS OF blocks (RefHB 3.12-41) attach constraints to a viewable but have no source name; they are
@@ -486,7 +508,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         using var scopeFrame = CurrentScope.NewFrame(viewDef);
 
         viewDef.Formation = context.formationDef() == null ? null : VisitFormationDef(context.formationDef());
-        viewDef.Selections.AddRange(context.selection().Select(s => (IExpression)Visit(s.expression())));
+        viewDef.Selections.AddRange(context.selection().Select(s => Visit(s.expression()) as IExpression).WhereNotNull());
         viewDef.BaseExtensions.AddRange(context.baseExtensionDef().Select(VisitBaseExtensionDef));
 
         var attributes = new List<IInterlisDefinition>();
@@ -616,7 +638,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     /// alias token (or the viewable reference when the alias is implicit) so tooling can locate the base-name
     /// declaration. The single viewable reference is registered for resolution via <see cref="CreateReference"/>.
     /// </summary>
-    public override BaseView VisitRenamedViewableRef([NotNull] Interlis24Parser.RenamedViewableRefContext context)
+    public override BaseView VisitRenamedViewableRef(Interlis24Parser.RenamedViewableRefContext? context)
     {
         // Callers (projection/join/union/aggregation/inspection/base-extension) pass a renamedViewableRef that can be
         // absent while typing (e.g. just 'PROJECTION'); return an empty base view so the formation can still be built.
@@ -626,20 +648,18 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
 
         var viewable = CreateReference<IInterlisDefinition>(context.definitionRef(), AcceptViewable);
-        var isRenamed = context.@base != null;
 
         var baseView = new BaseView
         {
             Name = context.@base?.Text ?? viewable?.Path.LastOrDefault() ?? string.Empty,
             SourceRange = GetRange(context),
             Viewable = viewable,
-            IsRenamed = isRenamed,
+            IsRenamed = context.@base != null,
         };
 
-        if (isRenamed)
+        if (context.@base is { } baseToken)
         {
-            var nameLocation = GetRange(context.@base);
-            baseView.NameLocations.Add(nameLocation);
+            baseView.NameLocations.Add(GetRange(baseToken));
         }
 
         return baseView;
@@ -700,7 +720,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
             Properties = { properties },
             Extends = CreateReference<GraphicDef>(context.extends),
             BasedOn = CreateReference<IInterlisDefinition>(context.basedOn),
-            Selections = { context.selection().Select(s => (IExpression)Visit(s.expression())) },
+            Selections = { context.selection().Select(s => Visit(s.expression()) as IExpression).WhereNotNull() },
         };
 
         graphicDef.DrawingRules.AddRange(context.drawingRule().Select(VisitDrawingRule));
@@ -725,7 +745,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         var conditional = new CondSignParamAssignment
         {
-            Where = context.expression() == null ? null : (IExpression)Visit(context.expression()),
+            Where = context.expression() == null ? null : Visit(context.expression()) as IExpression,
         };
         conditional.Assignments.AddRange(context.signParamAssignment().Select(VisitSignParamAssignment));
         return conditional;
@@ -1001,7 +1021,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return type;
     }
 
-    public override TypeDef VisitAttrType([NotNull] Interlis24Parser.AttrTypeContext context)
+    public override TypeDef? VisitAttrType([NotNull] Interlis24Parser.AttrTypeContext context)
     {
         var restrictedDefinitonRef = context.restrictedDefinitionRef();
         if (restrictedDefinitonRef != null)
@@ -1017,7 +1037,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         }
         else
         {
-            return (TypeDef)VisitChildrenBase(context);
+            return VisitChildrenBase(context) as TypeDef;
         }
     }
 
@@ -1052,10 +1072,10 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         NumericType numericTypeDef;
 
-        if (context.min != null && context.min.exception == null && context.max != null && context.max.exception == null)
+        if (context.min is { exception: null } && context.max is { exception: null }
+            && Visit(context.min) is Tuple<double, int>(var minValue, var minPrecision)
+            && Visit(context.max) is Tuple<double, int>(var maxValue, var maxPrecision))
         {
-            var (minValue, minPrecision) = (Tuple<double, int>)Visit(context.min);
-            var (maxValue, maxPrecision) = (Tuple<double, int>)Visit(context.max);
 
             // RefHB 3.8.5-3: the Stellenzahl (digit count) of the minimum and the maximum must match. In mantissa
             // notation the digits of the mantissa count, so 0.1E7 .. 0.1000E10 is invalid although a scaling could
@@ -1444,7 +1464,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     public override DomainDef VisitDomainTypeDef([NotNull] Interlis24Parser.DomainTypeDefContext context)
     {
         var typeContext = context.type();
-        var type = typeContext != null ? (TypeDef)VisitType(typeContext) : new TypeRef();
+        var type = (typeContext != null ? VisitType(typeContext) as TypeDef : null) ?? new TypeRef();
         type.Cardinality = new Cardinality { Min = context.MANDATORY() == null ? 0 : 1, Max = Cardinality.Unbound };
         foreach (var constraintContext in context.domainConstraint())
         {
@@ -1477,14 +1497,14 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         return new DomainConstraint
         {
             Name = context.IDENTIFIER().GetText(),
-            Condition = (IExpression)Visit(context.expression()),
+            Condition = Visit(context.expression()) as IExpression ?? new UndefinedConstant(),
             SourceRange = GetRange(context),
         };
     }
 
-    public override ConstraintDef VisitConstraintDef([NotNull] Interlis24Parser.ConstraintDefContext context)
+    public override ConstraintDef? VisitConstraintDef([NotNull] Interlis24Parser.ConstraintDefContext context)
     {
-        return (ConstraintDef)VisitChildrenBase(context);
+        return VisitChildrenBase(context) as ConstraintDef;
     }
 
     /// <summary>
@@ -1585,7 +1605,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         {
             Name = context.name?.Text ?? "",
             IsBasket = context.BASKET() != null,
-            Where = context.expression() == null ? null : (IExpression)Visit(context.expression()),
+            Where = context.expression() == null ? null : Visit(context.expression()) as IExpression,
             SourceRange = GetRange(context),
         };
 
@@ -2047,8 +2067,9 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         CheckOperatorNotChained(context);
 
-        var first = (IExpression)Visit(context.expression(0));
-        var second = (IExpression)Visit(context.expression(1));
+        // An operand can be missing or unparseable while typing; UndefinedConstant keeps the node total.
+        var first = Visit(context.expression(0)) as IExpression ?? new UndefinedConstant();
+        var second = Visit(context.expression(1)) as IExpression ?? new UndefinedConstant();
 
         return (context.binOp.Type) switch
         {
@@ -2201,7 +2222,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
         if (context.@string() != null) return new TextConstant { Value = VisitString(context.@string()) };
         if (context.UNDEFINED() != null) return new UndefinedConstant();
 
-        return (ConstantExpression)VisitChildrenBase(context);
+        return VisitChildrenBase(context) as ConstantExpression ?? new UndefinedConstant();
     }
 
     public override NumericConstant VisitNumericConst([NotNull] Interlis24Parser.NumericConstContext context)
@@ -2384,7 +2405,7 @@ public sealed class Interlis24Visitor(ILoggerFactory loggerFactory, CommonTokenS
     {
         if (context.expression() != null)
         {
-            return (IExpression)Visit(context.expression());
+            return Visit(context.expression()) as IExpression ?? new UndefinedConstant();
         }
         else
         {

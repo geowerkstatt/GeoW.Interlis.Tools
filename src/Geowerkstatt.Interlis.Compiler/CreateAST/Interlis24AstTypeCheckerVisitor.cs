@@ -1217,20 +1217,25 @@ internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : I
     /// </summary>
     private void CheckOidAssignment(IInterlisDefinition element, HashSet<Property> properties, Reference<DomainDef>? oid, string kind)
     {
-        switch (oid?.Target is { } domain ? EffectiveTypeOf(domain) : null)
+        if (oid?.Target is not { } domain)
         {
-            case null or TypeRef or UndefinedType:
+            return;
+        }
+
+        switch (EffectiveTypeOf(domain))
+        {
+            case TypeRef or UndefinedType:
                 break;
 
             case OidType { Value: OidType.AnyOid } when !properties.Contains(Property.Abstract):
-                ReportError(element, $"must be declared ABSTRACT because its {kind} definition '{oid.Target!.Name}' is still open");
+                ReportError(element, $"must be declared ABSTRACT because its {kind} definition '{domain.Name}' is still open");
                 break;
 
             case OidType:
                 break;
 
             default:
-                ReportError(element, $"the {kind} definition '{oid.Target!.Name}' must be an OID domain");
+                ReportError(element, $"the {kind} definition '{domain.Name}' must be an OID domain");
                 break;
         }
     }
