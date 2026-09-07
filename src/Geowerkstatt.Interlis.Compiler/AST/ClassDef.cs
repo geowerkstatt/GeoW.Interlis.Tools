@@ -2,20 +2,19 @@
 
 namespace Geowerkstatt.Interlis.Compiler.AST;
 
-public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDefinitionContainer, IIdentifiable
+public sealed class ClassDef : InterlisDefinition, IExtending<ClassDef>, IInterlisDefinitionContainer, IConstraintContainer, IIdentifiable
 {
-    public required string Name { get; init; }
-    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
-    public IInterlisDefinitionContainer? Parent { get; set; }
-
-    public IList<string> DocComments { get; } = new List<string>();
-    public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
-
     public Reference<ClassDef>? Extends { get; set; }
 
     public HashSet<Property> Properties { get; } = new HashSet<Property>();
 
     public Dictionary<string, IInterlisDefinition> Content { get; } = new Dictionary<string, IInterlisDefinition>();
+
+    /// <summary>
+    /// The consistency constraints declared in this class/structure (RefHB 3.12). Kept in a list rather than in
+    /// <see cref="Content"/> because constraint names may be duplicated (they are for messages only, not the namespace).
+    /// </summary>
+    public List<ConstraintDef> Constraints { get; } = new List<ConstraintDef>();
 
     /// <inheritdoc />
     public Dictionary<string, AssociationDef> AssociationAccess { get; } = new Dictionary<string, AssociationDef>();
@@ -26,7 +25,7 @@ public sealed class ClassDef : IDocumentation, IExtending<ClassDef>, IInterlisDe
 
     public ICollection<IReference> ContainerReferences { get; } = new List<IReference>();
 
-    public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
+    public override TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor) where TResult : default
     {
         return visitor.VisitClassDef(this);
     }

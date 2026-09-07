@@ -4,8 +4,16 @@
 /// Interface to put <see cref="Reference{T}"/> instances into a collection.
 /// Does not care about the type of the target and has all necessary info to resolve the reference.
 /// </summary>
-public interface IReference : IAstElement
+public interface IReference : IVisitable, ISourceRange
 {
+    /// <summary>
+    /// The resolved target, or <see langword="null"/> while the reference is unresolved. Typed to
+    /// <see cref="IReferenceTarget"/> so a consumer that walks references generically (diagnostics, navigation)
+    /// gets the name and its locations without knowing the concrete target type; use
+    /// <see cref="Reference{T}.Target"/> for the strongly typed one.
+    /// </summary>
+    public IReferenceTarget? Target { get; }
+
     /// <summary>
     /// The path to the target object.
     /// </summary>

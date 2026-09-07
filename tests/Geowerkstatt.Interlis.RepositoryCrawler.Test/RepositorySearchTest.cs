@@ -1,5 +1,6 @@
 ﻿using Geowerkstatt.Interlis.RepositoryCrawler.Models;
 using Geowerkstatt.Interlis.RepositoryCrawler.TestHelpers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -79,8 +80,9 @@ public class RepositorySearchTest
             .Setup(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()))
             .ReturnsAsync((Model model, Func<string, InterlisFile?> getCachedFile) =>
             {
-                Assert.IsNotNull(model.MD5);
-                return getCachedFile(model.MD5);
+                var url = model.Uri?.AbsoluteUri;
+                Assert.IsNotNull(url);
+                return getCachedFile(url);
             });
         var searcher = new RepositorySearcher(crawler.Object, configuration, loggerFactory);
 
@@ -111,5 +113,52 @@ public class RepositorySearchTest
         Assert.IsNotNull(cachedModel?.FileContent);
 
         Assert.AreEqual(uncachedModel?.FileContent?.MD5, cachedModel?.FileContent?.MD5);
+    }
+
+    [TestMethod]
+    public async Task UpdateRepositoryTreePrunesCacheForRemovedModels()
+    {
+        // Force a re-crawl on every search, so the prune runs each time.
+        configuration["RepositoryCrawler:StaleTime"] = "00:00:00";
+        var cacheDbFolder = configuration["RepositoryCrawler:CacheDbFolder"]!;
+
+        var model = new Model { Name = "PruneModel", SchemaLanguage = "ili2_4", File = "PruneModel.ili", Version = "1", MD5 = "HASH" };
+        var repository = new Repository { HostNameId = "https://prune.testdata/", Uri = new Uri("https://prune.testdata/"), Name = "prune", Models = new HashSet<Model> { model } };
+        model.ModelRepository = repository;
+
+        // The first crawl serves the model; the second no longer contains it (the model was removed from the repository).
+        var crawls = new Queue<IDictionary<string, Repository>>(
+        [
+            new Dictionary<string, Repository> { { repository.HostNameId, repository } },
+            new Dictionary<string, Repository>(),
+        ]);
+        var crawler = new Mock<IRepositoryCrawler>();
+        crawler.Setup(c => c.CrawlModelRepositories(It.IsAny<RepositoryCrawlerOptions>())).ReturnsAsync(() => crawls.Dequeue());
+        crawler
+            .Setup(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()))
+            .ReturnsAsync(() => new InterlisFile { MD5 = "HASH", Content = "content" });
+
+        var searcher = new RepositorySearcher(crawler.Object, configuration, loggerFactory);
+
+        // First search caches the model's file.
+        await searcher.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        using (var afterFirst = OpenCacheContext(cacheDbFolder))
+        {
+            Assert.AreEqual(1, afterFirst.InterlisFiles.Count());
+            Assert.AreEqual(1, afterFirst.InterlisFileReferences.Count());
+        }
+
+        // Second search re-crawls an empty tree; the now-stale reference and its orphaned file must be pruned.
+        await searcher.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        using var afterSecond = OpenCacheContext(cacheDbFolder);
+        Assert.AreEqual(0, afterSecond.InterlisFileReferences.Count(), "The reference for the removed model's URL should be pruned.");
+        Assert.AreEqual(0, afterSecond.InterlisFiles.Count(), "The orphaned file should be pruned.");
+    }
+
+    private static RepositoryCrawlerContext OpenCacheContext(string cacheDbFolder)
+    {
+        var dbFile = Directory.GetFiles(cacheDbFolder, "*.db").Single();
+        var options = new DbContextOptionsBuilder<RepositoryCrawlerContext>().UseSqlite($"Data Source={dbFile}").Options;
+        return new RepositoryCrawlerContext(options);
     }
 }

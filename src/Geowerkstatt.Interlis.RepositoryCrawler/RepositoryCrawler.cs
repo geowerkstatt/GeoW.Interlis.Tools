@@ -1,4 +1,5 @@
-﻿using Geowerkstatt.Interlis.RepositoryCrawler.Models;
+﻿using Geowerkstatt.Interlis.Common;
+using Geowerkstatt.Interlis.RepositoryCrawler.Models;
 using Geowerkstatt.Interlis.RepositoryCrawler.XmlModels;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -20,35 +21,34 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     public async Task<InterlisFile?> FetchInterlisFile(Model model, Func<string, InterlisFile?> getCachedFile)
     {
-        // Check cache
-        InterlisFile? file = string.IsNullOrEmpty(model.MD5) ? null : getCachedFile(model.MD5);
-        if (file != null)
+        var fileUri = model.Uri;
+        if (fileUri == null)
         {
-            model.FileContent = file;
-            return file;
+            return null;
         }
 
-        // Fetch file from repository
-        if (model.Uri != null)
+        // Reuse a cached file only when it was fetched from this model's exact URL AND its actual content still
+        // matches the hash the catalog declares. Looking up by URL (instead of by the catalog hash) means a wrong
+        // or copy-pasted catalog hash can never substitute another file's content, and a stale or missing catalog
+        // hash re-fetches instead of serving the wrong bytes.
+        var cachedFile = getCachedFile(fileUri.AbsoluteUri);
+        if (cachedFile != null && cachedFile.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
         {
-            file = await FetchInterlisFile(model.Uri).ConfigureAwait(false);
+            model.FileContent = cachedFile;
+            return cachedFile;
         }
 
+        var file = await FetchInterlisFile(fileUri).ConfigureAwait(false);
         if (file != null)
         {
-            if (!file.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(model.MD5))
             {
-                // Reuse file from cache instead of trying to add the same file as a new entity with the same primary key
-                file = getCachedFile(file.MD5) ?? file;
-
-                if (string.IsNullOrEmpty(model.MD5))
-                {
-                    model.MD5 = file.MD5;
-                }
-                else
-                {
-                    logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, model.Uri, file.MD5);
-                }
+                // The catalog did not declare a hash; adopt the one computed from the downloaded file.
+                model.MD5 = file.MD5;
+            }
+            else if (!file.MD5.Equals(model.MD5, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("The MD5 Hash of Model <{Model}> ({MD5Model}) does not match that of the file <{URL}> ({MD5File}).", model.Name, model.MD5, fileUri, file.MD5);
             }
 
             model.FileContent = file;
@@ -182,9 +182,15 @@ public class RepositoryCrawler : IRepositoryCrawler
             var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
             var iliData = await repositoryReader.ReadIliData().ConfigureAwait(false);
 
-            return iliData
-                .Where(d => d.IsCatalog())
-                .Select(m => new Catalog
+            Catalog? ToCatalog(DatasetMetadata m)
+            {
+                if (m is not { id: not null, version: not null })
+                {
+                    logger.LogWarning("Skipping a catalog entry of ilidata.xml in repository {RepositoryUri} that has no id or version.", repositoryUri);
+                    return null;
+                }
+
+                return new Catalog
                 {
                     Identifier = m.id,
                     Version = m.version,
@@ -194,7 +200,13 @@ public class RepositoryCrawler : IRepositoryCrawler
                     Title = m.GetDefaultTitle(),
                     File = m.GetFiles().Select(f => repositoryUri.Append(f).AbsoluteUri).ToList(),
                     ReferencedModels = m.GetReferencedModels(),
-                })
+                };
+            }
+
+            return iliData
+                .Where(d => d.IsCatalog())
+                .Select(ToCatalog)
+                .WhereNotNull()
                 .RemovePrecursorCatalogVersions()
                 .ToHashSet();
         }
@@ -211,23 +223,36 @@ public class RepositoryCrawler : IRepositoryCrawler
         var repositoryReader = RepositoryReaderFactory.Create(repositoryUri.AbsoluteUri, httpClient);
         var modelMetadatas = await repositoryReader.ReadIliModels().ConfigureAwait(false);
 
-        return modelMetadatas.Select(model => new Model
+        Model? ToModel(ModelMetadata model)
         {
-            Name = model.Name,
-            SchemaLanguage = model.SchemaLanguage,
-            File = model.File,
-            Version = model.Version,
-            PublishingDate = model.publishingDate?.ToUniversalTime(),
-            DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
-            ShortDescription = model.shortDescription,
-            Title = model.Title,
-            Issuer = model.Issuer,
-            TechnicalContact = model.technicalContact,
-            FurtherInformation = model.furtherInformation,
-            MD5 = model.md5,
-            Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
-        })
-        .ToHashSet();
+            if (model is not { Name: not null, SchemaLanguage: not null, File: not null, Version: not null })
+            {
+                logger.LogWarning("Skipping a model entry of ilimodels.xml in repository {RepositoryUri} that has no name, schema language, file or version.", repositoryUri);
+                return null;
+            }
+
+            return new Model
+            {
+                Name = model.Name,
+                SchemaLanguage = model.SchemaLanguage,
+                File = model.File,
+                Version = model.Version,
+                PublishingDate = model.publishingDate?.ToUniversalTime(),
+                DependsOnModel = model.dependsOnModel.Where(s => !string.IsNullOrEmpty(s?.value)).Select(m => m.value!).ToList(),
+                ShortDescription = model.shortDescription,
+                Title = model.Title,
+                Issuer = model.Issuer,
+                TechnicalContact = model.technicalContact,
+                FurtherInformation = model.furtherInformation,
+                MD5 = model.md5,
+                Tags = model.Tags?.Split(',').Distinct().ToList() ?? new List<string>(),
+            };
+        }
+
+        return modelMetadatas
+            .Select(ToModel)
+            .WhereNotNull()
+            .ToHashSet();
     }
 
     private async Task<Site?> ParseIlisite(Uri repositoryUri)

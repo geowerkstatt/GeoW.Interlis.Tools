@@ -247,28 +247,29 @@ public class RepositoryCrawlerTest
         Assert.IsNotNull(result);
         result.AssertCount(1).Single().Value.Models.AssertCount(7);
 
-        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
-        result.AssertSingleItem("https://models.multiparent.testdata/", async repository =>
-        {
-            foreach (var model in repository.Models)
-            {
-                var file = await repositoryCrawler.FetchInterlisFile(model, md5 => cachedFiles.GetValueOrDefault(md5));
-                if (file != null)
-                {
-                    cachedFiles[file.MD5] = file;
-                }
-            }
+        // The async fetch loop runs in the test method itself: an async lambda passed to the Action-taking
+        // AssertSingleItem would be async void, whose assertion failures cannot fail the test (MSTEST0040).
+        Assert.IsTrue(result.TryGetValue("https://models.multiparent.testdata/", out var repository), "Expected the root repository in the crawl result.");
 
-            repository.Models
-                .AssertCount(7)
-                .AssertSingleItem(m => m.Name == "Test_Model_Without_MD5", m => Assert.AreEqual("EB137F3B28D3D06C41F20237886A8B41", m.MD5))
-                .AssertSingleItem(m => m.Name == "Test_Model_With_Empty_MD5", m => Assert.AreEqual("EB137F3B28D3D06C41F20237886A8B41", m.MD5))
-                .AssertSingleItem(m => m.Name == "Test_Model_Without_MD5_And_Invalid_File", m => Assert.AreEqual(null, m.MD5))
-                .AssertSingleItem(m => m.Name == "Test_Model_With_Correct_MD5", m => Assert.AreEqual("eb137f3b28d3d06c41f20237886a8b41", m.MD5))
-                .AssertSingleItem(m => m.Name == "Test_Model_With_Wrong_MD5", m => Assert.AreEqual("85d9577a5d8d9115484cdf2c0917c802", m.MD5))
-                .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model1", m => Assert.AreEqual("17dd3681a880848baef146904991c36b", m.MD5))
-                .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model2", m => Assert.AreEqual("17dd3681a880848baef146904991c36b", m.MD5));
-        });
+        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in repository.Models)
+        {
+            var file = await repositoryCrawler.FetchInterlisFile(model, url => cachedFiles.GetValueOrDefault(url));
+            if (file != null && model.Uri != null)
+            {
+                cachedFiles[model.Uri.AbsoluteUri] = file;
+            }
+        }
+
+        repository.Models
+            .AssertCount(7)
+            .AssertSingleItem(m => m.Name == "Test_Model_Without_MD5", m => Assert.AreEqual("EB137F3B28D3D06C41F20237886A8B41", m.MD5))
+            .AssertSingleItem(m => m.Name == "Test_Model_With_Empty_MD5", m => Assert.AreEqual("EB137F3B28D3D06C41F20237886A8B41", m.MD5))
+            .AssertSingleItem(m => m.Name == "Test_Model_Without_MD5_And_Invalid_File", m => Assert.AreEqual(null, m.MD5))
+            .AssertSingleItem(m => m.Name == "Test_Model_With_Correct_MD5", m => Assert.AreEqual("eb137f3b28d3d06c41f20237886a8b41", m.MD5))
+            .AssertSingleItem(m => m.Name == "Test_Model_With_Wrong_MD5", m => Assert.AreEqual("85d9577a5d8d9115484cdf2c0917c802", m.MD5))
+            .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model1", m => Assert.AreEqual("17dd3681a880848baef146904991c36b", m.MD5))
+            .AssertSingleItem(m => m.Name == "TwoModelsInOneFile_Model2", m => Assert.AreEqual("17dd3681a880848baef146904991c36b", m.MD5));
     }
 
     [TestMethod]
@@ -281,10 +282,10 @@ public class RepositoryCrawlerTest
         var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase);
         foreach (var model in result.Single().Value.Models)
         {
-            var file = await repositoryCrawler.FetchInterlisFile(model, md5 => cachedFiles.GetValueOrDefault(md5));
-            if (file != null)
+            var file = await repositoryCrawler.FetchInterlisFile(model, url => cachedFiles.GetValueOrDefault(url));
+            if (file != null && model.Uri != null)
             {
-                cachedFiles[file.MD5] = file;
+                cachedFiles[model.Uri.AbsoluteUri] = file;
             }
         }
 
@@ -300,11 +301,12 @@ public class RepositoryCrawlerTest
         result.AssertCount(1).Single().Value.Models.AssertCount(7);
 
         var expectedContent = "Expected Content NISECTIOUSIS";
+        var fileUrl = "https://models.multiparent.testdata/TwoModelsInOneFile.ili";
         var md5 = "17DD3681A880848BAEF146904991C36B";
-        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase) { { md5, new InterlisFile { MD5 = md5, Content = expectedContent } } };
+        var cachedFiles = new Dictionary<string, InterlisFile>(StringComparer.OrdinalIgnoreCase) { { fileUrl, new InterlisFile { MD5 = md5, Content = expectedContent } } };
 
-        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model1"), md5 => cachedFiles.GetValueOrDefault(md5));
-        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model2"), md5 => cachedFiles.GetValueOrDefault(md5));
+        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model1"), url => cachedFiles.GetValueOrDefault(url));
+        await repositoryCrawler.FetchInterlisFile(result.Single().Value.Models.Single(m => m.Name == "TwoModelsInOneFile_Model2"), url => cachedFiles.GetValueOrDefault(url));
         cachedFiles.AssertCount(1, "The cached files dictionary should only contain the initial file.");
 
         Assert.AreEqual(0, mockHttp.GetMatchCount(mockRequests["https://models.multiparent.testdata/TwoModelsInOneFile.ili"]));

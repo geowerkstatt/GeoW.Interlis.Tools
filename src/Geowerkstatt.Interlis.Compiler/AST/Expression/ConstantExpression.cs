@@ -4,5 +4,5 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 public abstract class ConstantExpression(TypeDef returnType) : IExpression
 {
-    public TypeDef ReturnType { get; init; } = returnType;
+    public virtual TypeDef ReturnType { get; } = returnType;
 }

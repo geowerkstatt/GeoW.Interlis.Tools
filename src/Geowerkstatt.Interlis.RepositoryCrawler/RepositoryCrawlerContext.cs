@@ -12,6 +12,7 @@ internal class RepositoryCrawlerContext : DbContext
     public DbSet<Model> Models { get; set; }
     public DbSet<Catalog> Catalogs { get; set; }
     public DbSet<InterlisFile> InterlisFiles { get; set; }
+    public DbSet<InterlisFileReference> InterlisFileReferences { get; set; }
     public DbSet<CrawlInformation> CrawlInformations { get; set; }
 
     public RepositoryCrawlerContext(DbContextOptions<RepositoryCrawlerContext> options)

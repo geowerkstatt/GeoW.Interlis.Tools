@@ -7,20 +7,47 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+
+    <!-- ilitools compiler -->
+    <InterlisRepository>https://jars.interlis.ch</InterlisRepository>
+    <Ili2cGroup>ch.interlis</Ili2cGroup>
+    <Ili2cArtifact>ili2c-tool</Ili2cArtifact>
+    <Ili2cVersion>5.6.8</Ili2cVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DeepEqual" Version="5.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" />
-    <PackageReference Include="MSTest" Version="3.9.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.5" />
+    <PackageReference Include="TUnit" Version="1.56.35" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Geowerkstatt.Interlis.Compiler\Geowerkstatt.Interlis.Compiler.csproj" />
+    <ProjectReference Include="..\..\src\Geowerkstatt.Interlis.RepositoryCrawler\Geowerkstatt.Interlis.RepositoryCrawler.csproj" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <Ili2cBindistFileName>$(Ili2cArtifact)-$(Ili2cVersion)-bindist.zip</Ili2cBindistFileName>
+    <Ili2cDownloadPath>$(BaseIntermediateOutputPath)maven\</Ili2cDownloadPath>
+    <Ili2cJarPath>$(Ili2cDownloadPath)ili2c.jar</Ili2cJarPath>
+    <Ili2cMavenUrl>$(InterlisRepository)/$([System.String]::Copy('$(Ili2cGroup)').Replace('.', '/'))/$(Ili2cArtifact)/$(Ili2cVersion)/$(Ili2cBindistFileName)</Ili2cMavenUrl>
+  </PropertyGroup>
+
+  <!-- Download and extract ili2c bindist from interlis Maven repository -->
+  <Target Name="DownloadIli2cJar" Condition="!Exists('$(Ili2cJarPath)') And '$(DesignTimeBuild)' != 'true'">
+    <Message Importance="High" Text="Downloading ili2c-tool v$(Ili2cVersion) bindist from jars.interlis.ch..." />
+    <MakeDir Directories="$(Ili2cDownloadPath)" />
+    <DownloadFile SourceUrl="$(Ili2cMavenUrl)" DestinationFolder="$(Ili2cDownloadPath)" />
+    <Unzip SourceFiles="$(Ili2cDownloadPath)$(Ili2cBindistFileName)" DestinationFolder="$(Ili2cDownloadPath)" />
+  </Target>
+
+  <!-- Include JAR in output; must run as a target after the download,
+       because a static item would be evaluated before the JAR exists on a fresh build -->
+  <Target Name="IncludeIli2cJar" BeforeTargets="AssignTargetPaths" DependsOnTargets="DownloadIli2cJar">
+    <ItemGroup>
+      <None Include="$(Ili2cJarPath)" CopyToOutputDirectory="PreserveNewest" Link="ili2c.jar" Condition="Exists('$(Ili2cJarPath)')" />
+    </ItemGroup>
+  </Target>
 
 </Project>

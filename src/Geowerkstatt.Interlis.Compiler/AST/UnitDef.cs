@@ -2,7 +2,7 @@ using Geowerkstatt.Interlis.Compiler.AST.Expression;
 
 namespace Geowerkstatt.Interlis.Compiler.AST;
 
-public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
+public class UnitDef : InterlisDefinition, IExtending<UnitDef>
 {
     /// <summary>
     /// The term used to define the unit.
@@ -10,24 +10,20 @@ public class UnitDef : IInterlisDefinition, IDocumentation, IExtending<UnitDef>
     /// </summary>
     public required string Term { get; init; }
 
-    /// <summary>
-    /// The short name of this unit as defined in square brackets in the INTERLIS syntax.
-    /// This name is used to reference the unit.
-    /// </summary>
-    public required string Name { get; init; }
-    public ICollection<RangePosition> NameLocations { get; } = new List<RangePosition>();
-    public IInterlisDefinitionContainer? Parent { get; set; }
-
     public Reference<UnitDef>? Extends { get; set; }
 
-    public IList<string> DocComments { get; } = new List<string>();
-    public IDictionary<string, string> MetaAttributes { get; } = new Dictionary<string, string>();
 
     public HashSet<Property> Properties { get; } = new HashSet<Property>();
 
     public IExpression? Expression { get; set; }
 
-    public TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor)
+    /// <summary>
+    /// The explanation (<c>//...//</c>) of a <c>FUNCTION</c>-defined derived unit, if any (RefHB 3.2.6/3.9.2).
+    /// For such units the conversion is described informally by this explanation rather than by a formula.
+    /// </summary>
+    public string? Explanation { get; set; }
+
+    public override TResult? Accept<TResult>(IInterlis24AstVisitor<TResult> visitor) where TResult : default
     {
         return visitor.VisitUnitDef(this);
     }

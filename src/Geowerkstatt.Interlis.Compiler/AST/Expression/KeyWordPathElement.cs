@@ -11,7 +11,5 @@ public class KeyWordPathElement : IPathElement
         ThatArea = Interlis24Parser.THATAREA,
         Parent = Interlis24Parser.PARENT,
         Aggregates = Interlis24Parser.AGGREGATES,
-        First = Interlis24Parser.FIRST,
-        Last = Interlis24Parser.LAST,
     }
 }

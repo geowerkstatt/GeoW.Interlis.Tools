@@ -5,8 +5,11 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 public class FunctionCall : IExpression
 {
     /// <inheritdoc />
-    /// <remarks>Is resolved from the <see cref="FunctionDef"/>.</remarks>
-    public TypeDef ReturnType => FunctionDef.Target?.ReturnType!;
+    /// <remarks>
+    /// Is resolved from the <see cref="FunctionDef"/>. Falls back to <see cref="UndefinedType.Instance"/>
+    /// when the function reference is unresolved, so consumers never observe a null return type.
+    /// </remarks>
+    public TypeDef ReturnType => FunctionDef.Target?.ReturnType ?? UndefinedType.Instance;
 
     public required Reference<FunctionDef> FunctionDef { get; init; }
 

@@ -32,7 +32,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler
         [TestMethod]
         public void CreateWithNull()
         {
-            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(null));
+            var ex = Assert.ThrowsException<RepositoryReaderException>(() => RepositoryReaderFactory.Create(null!));
             Assert.AreEqual("The repository location must not be empty.", ex.Message);
         }
 
