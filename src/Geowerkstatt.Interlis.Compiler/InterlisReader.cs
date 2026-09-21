@@ -57,7 +57,7 @@ public class InterlisReader
         {
             addedModels = false;
             var missingModels = environment.Content.Values
-                .SelectMany(GetDependencies)
+                .SelectMany(model => model.Dependencies)
                 .Where(dependency => !environment.Content.ContainsKey(dependency.ModelName) && requestedModels.Add(dependency.ModelName))
                 .ToList();
 
@@ -94,25 +94,6 @@ public class InterlisReader
 
         ResolveAndCheck(environment);
         return environment;
-    }
-
-    /// <summary>
-    /// The external models a <paramref name="model"/> depends on and that must therefore be loaded into the
-    /// environment for its references to resolve: its imported models plus, for a translation, the base-language model
-    /// named by its <c>TRANSLATION OF</c> clause (RefHB 3.5.1-10). The base model is not imported, so it would
-    /// otherwise never be requested. Each dependency comes with the reference that names it, for locating problems.
-    /// </summary>
-    private static IEnumerable<(string ModelName, IReference Reference)> GetDependencies(ModelDef model)
-    {
-        foreach (var (importName, import) in model.Imports)
-        {
-            yield return (importName, import.ModelDef);
-        }
-
-        if (model.TranslationOf is { Path: { Count: > 0 } translationPath } translationOf)
-        {
-            yield return (translationPath[0], translationOf);
-        }
     }
 
     /// <summary>

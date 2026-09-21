@@ -113,6 +113,7 @@ public class TestTools
                         || nameof(Reference<IInterlisDefinition>.MapTarget).Equals(p.Name) // Ignore Func property
                         || nameof(Reference<IInterlisDefinition>.ResolvesInEnvironment).Equals(p.Name))) // Ignore resolution plumbing
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
+            .IgnoreProperty<ModelDef>(m => m.Dependencies) // Ignore calculated property (derived from Imports and TranslationOf)
             // Ignore definitions' own declaration spans (uniform clutter, like NameLocations); TypeDef spans stay compared
             .IgnoreProperty(p => nameof(ISourceRange.SourceRange).Equals(p.Name)
                     && (typeof(IInterlisDefinition).IsAssignableFrom(p.DeclaringType) || typeof(IExpression).IsAssignableFrom(p.DeclaringType)))
