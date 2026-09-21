@@ -24,7 +24,7 @@
         {
             try
             {
-                var fullFilePath = new Uri(repositoryUri, filePath);
+                var fullFilePath = repositoryUri.Append(filePath);
 
                 var response = await httpClient.GetAsync(fullFilePath).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
