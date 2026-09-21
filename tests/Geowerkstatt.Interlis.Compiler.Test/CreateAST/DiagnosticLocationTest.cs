@@ -127,7 +127,7 @@ public class DiagnosticLocationTest
                     """), "file:///dep.ili")
                 : null);
 
-            reader.ReadModelWithImports(
+            await reader.ReadModelWithImportsAsync(
                 new StringReader(
                     """
                     INTERLIS 2.4;
@@ -183,6 +183,45 @@ public class DiagnosticLocationTest
     }
 
     [Test]
+    public async Task ImportedModelOfAnotherVersionIsReportedAtTheImport()
+    {
+        var (reader, collector, loggerFactory) = CreateReader();
+        using (loggerFactory)
+        {
+            var resolver = new DelegateModelResolver(name => name == "Dep"
+                ? (new StringReader(
+                    """
+                    INTERLIS 2.3;
+                    MODEL Dep AT "http://example.com" VERSION "1.0.0" =
+                    END Dep.
+                    """), "file:///dep.ili")
+                : null);
+
+            await reader.ReadModelWithImportsAsync(
+                new StringReader(
+                    """
+                    INTERLIS 2.4;
+                    MODEL Root AT "http://example.com" VERSION "1.0.0" =
+                      IMPORTS Dep;
+                    END Root.
+                    """),
+                resolver,
+                "file:///root.ili");
+        }
+
+        var mismatch = collector.Diagnostics.Single(d => d.Message.StartsWith("Imported model", StringComparison.Ordinal));
+        using (Assert.Multiple())
+        {
+            await Assert.That(mismatch.Level).IsEqualTo<LogLevel>(LogLevel.Error);
+            await Assert.That(mismatch.Message).IsEqualTo("Imported model 'Dep' at 3:10-3:13 has INTERLIS version 2.3, expected 2.4.");
+            await Assert.That(mismatch.Range?.SourceUri).IsEqualTo("file:///root.ili");
+
+            // The model is not merged, so the import itself stays unresolved.
+            await Assert.That(collector.Diagnostics.Any(d => d.Message.StartsWith("Could not resolve 'reference 'Dep'", StringComparison.Ordinal))).IsTrue();
+        }
+    }
+
+    [Test]
     public async Task ReadRuleAttributesProblemsToTheGivenSource()
     {
         // A caller that parses through ReadRule (the language server) passes the document URI along with the text.
@@ -207,6 +246,6 @@ public class DiagnosticLocationTest
 
     private sealed class DelegateModelResolver(Func<string, (TextReader Reader, string? SourceUri)?> open) : IModelResolver
     {
-        public (TextReader Reader, string? SourceUri)? OpenModel(string modelName, double? languageVersion) => open(modelName);
+        public ValueTask<(TextReader Reader, string? SourceUri)?> OpenModelAsync(string modelName, double? languageVersion, CancellationToken cancellationToken) => new(open(modelName));
     }
 }

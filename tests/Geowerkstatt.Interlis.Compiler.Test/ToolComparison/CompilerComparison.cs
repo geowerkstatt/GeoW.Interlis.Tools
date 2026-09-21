@@ -66,13 +66,13 @@ public sealed class CompilerComparison : IDisposable
     /// <param name="interlisSource">The INTERLIS source code to compile.</param>
     /// <param name="dependencies">The imported model files the compiler may resolve against.</param>
     /// <returns>Error messages from the compiler, or empty string if successful.</returns>
-    public string CompileWithGeowerkstatt(string interlisSource, IReadOnlyList<ModelFile> dependencies)
+    public async Task<string> CompileWithGeowerkstattAsync(string interlisSource, IReadOnlyList<ModelFile> dependencies)
     {
         var loggerProvider = new TestLoggerProvider();
         using var loggerFactory = LoggerFactory.Create(b => b.AddProvider(loggerProvider).SetMinimumLevel(LogLevel.Error));
 
         var reader = new InterlisReader(loggerFactory);
-        reader.ReadModelWithImports(new StringReader(interlisSource), new DictionaryModelResolver(dependencies));
+        await reader.ReadModelWithImportsAsync(new StringReader(interlisSource), new DictionaryModelResolver(dependencies));
 
         return string.Join(Environment.NewLine, loggerProvider.GetMessages()).Trim();
     }
@@ -105,7 +105,7 @@ public sealed class CompilerComparison : IDisposable
         }
 
         var ili2cTask = CompileWithIli2cAsync(interlisSource, dependencies);
-        var geowerkstattErrors = CompileWithGeowerkstatt(interlisSource, dependencies);
+        var geowerkstattErrors = await CompileWithGeowerkstattAsync(interlisSource, dependencies);
 
         bool compilersAgree;
         try
@@ -167,7 +167,9 @@ public sealed class CompilerComparison : IDisposable
 
         // The dependency set of a single case is resolved for one INTERLIS language version (see the case source),
         // so a model name identifies at most one file and languageVersion needs no further disambiguation here.
-        public (TextReader Reader, string? SourceUri)? OpenModel(string modelName, double? languageVersion)
+        public ValueTask<(TextReader Reader, string? SourceUri)?> OpenModelAsync(string modelName, double? languageVersion, CancellationToken cancellationToken) => new(Open(modelName));
+
+        private (TextReader Reader, string? SourceUri)? Open(string modelName)
             => fileByModelName.TryGetValue(modelName, out var file)
                 ? (new StringReader(file.Content), file.SourceUri)
                 : null;

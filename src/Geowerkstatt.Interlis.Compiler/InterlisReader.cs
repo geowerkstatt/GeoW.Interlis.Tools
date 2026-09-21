@@ -9,10 +9,12 @@ namespace Geowerkstatt.Interlis.Compiler;
 public class InterlisReader
 {
     private readonly ILoggerFactory loggerFactory;
+    private readonly ILogger logger;
 
     public InterlisReader(ILoggerFactory? loggerFactory = null)
     {
         this.loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+        logger = this.loggerFactory.CreateLogger<InterlisReader>();
     }
 
     /// <summary>
@@ -33,13 +35,15 @@ public class InterlisReader
     /// that is not already loaded is fetched through <paramref name="modelResolver"/>, parsed, and merged into a
     /// single <see cref="InterlisEnvironment"/>; references are then resolved and the type checker runs once over the
     /// complete environment. Imports the resolver cannot supply are left unresolved and reported as compile errors
-    /// during name resolution.
+    /// during name resolution; a supplied model of another INTERLIS version than the root is reported at the import
+    /// and not merged.
     /// </summary>
     /// <param name="rootReader">The input to compile.</param>
     /// <param name="modelResolver">Supplies the source of imported models on demand.</param>
     /// <param name="sourceUri">The filepath or URL to the root source interlis file.</param>
+    /// <param name="cancellationToken">Cancels the compilation between resolving imported models.</param>
     /// <returns>The compiled representation of the <paramref name="rootReader"/> input and its loaded dependencies.</returns>
-    public InterlisEnvironment ReadModelWithImports(TextReader rootReader, IModelResolver modelResolver, string? sourceUri = null)
+    public async Task<InterlisEnvironment> ReadModelWithImportsAsync(TextReader rootReader, IModelResolver modelResolver, string? sourceUri = null, CancellationToken cancellationToken = default)
     {
         var root = ParseModels(rootReader, sourceUri);
         var environment = new InterlisEnvironment { Version = root.Version };
@@ -53,19 +57,36 @@ public class InterlisReader
         {
             addedModels = false;
             var missingModels = environment.Content.Values
-                .SelectMany(GetDependencyModelNames)
-                .Where(modelName => !environment.Content.ContainsKey(modelName) && requestedModels.Add(modelName))
+                .SelectMany(GetDependencies)
+                .Where(dependency => !environment.Content.ContainsKey(dependency.ModelName) && requestedModels.Add(dependency.ModelName))
                 .ToList();
 
-            foreach (var modelName in missingModels)
+            foreach (var (modelName, reference) in missingModels)
             {
-                if (modelResolver.OpenModel(modelName, environment.Version) is not { } modelSource)
+                cancellationToken.ThrowIfCancellationRequested();
+                if (await modelResolver.OpenModelAsync(modelName, environment.Version, cancellationToken) is not { } modelSource)
                 {
                     continue;
                 }
 
-                using var modelReader = modelSource.Reader;
-                environment.MergeFrom(ParseModels(modelReader, modelSource.SourceUri));
+                InterlisEnvironment imported;
+                using (modelSource.Reader)
+                {
+                    imported = ParseModels(modelSource.Reader, modelSource.SourceUri);
+                }
+
+                try
+                {
+                    environment.MergeFrom(imported);
+                }
+                catch (InvalidOperationException)
+                {
+                    // A model of another INTERLIS version: the import stays unresolved (which the reference resolver
+                    // reports) and the reason is given here.
+                    logger.LogError("Imported model '{ModelName}' at {Range} has INTERLIS version {ImportedVersion}, expected {Version}.", modelName, reference.GetRange(), imported.Version, environment.Version);
+                    continue;
+                }
+
                 addedModels = true;
             }
         }
@@ -76,21 +97,21 @@ public class InterlisReader
     }
 
     /// <summary>
-    /// The names of the external models a <paramref name="model"/> depends on and that must therefore be loaded into
-    /// the environment for its references to resolve: its imported models plus, for a translation, the base-language
-    /// model named by its <c>TRANSLATION OF</c> clause (RefHB 3.5.1-10). The base model is not imported, so it would
-    /// otherwise never be requested.
+    /// The external models a <paramref name="model"/> depends on and that must therefore be loaded into the
+    /// environment for its references to resolve: its imported models plus, for a translation, the base-language model
+    /// named by its <c>TRANSLATION OF</c> clause (RefHB 3.5.1-10). The base model is not imported, so it would
+    /// otherwise never be requested. Each dependency comes with the reference that names it, for locating problems.
     /// </summary>
-    private static IEnumerable<string> GetDependencyModelNames(ModelDef model)
+    private static IEnumerable<(string ModelName, IReference Reference)> GetDependencies(ModelDef model)
     {
-        foreach (var importName in model.Imports.Keys)
+        foreach (var (importName, import) in model.Imports)
         {
-            yield return importName;
+            yield return (importName, import.ModelDef);
         }
 
-        if (model.TranslationOf?.Path is { Count: > 0 } translationPath)
+        if (model.TranslationOf is { Path: { Count: > 0 } translationPath } translationOf)
         {
-            yield return translationPath[0];
+            yield return (translationPath[0], translationOf);
         }
     }
 
