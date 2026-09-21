@@ -662,7 +662,7 @@ public class ConstraintTest
                 RefHB 3.12: a constraint condition must be a boolean expression. A numeric (non-boolean) body is rejected
                 (GEOW previously accepted it, unlike ili2c).
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:12-6:39: the constraint condition must be a boolean expression."],
+            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:33-6:38: the constraint condition must be a boolean expression."],
             RefHB: "3.12-32",
             AssertOutput: false));
 
@@ -697,7 +697,7 @@ public class ConstraintTest
             END Model.
             """,
             Description: "The plausibility constraint condition must be boolean too.",
-            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:12-6:36: the constraint condition must be a boolean expression."],
+            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:30-6:35: the constraint condition must be a boolean expression."],
             RefHB: "3.12-38",
             AssertOutput: false));
 
@@ -715,7 +715,7 @@ public class ConstraintTest
             END Model.
             """,
             Description: "The set constraint condition must be boolean too.",
-            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:12-6:33: the constraint condition must be a boolean expression."],
+            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:27-6:32: the constraint condition must be a boolean expression."],
             RefHB: "3.12-39",
             AssertOutput: false));
 

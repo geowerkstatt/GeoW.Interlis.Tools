@@ -115,7 +115,7 @@ public class TestTools
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
             // Ignore definitions' own declaration spans (uniform clutter, like NameLocations); TypeDef spans stay compared
             .IgnoreProperty(p => nameof(ISourceRange.SourceRange).Equals(p.Name)
-                    && (typeof(IInterlisDefinition).IsAssignableFrom(p.DeclaringType) || typeof(PathExpression).IsAssignableFrom(p.DeclaringType)))
+                    && (typeof(IInterlisDefinition).IsAssignableFrom(p.DeclaringType) || typeof(IExpression).IsAssignableFrom(p.DeclaringType)))
             .IgnoreProperty<IInterlisDefinitionContainer>(d => d.ContainerReferences) // Easy access collection for references
             .IgnoreCircularReferences();
 

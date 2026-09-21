@@ -1310,7 +1310,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override IExpression VisitDerivedUnit([NotNull] Interlis24Parser.DerivedUnitContext context)
     {
-        var derivedFrom = new UnitReferenceExpression { Unit = CreateReference<UnitDef>(context.definitionRef()) };
+        var derivedFrom = new UnitReferenceExpression { Unit = CreateReference<UnitDef>(context.definitionRef()), SourceRange = context.definitionRef()?.ToRange() };
 
         if (context.FUNCTION() != null)
         {
@@ -1326,11 +1326,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
 
         // Build the conversion factor as the written left-associative expression tree (e.g. 360 / 2 / PI).
-        IExpression conversion = new NumericConstant { Value = VisitDecConst(factors[0]) };
+        IExpression conversion = new NumericConstant { Value = VisitDecConst(factors[0]), SourceRange = factors[0].ToRange() };
         for (var i = 1; i < factors.Length; i++)
         {
             conversion = new ArithmeticExpression
             {
+                SourceRange = factors[0].Start.ToRange(factors[i].Stop),
                 Operator = context._op[i - 1].Type switch
                 {
                     Interlis24Parser.ASTERISK => ArithmeticExpression.ArithmeticOperator.Multiplication,
@@ -1338,23 +1339,26 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                     _ => throw new UnexpectedNodeException(context._op[i - 1]),
                 },
                 FirstOperand = conversion,
-                SecondOperand = new NumericConstant { Value = VisitDecConst(factors[i]) },
+                SecondOperand = new NumericConstant { Value = VisitDecConst(factors[i]), SourceRange = factors[i].ToRange() },
             };
         }
 
-        return new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Multiplication, FirstOperand = conversion, SecondOperand = derivedFrom };
+        // The derivation "factor * base unit" is implied by the syntax, so it spans the whole derived unit.
+        return new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Multiplication, FirstOperand = conversion, SecondOperand = derivedFrom, SourceRange = context.ToRange() };
     }
 
     public override IExpression VisitComposedUnit([NotNull] Interlis24Parser.ComposedUnitContext context)
     {
-        var composedFrom = context.definitionRef().Select(d => new UnitReferenceExpression { Unit = CreateReference<UnitDef>(d) }).ToArray();
+        var unitRefs = context.definitionRef();
+        var composedFrom = unitRefs.Select(d => new UnitReferenceExpression { Unit = CreateReference<UnitDef>(d), SourceRange = d.ToRange() }).ToArray();
         IExpression result = composedFrom[0];
         for (var i = 1; i < composedFrom.Length; i++)
         {
+            var range = unitRefs[0].Start.ToRange(unitRefs[i].Stop);
             result = context._op[i - 1].Type switch
             {
-                Interlis24Parser.ASTERISK => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Multiplication, FirstOperand = result, SecondOperand = composedFrom[i] },
-                Interlis24Parser.SLASH => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Division, FirstOperand = result, SecondOperand = composedFrom[i] },
+                Interlis24Parser.ASTERISK => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Multiplication, FirstOperand = result, SecondOperand = composedFrom[i], SourceRange = range },
+                Interlis24Parser.SLASH => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Division, FirstOperand = result, SecondOperand = composedFrom[i], SourceRange = range },
                 _ => throw new UnexpectedNodeException(context._op[i - 1]),
             };
         }
@@ -2040,26 +2044,27 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // An operand can be missing or unparseable while typing; UndefinedConstant keeps the node total.
         var first = Visit(context.expression(0)) as IExpression ?? new UndefinedConstant();
         var second = Visit(context.expression(1)) as IExpression ?? new UndefinedConstant();
+        var range = context.ToRange();
 
         return (context.binOp.Type) switch
         {
             // Comparison operators keep the written operator and operand order (no desugaring): `<` is not a
             // swapped `>`, and `<>` is not a negated `==`.
-            Interlis24Parser.DOUBLE_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.Equal, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.NOT_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.NotEqual, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.GREATER => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.Greater, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.LESSER => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.Less, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.GREATER_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.GreaterOrEqual, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.LESS_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.LessOrEqual, FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.DOUBLE_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.Equal, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.NOT_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.NotEqual, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.GREATER => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.Greater, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.LESSER => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.Less, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.GREATER_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.GreaterOrEqual, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.LESS_EQUAL => new ComparisonExpression { Operator = ComparisonExpression.ComparisonOperator.LessOrEqual, FirstOperand = first, SecondOperand = second, SourceRange = range },
 
-            Interlis24Parser.AND => new LogicalExpression { Operator = LogicalExpression.LogicalOperator.And, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.OR => new LogicalExpression { Operator = LogicalExpression.LogicalOperator.Or, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.FAT_ARROW => new LogicalExpression { Operator = LogicalExpression.LogicalOperator.Implication, FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.AND => new LogicalExpression { Operator = LogicalExpression.LogicalOperator.And, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.OR => new LogicalExpression { Operator = LogicalExpression.LogicalOperator.Or, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.FAT_ARROW => new LogicalExpression { Operator = LogicalExpression.LogicalOperator.Implication, FirstOperand = first, SecondOperand = second, SourceRange = range },
 
-            Interlis24Parser.PLUS => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Addition, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.HYPHEN => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Subtraction, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.ASTERISK => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Multiplication, FirstOperand = first, SecondOperand = second },
-            Interlis24Parser.SLASH => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Division, FirstOperand = first, SecondOperand = second },
+            Interlis24Parser.PLUS => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Addition, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.HYPHEN => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Subtraction, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.ASTERISK => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Multiplication, FirstOperand = first, SecondOperand = second, SourceRange = range },
+            Interlis24Parser.SLASH => new ArithmeticExpression { Operator = ArithmeticExpression.ArithmeticOperator.Division, FirstOperand = first, SecondOperand = second, SourceRange = range },
 
             _ => throw new NotImplementedException($"Operator {Interlis24Parser.DefaultVocabulary.GetDisplayName(context.binOp.Type)} not implemented"),
         };
@@ -2121,14 +2126,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return null;
         }
 
-        return context.NOT() == null ? expression : new NotExpression { Operand = expression };
+        return context.NOT() == null ? expression : new NotExpression { Operand = expression, SourceRange = context.ToRange() };
     }
 
     public override IExpression? VisitDefinedExpression([NotNull] Interlis24Parser.DefinedExpressionContext context)
     {
         // 'DEFINED '(' factor ')'' — the factor can still be unwritten while typing.
         var operand = context.factor() == null ? null : VisitFactor(context.factor());
-        return operand == null ? null : new DefinedExpression { Operand = operand };
+        return operand == null ? null : new DefinedExpression { Operand = operand, SourceRange = context.ToRange() };
     }
 
     public override IExpression VisitFactor([NotNull] Interlis24Parser.FactorContext context)
@@ -2146,7 +2151,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         if (context.PARAMETER() != null)
         {
             return context.definitionRef() is { } parameter && IsValidToken(parameter.name)
-                ? new ParameterRefExpression { Parameter = CreateReference<ParameterDef>(parameter) }
+                ? new ParameterRefExpression { Parameter = CreateReference<ParameterDef>(parameter), SourceRange = context.ToRange() }
                 : new UndefinedConstant();
         }
 
@@ -2184,13 +2189,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Source = source,
             Of = context.objectOrAttributePath() is { } ofPath ? VisitObjectOrAttributePath(ofPath) : null,
+            SourceRange = context.ToRange(),
         };
     }
 
     public override ConstantExpression VisitConstant([NotNull] Interlis24Parser.ConstantContext context)
     {
-        if (context.@string() != null) return new TextConstant { Value = VisitString(context.@string()) };
-        if (context.UNDEFINED() != null) return new UndefinedConstant();
+        if (context.@string() != null) return new TextConstant { Value = VisitString(context.@string()), SourceRange = context.ToRange() };
+        if (context.UNDEFINED() != null) return new UndefinedConstant { SourceRange = context.ToRange() };
 
         return VisitChildrenBase(context) as ConstantExpression ?? new UndefinedConstant();
     }
@@ -2201,6 +2207,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Value = VisitDecConst(context.decConst()),
             Unit = CreateReference<UnitDef>(context.definitionRef()),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -2210,6 +2217,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Path = { context.IDENTIFIER().Select(e => e.GetText()) },
             IsOthers = context.OTHERS() != null,
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -2239,12 +2247,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var startToken = context.definitionRef()?.Start ?? context.attribute ?? context.Start;
         var stopToken = context.attribute ?? context.Stop ?? context.Start;
 
-        return new AttributePathConstant { Attribute = CreateReference<AttributeDef>(path, startToken.ToRange(stopToken)) };
+        return new AttributePathConstant { Attribute = CreateReference<AttributeDef>(path, startToken.ToRange(stopToken)), SourceRange = context.ToRange() };
     }
 
     public override ClassConstant VisitClassConst([NotNull] Interlis24Parser.ClassConstContext context)
     {
-        return new ClassConstant { Viewable = CreateReference<IInterlisDefinition>(context.definitionRef()) };
+        return new ClassConstant { Viewable = CreateReference<IInterlisDefinition>(context.definitionRef()), SourceRange = context.ToRange() };
     }
 
     public override PathExpression VisitObjectOrAttributePath([NotNull] Interlis24Parser.ObjectOrAttributePathContext context)
@@ -2369,6 +2377,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             FunctionDef = CreateReference<FunctionDef>(context.definitionRef()),
             Arguments = { context.argument().Select(VisitArgument) },
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -2380,7 +2389,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
         else
         {
-            return new AllExpression(context.restrictedDefinitionRef() != null ? VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()) : null);
+            return new AllExpression(context.restrictedDefinitionRef() != null ? VisitRestrictedDefinitionRef(context.restrictedDefinitionRef()) : null) { SourceRange = context.ToRange() };
         }
     }
 }

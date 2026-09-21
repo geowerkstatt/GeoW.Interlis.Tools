@@ -6,14 +6,9 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 /// An object or attribute path (RefHB 3.13, <c>ObjectOrAttributePath = PathEl { '-&gt;' PathEl }</c>): a chain of
 /// <see cref="IPathElement"/> steps navigating from a context object to the object or attribute value it denotes.
 /// </summary>
-public class PathExpression : ConstantExpression, ISourceRange
+public class PathExpression : ConstantExpression
 {
     public IList<IPathElement> Path { get; } = new List<IPathElement>();
-
-    /// <summary>
-    /// The source range of the whole path, or <see langword="null"/> for a path built during error recovery.
-    /// </summary>
-    public RangePosition? SourceRange { get; init; }
 
     /// <summary>
     /// The definition the path resolves to: the definition reached by following the path to its last element — an

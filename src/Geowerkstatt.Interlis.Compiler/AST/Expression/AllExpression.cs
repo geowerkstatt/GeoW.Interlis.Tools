@@ -9,5 +9,8 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 /// </summary>
 public class AllExpression(RestrictedRef? restriction = null) : IExpression
 {
+    /// <inheritdoc />
+    public RangePosition? SourceRange { get; init; }
+
     public TypeDef ReturnType { get; } = new ObjectType { Targets = restriction is null ? [] : [restriction] };
 }

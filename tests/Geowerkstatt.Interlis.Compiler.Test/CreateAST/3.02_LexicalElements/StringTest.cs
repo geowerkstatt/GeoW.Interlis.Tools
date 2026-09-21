@@ -48,7 +48,7 @@ public class StringTest
             "\"invalid unicode: \\\r\nmore text\"",
             ExpectedLog: [
                 "Compile error at 1:18-1:19 Invalid escape sequence inside String: '\\'.",
-                "Compile error at 1:19-1:21 Strings cannot span multiple lines.",
+                "Compile error at 1:19-2:0 Strings cannot span multiple lines.",
             ],
             RefHB: "3.2.3-1",
             Expected: "invalid unicode: \\\r\nmore text"));
@@ -64,7 +64,7 @@ public class StringTest
         yield return Rule(new(
             "String over multiple lines",
             "\"first line\r\nsecond line\"",
-            ExpectedLog: ["Compile error at 1:11-1:13 Strings cannot span multiple lines."],
+            ExpectedLog: ["Compile error at 1:11-2:0 Strings cannot span multiple lines."],
             RefHB: "3.2.3-1",
             Expected: "first line\r\nsecond line",
             Ili2cDivergenceReason: "we reject strings spanning multiple lines (RefHB 3.2.3), ili2c accepts them"));
@@ -114,7 +114,7 @@ public class StringTest
             "\"invalid unicode: \\u1\r\nmore text\"",
             ExpectedLog: [
                 "Compile error at 1:18-1:21 Unicode escape sequence with invalid characters: '\\u1'.",
-                "Compile error at 1:21-1:23 Strings cannot span multiple lines.",
+                "Compile error at 1:21-2:0 Strings cannot span multiple lines.",
             ],
             RefHB: "3.2.3-2",
             Expected: "invalid unicode: \\u1\r\nmore text"));

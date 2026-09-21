@@ -129,7 +129,7 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" =
             END Test.
             """, @"(\r\n|\r|\n)", "\r\n"),
-            ExpectedLog: [@"Compile error at 1:16-1:18 extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}."],
+            ExpectedLog: [@"Compile error at 1:16-2:0 extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}."],
             RefHB: "3.2.8.1-1",
             Ech0117: "4.2-9",
             Expected: new ModelDef

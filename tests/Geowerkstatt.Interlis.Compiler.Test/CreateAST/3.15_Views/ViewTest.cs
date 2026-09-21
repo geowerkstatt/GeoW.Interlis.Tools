@@ -1300,7 +1300,7 @@ public class ViewTest
                 object-path head must denote a base of the view. Here 'other' is neither a base nor a keyword.
                 (Verified: ili2c rejects with "Name other is not applicable to VIEW".)
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.V' at 8:8-13:14: the path must start with a base of the view, but 'other' is not a base."],
+            ExpectedLog: ["Type check error in 'Model.Topic.V' at 12:21-12:34: the path must start with a base of the view, but 'other' is not a base."],
             RefHB: "3.15-38",
             AssertOutput: false));
 
@@ -1389,7 +1389,7 @@ public class ViewTest
                 """,
             ExpectedLog: [
                 "Compile error at 13:32-13:33 mismatched input '+' expecting ';'.",
-                "Type check error in 'Model.Topic.V' at 8:8-14:14: the path must start with a base of the view, but 'attr' is not a base.",
+                "Type check error in 'Model.Topic.V' at 13:27-13:31: the path must start with a base of the view, but 'attr' is not a base.",
             ],
             RefHB: "3.15-38",
             AssertOutput: false));

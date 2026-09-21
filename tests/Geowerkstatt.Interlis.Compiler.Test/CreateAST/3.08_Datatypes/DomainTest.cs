@@ -728,7 +728,7 @@ public class DomainTest
             """,
             Description: "RefHB 3.8-10: the condition is a Logical-Expression, so its result must be boolean.",
             RefHB: "3.8-8",
-            ExpectedLog: ["Type check error in 'Model.ShortText' at 4:8-4:45: the condition of domain constraint 'c' must be a boolean expression."],
+            ExpectedLog: ["Type check error in 'Model.ShortText' at 4:43-4:44: the condition of domain constraint 'c' must be a boolean expression."],
             Ili2cDivergenceReason: """
                 ili2c does not judge a domain constraint's result type at all (a bare numeric constant is
                 accepted); RefHB 3.8-10 demands a Logical-Expression, so we reject.

@@ -1,4 +1,5 @@
 using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.Test;
 using Microsoft.Extensions.Logging;
 
@@ -147,5 +148,40 @@ public class SourceRangeTest
             """);
 
         await Assert.That(((ModelDef)environment.Content["Model"]).SourceRange?.SourceUri).IsNull();
+    }
+
+    [Test]
+    public async Task ExpressionsCarryTheirRange()
+    {
+        // Every node of an expression tree covers exactly the text it was parsed from: the condition as a whole,
+        // each operand, and the constants and paths at the leaves (line 6, zero-based).
+        var environment = await ReadWithoutErrors(
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS ClassName =
+                        Attr : 0 .. 100;
+                        MANDATORY CONSTRAINT Attr > 1 AND DEFINED (Attr);
+                    END ClassName;
+                END Topic;
+            END Model.
+            """);
+
+        var classDef = (ClassDef)((TopicDef)((ModelDef)environment.Content["Model"]).Content["Topic"]).Content["ClassName"];
+        var constraint = (MandatoryConstraint)classDef.Constraints.Single();
+        var condition = (LogicalExpression)constraint.Condition;
+        var comparison = (ComparisonExpression)condition.FirstOperand;
+        var defined = (DefinedExpression)condition.SecondOperand;
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(Describe(condition)).IsEqualTo("5:33..5:60");
+            await Assert.That(Describe(comparison)).IsEqualTo("5:33..5:41");
+            await Assert.That(Describe(comparison.FirstOperand)).IsEqualTo("5:33..5:37");
+            await Assert.That(Describe(comparison.SecondOperand)).IsEqualTo("5:40..5:41");
+            await Assert.That(Describe(defined)).IsEqualTo("5:46..5:60");
+            await Assert.That(Describe(defined.Operand)).IsEqualTo("5:55..5:59");
+        }
     }
 }

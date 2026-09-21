@@ -10,6 +10,9 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 /// </summary>
 public sealed class UnitReferenceExpression : IExpression
 {
+    /// <inheritdoc />
+    public RangePosition? SourceRange { get; init; }
+
     public required Reference<UnitDef> Unit { get; init; }
 
     public TypeDef ReturnType { get; } = new NumericType();

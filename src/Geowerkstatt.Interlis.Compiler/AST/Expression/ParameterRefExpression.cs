@@ -9,6 +9,9 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 /// </summary>
 public class ParameterRefExpression : IExpression
 {
+    /// <inheritdoc />
+    public RangePosition? SourceRange { get; init; }
+
     /// <summary>The referenced run-time parameter.</summary>
     public required Reference<ParameterDef> Parameter { get; init; }
 
