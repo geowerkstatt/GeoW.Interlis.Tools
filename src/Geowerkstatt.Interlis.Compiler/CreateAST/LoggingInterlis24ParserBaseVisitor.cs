@@ -15,7 +15,7 @@ public class LoggingInterlis24ParserBaseVisitor<TResult>(ILoggerFactory loggerFa
     {
         var name = Interlis24Parser.ruleNames[context.RuleIndex];
         var token = context.Start;
-        logger.LogWarning("Rule '{Name}' at line {Line}:{Column} not implemented.", name, token.Line, token.Column);
+        logger.LogWarning("Rule '{Name}' at {Range} not implemented.", name, token.ToRange());
         return default!;
     }
 

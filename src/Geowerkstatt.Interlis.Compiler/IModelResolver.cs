@@ -1,7 +1,7 @@
 namespace Geowerkstatt.Interlis.Compiler;
 
 /// <summary>
-/// Supplies the INTERLIS source of imported models on demand, so <see cref="InterlisReader.ReadModelWithImports"/>
+/// Supplies the INTERLIS source of imported models on demand, so <see cref="InterlisReader.ReadModelWithImportsAsync"/>
 /// can load a model's transitive dependencies while compiling it.
 /// </summary>
 public interface IModelResolver
@@ -16,6 +16,7 @@ public interface IModelResolver
     /// </summary>
     /// <param name="modelName">The name of the imported model to resolve.</param>
     /// <param name="languageVersion">The INTERLIS language version of the importing model (e.g. <c>2.4</c>), or <see langword="null"/> if unknown.</param>
+    /// <param name="cancellationToken">Cancels the resolution, e.g. a download.</param>
     /// <returns>The model's source and its origin, or <see langword="null"/> if it cannot be resolved.</returns>
-    (TextReader Reader, string? SourceUri)? OpenModel(string modelName, double? languageVersion);
+    ValueTask<(TextReader Reader, string? SourceUri)?> OpenModelAsync(string modelName, double? languageVersion, CancellationToken cancellationToken);
 }

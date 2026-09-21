@@ -23,10 +23,11 @@ public sealed record RepositoryModelTestCase
     public string? SetupError { get; init; }
 
     /// <summary>
-    /// An environmental reason this case cannot be compared: the crawled repository metadata lists the model,
-    /// but downloading its file failed (typically a 404 — the repository no longer serves the file). The case is
-    /// skipped rather than failed, because nothing in this repository can fix the upstream inconsistency and a
-    /// permanent failure would only add noise; the reason keeps the skip visible and traceable.
+    /// A reason this case is not compared, or <see langword="null"/>. Either the crawled repository metadata lists
+    /// the model but downloading its file failed (typically a 404 — the repository no longer serves the file), or the
+    /// comparison is a known divergence between the two compilers. The case is skipped rather than failed, because
+    /// re-running the suite fixes neither and a permanent failure would only add noise; the reason keeps the skip
+    /// visible and traceable in the test report.
     /// </summary>
     public string? SkipReason { get; init; }
 
@@ -72,6 +73,17 @@ public static class RepositoryModelTestCaseSource
 
     /// <summary>The internal INTERLIS model is built into both compilers and is never fetched from a repository.</summary>
     private const string InternalInterlisModelName = "INTERLIS";
+
+    /// <summary>The repository files whose comparison is known to diverge, skipped with the reason instead of failing the suite.</summary>
+    private static readonly IReadOnlyDictionary<string, string> KnownDivergences = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["https://evd.vd.ch/geo/DGE/VD46.1_PompesChaleur_V1.0.1.ili"] =
+            "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
+        ["https://evd.vd.ch/geo/DGE/VD102.1_ArbresRemarquables_V1.1.0.ili"] =
+            "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
+        ["https://evd.vd.ch/geo/DGIP/VD14.1_SitesArcheologiques_V1.0.1.ili"] =
+            "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
+    };
 
     private static readonly Lazy<Task<IReadOnlyList<RepositoryModelTestCase>>> LazyCases = new(BuildCasesAsync);
 
@@ -230,6 +242,7 @@ public static class RepositoryModelTestCaseSource
         {
             DisplayName = string.Join(", ", targetModels.Select(m => string.IsNullOrEmpty(m.Version) ? m.Name : $"{m.Name}[{m.Version}]").Order(StringComparer.Ordinal)),
             FileUri = fileUri,
+            SkipReason = KnownDivergences.GetValueOrDefault(fileUri),
             Models = targetModels
                 .Select(model => $"{model.Name} ({model.Version}, {model.SchemaLanguage})")
                 .Distinct(StringComparer.Ordinal)

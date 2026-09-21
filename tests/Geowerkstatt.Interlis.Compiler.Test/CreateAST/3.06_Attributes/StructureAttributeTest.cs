@@ -256,7 +256,7 @@ public class StructureAttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.SubClass -> attr': a BAG (unordered) can not extend a LIST (ordered)."],
+            ExpectedLog: ["Type check error in 'Model.Topic.SubClass -> attr' at 10:12-10:43: a BAG (unordered) can not extend a LIST (ordered)."],
             RefHB: "3.6.4-5",
             AssertOutput: false));
 
@@ -276,7 +276,7 @@ public class StructureAttributeTest
                 ANYCLASS is only a class-or-association reference (RefHB 3.6.1-15); it can not stand in for an attribute
                 type, which is a domain or a (restricted) structure (RefHB 3.6.1-13).
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr': ANYCLASS is not allowed as an attribute type."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr' at 5:12-5:27: ANYCLASS is not allowed as an attribute type."],
             RefHB: "3.6.1-12",
             AssertOutput: false));
 
@@ -297,7 +297,7 @@ public class StructureAttributeTest
                 A RESTRICTION narrows a structure reference (RefHB 3.6.1-17); a plain domain reference (RefHB 3.8-12)
                 can not be restricted.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr': a domain reference can not be restricted."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr' at 6:12-6:50: a domain reference can not be restricted."],
             RefHB: "3.6.1-12",
             AssertOutput: false));
 
@@ -319,7 +319,7 @@ public class StructureAttributeTest
                 An attribute type is a domain or a (restricted) structure (RefHB 3.6.1-13); a class's objects are only
                 reachable through a reference attribute (REFERENCE TO, RefHB 3.6.3).
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr': a class can only be referenced with REFERENCE TO."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr' at 7:12-7:24: a class can only be referenced with REFERENCE TO."],
             RefHB: "3.6.1-12",
             AssertOutput: false));
 
@@ -344,7 +344,7 @@ public class StructureAttributeTest
             END Model.
             """,
             Description: "An association is not a value domain either (RefHB 3.6.1-13).",
-            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr': an association is not allowed as an attribute type."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr' at 13:12-13:24: an association is not allowed as an attribute type."],
             RefHB: "3.6.1-12",
             AssertOutput: false));
     }

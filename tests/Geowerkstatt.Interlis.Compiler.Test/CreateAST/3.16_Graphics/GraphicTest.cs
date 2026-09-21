@@ -777,9 +777,9 @@ public class GraphicTest
             Description: "3.16-10: a graphic whose END name does not match its start name is rejected.",
             ExpectedLog:
             [
-                "Compile error at line 6:12 Start name 'G' and end name 'WrongName' do not match.",
-                "Type check error in 'Model.Topic.G': must be BASED ON a class or view, or EXTEND a graphic to inherit its base.",
-                "Type check error in 'Model.Topic.G': the drawing rule 'R' must specify the class of the graphic signatures it assigns ('OF ...').",
+                "Compile error at 6:12-6:21 Start name 'G' and end name 'WrongName' do not match.",
+                "Type check error in 'Model.Topic.G' at 4:8-6:22: must be BASED ON a class or view, or EXTEND a graphic to inherit its base.",
+                "Type check error in 'Model.Topic.G' at 4:8-6:22: the drawing rule 'R' must specify the class of the graphic signatures it assigns ('OF ...').",
             ],
             RefHB: "3.16-8",
             AssertOutput: false));

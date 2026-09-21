@@ -10,6 +10,9 @@ namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 /// </summary>
 public class InspectionExpression : IExpression
 {
+    /// <inheritdoc />
+    public RangePosition? SourceRange { get; init; }
+
     /// <summary>The inspection evaluated: written inline or referencing a named inspection view.</summary>
     public required InspectionSource Source { get; init; }
 

@@ -1,6 +1,7 @@
 ﻿using DeepEqual;
 using DeepEqual.Syntax;
 using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.CreateAST;
 using Geowerkstatt.Interlis.Compiler.Test;
 using Microsoft.Extensions.Logging;
@@ -115,7 +116,7 @@ public class TestTools
             .IgnoreProperty<ModelDef>(m => m.Dependencies) // Ignore calculated property (derived from Imports and TranslationOf)
             // Ignore definitions' own declaration spans (uniform clutter, like NameLocations); TypeDef spans stay compared
             .IgnoreProperty(p => nameof(ISourceRange.SourceRange).Equals(p.Name)
-                    && typeof(IInterlisDefinition).IsAssignableFrom(p.DeclaringType))
+                    && (typeof(IInterlisDefinition).IsAssignableFrom(p.DeclaringType) || typeof(IExpression).IsAssignableFrom(p.DeclaringType)))
             .IgnoreProperty<IInterlisDefinitionContainer>(d => d.ContainerReferences) // Easy access collection for references
             .IgnoreCircularReferences();
 

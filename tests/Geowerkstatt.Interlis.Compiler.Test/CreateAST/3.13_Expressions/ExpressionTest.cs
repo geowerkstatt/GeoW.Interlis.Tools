@@ -341,7 +341,7 @@ public class ExpressionTest
         yield return Rule(new(
             "Association path with leading backslash",
             "\\Assoc",
-            ExpectedLog: ["Compile error at line 1:0 extraneous input '\\' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
+            ExpectedLog: ["Compile error at 1:0-1:1 extraneous input '\\' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
             RefHB: "3.13-29",
             Expected: new PathExpression
             {
@@ -554,7 +554,7 @@ public class ExpressionTest
                 A relation is non-associative (Term2 = Predicate [ Relation Predicate ]), so at most one comparison may
                 appear without parentheses.
                 """,
-            ExpectedLog: ["Compile error at line 1:6 comparison operators can not be chained (use parentheses)."],
+            ExpectedLog: ["Compile error at 1:6-1:7 comparison operators can not be chained (use parentheses)."],
             RefHB: "3.13-6",
             AssertOutput: false));
 
@@ -582,7 +582,7 @@ public class ExpressionTest
                 An implication is non-associative (Term = Term0 [ '=>' Term0 ]), so at most one '=>' may appear without
                 parentheses.
                 """,
-            ExpectedLog: ["Compile error at line 1:7 the implication operator '=>' can not be chained (use parentheses)."],
+            ExpectedLog: ["Compile error at 1:7-1:9 the implication operator '=>' can not be chained (use parentheses)."],
             RefHB: "3.13-3",
             AssertOutput: false));
 
@@ -678,7 +678,7 @@ public class ExpressionTest
                 The surplus ')' is a syntax error: a rule-level parse requires the whole input to be consumed (EOF), so
                 trailing tokens after the valid prefix `8 / 4 / 2` are reported instead of silently ignored.
                 """,
-            ExpectedLog: ["Compile error at line 1:9 extraneous input ')' expecting <EOF>."],
+            ExpectedLog: ["Compile error at 1:9-1:10 extraneous input ')' expecting <EOF>."],
             RefHB: "3.13-5",
             AssertOutput: false));
 
@@ -964,7 +964,7 @@ public class ExpressionTest
             END M.
             """,
             Description: "Compile-time attribute access: a path element that names no member of a known viewable is an error.",
-            ExpectedLog: ["Could not resolve 'unknown' in 'M.T.C'"],
+            ExpectedLog: ["Could not resolve 'unknown' in 'M.T.C' at 6:41-6:48"],
             RefHB: "3.13",
             AssertOutput: false));
 
@@ -985,7 +985,7 @@ public class ExpressionTest
             END M.
             """,
             Description: "Compile-time attribute access: a path element that names no member of a known viewable is an error.",
-            ExpectedLog: ["Could not resolve 'unknown' in 'M.T.Target'"],
+            ExpectedLog: ["Could not resolve 'unknown' in 'M.T.Target' at 9:41-9:54"],
             RefHB: "3.13",
             AssertOutput: false));
 
@@ -1011,7 +1011,7 @@ public class ExpressionTest
                 An object behind a multi-target role is an instance of ONE of the targets, so a member is only valid if
                 every target has it (the intersection of the targets' members). Missing from all targets:
                 """,
-            ExpectedLog: ["Could not resolve 'nonexistent' in 'M.T.A', 'M.T.B'"],
+            ExpectedLog: ["Could not resolve 'nonexistent' in 'M.T.A', 'M.T.B' at 11:41-11:56"],
             RefHB: "3.13",
             AssertOutput: false));
 
@@ -1035,7 +1035,7 @@ public class ExpressionTest
             END M.
             """,
             Description: "Missing from only one target: reported for exactly the target that lacks it.",
-            ExpectedLog: ["Could not resolve 'onlyInA' in 'M.T.B'"],
+            ExpectedLog: ["Could not resolve 'onlyInA' in 'M.T.B' at 12:41-12:52"],
             RefHB: "3.13",
             Ili2cDivergenceReason: "ili2c types a multi-target role (A OR B) by its FIRST target only: an attribute existing only in the first target passes while one existing only in the second is rejected as not applicable to the first (verified with mirrored inputs), and a member missing in a later branch's substructure is never seen; we require a path member behind a multi-target role to exist in EVERY target since the object may be of any of them, so we reject what ili2c's first-target view accepts.",
             AssertOutput: false));
@@ -1067,7 +1067,7 @@ public class ExpressionTest
                 An attribute inherited from a common base resolves through a multi-target role and navigation continues —
                 proven by the error behind it, which is only found if the multi-target descent worked.
                 """,
-            ExpectedLog: ["Could not resolve 'bogus' in 'M.T.Target'"],
+            ExpectedLog: ["Could not resolve 'bogus' in 'M.T.Target' at 16:41-16:56"],
             RefHB: "3.13",
             AssertOutput: false));
 
@@ -1100,7 +1100,7 @@ public class ExpressionTest
                 Same-named attributes that are DIFFERENT definitions per target: the next element must exist in the union
                 of the viewables they navigate into (here it is missing from one branch's structure).
                 """,
-            ExpectedLog: ["Could not resolve 'y' in 'M.T.U'"],
+            ExpectedLog: ["Could not resolve 'y' in 'M.T.U' at 18:41-18:49"],
             RefHB: "3.13",
             Ili2cDivergenceReason: "ili2c types a multi-target role (A OR B) by its FIRST target only: an attribute existing only in the first target passes while one existing only in the second is rejected as not applicable to the first (verified with mirrored inputs), and a member missing in a later branch's substructure is never seen; we require a path member behind a multi-target role to exist in EVERY target since the object may be of any of them, so we reject what ili2c's first-target view accepts.",
             AssertOutput: false));
@@ -1189,7 +1189,7 @@ public class ExpressionTest
             END Model.
             """,
             Description: "The viewable referenced by a named inspection factor must be an inspection view.",
-            ExpectedLog: ["'Model.Topic.ProjView' can not be used as an INSPECTION factor because it is not an inspection view"],
+            ExpectedLog: ["'Model.Topic.ProjView' at 20:47-20:55 can not be used as an INSPECTION factor because it is not an inspection view"],
             RefHB: "3.13-25",
             AssertOutput: false));
 
@@ -1214,7 +1214,7 @@ public class ExpressionTest
                 The OF restriction path of an inspection factor is rooted at the context viewable and checked like any
                 other path, so an unknown member in it is reported.
                 """,
-            ExpectedLog: ["Could not resolve 'Missing' in 'Model.Topic.ClassA'"],
+            ExpectedLog: ["Could not resolve 'Missing' in 'Model.Topic.ClassA' at 10:65-10:72"],
             RefHB: "3.13-48",
             AssertOutput: false));
 
@@ -1239,7 +1239,7 @@ public class ExpressionTest
                 An inline inspection factor carries the same formation a view declares, so its attribute path is
                 resolved and checked the same way — rooted at its own source viewable.
                 """,
-            ExpectedLog: ["Could not resolve 'Nope' in 'Model.Topic.ClassA'"],
+            ExpectedLog: ["Could not resolve 'Nope' in 'Model.Topic.ClassA' at 10:56-10:60"],
             RefHB: "3.13-48",
             AssertOutput: false));
 
@@ -1257,7 +1257,7 @@ public class ExpressionTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["'Model.Topic.ClassA -> Label' can not be inspected because its type is not a substructure or a single polyline, surface or area"],
+            ExpectedLog: ["'Model.Topic.ClassA -> Label' at 7:56-7:61 can not be inspected because its type is not a substructure or a single polyline, surface or area"],
             RefHB: "3.13-48",
             AssertOutput: false));
 
@@ -1298,7 +1298,7 @@ public class ExpressionTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'Missing' from Model.Topic.ClassA'"],
+            ExpectedLog: ["Could not resolve 'reference 'Missing' from Model.Topic.ClassA' at 8:49-8:56"],
             RefHB: "3.13-53",
             AssertOutput: false));
     }

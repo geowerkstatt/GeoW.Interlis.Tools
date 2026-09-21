@@ -9,10 +9,12 @@ namespace Geowerkstatt.Interlis.Compiler;
 public class InterlisReader
 {
     private readonly ILoggerFactory loggerFactory;
+    private readonly ILogger logger;
 
     public InterlisReader(ILoggerFactory? loggerFactory = null)
     {
         this.loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+        logger = this.loggerFactory.CreateLogger<InterlisReader>();
     }
 
     /// <summary>
@@ -33,13 +35,15 @@ public class InterlisReader
     /// that is not already loaded is fetched through <paramref name="modelResolver"/>, parsed, and merged into a
     /// single <see cref="InterlisEnvironment"/>; references are then resolved and the type checker runs once over the
     /// complete environment. Imports the resolver cannot supply are left unresolved and reported as compile errors
-    /// during name resolution.
+    /// during name resolution; a supplied model of another INTERLIS version than the root is reported at the import
+    /// and not merged.
     /// </summary>
     /// <param name="rootReader">The input to compile.</param>
     /// <param name="modelResolver">Supplies the source of imported models on demand.</param>
     /// <param name="sourceUri">The filepath or URL to the root source interlis file.</param>
+    /// <param name="cancellationToken">Cancels the compilation between resolving imported models.</param>
     /// <returns>The compiled representation of the <paramref name="rootReader"/> input and its loaded dependencies.</returns>
-    public InterlisEnvironment ReadModelWithImports(TextReader rootReader, IModelResolver modelResolver, string? sourceUri = null)
+    public async Task<InterlisEnvironment> ReadModelWithImportsAsync(TextReader rootReader, IModelResolver modelResolver, string? sourceUri = null, CancellationToken cancellationToken = default)
     {
         var root = ParseModels(rootReader, sourceUri);
         var environment = new InterlisEnvironment { Version = root.Version };
@@ -57,15 +61,32 @@ public class InterlisReader
                 .Where(dependency => !environment.Content.ContainsKey(dependency.ModelName) && requestedModels.Add(dependency.ModelName))
                 .ToList();
 
-            foreach (var (modelName, _) in missingModels)
+            foreach (var (modelName, reference) in missingModels)
             {
-                if (modelResolver.OpenModel(modelName, environment.Version) is not { } modelSource)
+                cancellationToken.ThrowIfCancellationRequested();
+                if (await modelResolver.OpenModelAsync(modelName, environment.Version, cancellationToken) is not { } modelSource)
                 {
                     continue;
                 }
 
-                using var modelReader = modelSource.Reader;
-                environment.MergeFrom(ParseModels(modelReader, modelSource.SourceUri));
+                InterlisEnvironment imported;
+                using (modelSource.Reader)
+                {
+                    imported = ParseModels(modelSource.Reader, modelSource.SourceUri);
+                }
+
+                try
+                {
+                    environment.MergeFrom(imported);
+                }
+                catch (InvalidOperationException)
+                {
+                    // A model of another INTERLIS version: the import stays unresolved (which the reference resolver
+                    // reports) and the reason is given here.
+                    logger.LogError("Imported model '{ModelName}' at {Range} has INTERLIS version {ImportedVersion}, expected {Version}.", modelName, reference.GetRange(), imported.Version, environment.Version);
+                    continue;
+                }
+
                 addedModels = true;
             }
         }
@@ -78,11 +99,11 @@ public class InterlisReader
     /// <summary>
     /// Parses the <paramref name="textReader"/> into an <see cref="InterlisEnvironment"/> (including the internal
     /// INTERLIS model), without resolving references. The <see cref="ModelDef.SourceUri"/> of the parsed models is
-    /// set to <paramref name="sourceUri"/>.
+    /// set to <paramref name="sourceUri"/>, as is the <see cref="RangePosition.SourceUri"/> of every range in them.
     /// </summary>
     private InterlisEnvironment ParseModels(TextReader textReader, string? sourceUri)
     {
-        var interlisFile = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()));
+        var interlisFile = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()), sourceUri: sourceUri);
         foreach (var model in interlisFile.Content.Values)
         {
             if (model != InternalModel.Interlis)
@@ -115,10 +136,11 @@ public class InterlisReader
     /// <param name="textReader">The input to compile.</param>
     /// <param name="parseRule">A function to parse the input given the <see cref="Interlis24Parser"/> and <see cref="Interlis24Visitor"/>.</param>
     /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
-    /// <returns>The compiled representation of the <paramref name="textReader"/> input and a list of <see cref="UnresolvedReference"/>s.</returns>
-    public TResult ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
+    /// <param name="sourceUri">Optional filepath or URL of the source, recorded as the <see cref="RangePosition.SourceUri"/> of every range in the result and in the logged problems.</param>
+    /// <returns>The compiled representation of the <paramref name="textReader"/> input.</returns>
+    public TResult ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0, string? sourceUri = null)
     {
-        var tokenStream = RunLexer(textReader, lineOffset);
+        var tokenStream = RunLexer(textReader, lineOffset, sourceUri);
         var interlisParser = GetParser(tokenStream);
         var astCreator = new Interlis24Visitor(loggerFactory, tokenStream);
         var result = parseRule(interlisParser, astCreator);
@@ -137,10 +159,16 @@ public class InterlisReader
     /// </summary>
     /// <param name="textReader">The input to compile.</param>
     /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
+    /// <param name="sourceUri">Optional filepath or URL of the source; becomes the stream's <see cref="IIntStream.SourceName"/> and thereby the <see cref="RangePosition.SourceUri"/> of the ranges built from its tokens.</param>
     /// <returns>A <see cref="CommonTokenStream"/> with the tokens from the lexer.</returns>
-    public CommonTokenStream RunLexer(TextReader textReader, int lineOffset = 0)
+    public CommonTokenStream RunLexer(TextReader textReader, int lineOffset = 0, string? sourceUri = null)
     {
         var inputStream = CharStreams.fromTextReader(textReader);
+        if (sourceUri != null && inputStream is BaseInputCharStream namedStream)
+        {
+            namedStream.name = sourceUri;
+        }
+
 
         var interlisLexer = new Interlis24Lexer(inputStream);
         interlisLexer.TokenFactory = new LineOffsetDecorator(interlisLexer.TokenFactory, lineOffset);

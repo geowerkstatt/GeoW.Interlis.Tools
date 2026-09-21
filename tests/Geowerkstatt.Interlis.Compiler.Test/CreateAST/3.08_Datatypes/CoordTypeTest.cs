@@ -346,7 +346,7 @@ public class CoordTypeTest
                 The compiler does not yet resolve generic domain references (DEFERRED GENERICS), so the generic
                 'Coord2' used by the class attribute is currently reported as unresolved.
                 """,
-            ExpectedLog: ["Could not resolve 'reference 'Coord2' from Model'"],
+            ExpectedLog: ["Could not resolve 'reference 'Coord2' from Model' at 4:22-4:28"],
             RefHB: "3.8.8-20",
             AssertOutput: false));
 
@@ -364,7 +364,7 @@ public class CoordTypeTest
               END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic': must declare DEFERRED GENERICS for the generic domain 'Coord2'."],
+            ExpectedLog: ["Type check error in 'Model.Topic' at 3:2-9:12: must declare DEFERRED GENERICS for the generic domain 'Coord2'."],
             RefHB: "3.8.8-23",
             AssertOutput: false));
 
@@ -400,8 +400,8 @@ public class CoordTypeTest
                 """,
             ExpectedLog:
             [
-                "Could not resolve 'reference 'MyModel.Coord2' from MyModel'",
-                "Could not resolve 'reference 'Coord2' from MyModel'",
+                "Could not resolve 'reference 'MyModel.Coord2' from MyModel' at 16:4-16:18",
+                "Could not resolve 'reference 'Coord2' from MyModel' at 18:22-18:28",
             ],
             RefHB: "3.8.8-28",
             AssertOutput: false));
@@ -434,8 +434,8 @@ public class CoordTypeTest
                 """,
             ExpectedLog:
             [
-                "Could not resolve 'reference 'MyModel.Coord2' from MyModel'",
-                "Could not resolve 'reference 'Coord2' from MyModel'",
+                "Could not resolve 'reference 'MyModel.Coord2' from MyModel' at 12:4-12:18",
+                "Could not resolve 'reference 'Coord2' from MyModel' at 14:22-14:28",
             ],
             RefHB: "3.8.8-30",
             AssertOutput: false));
