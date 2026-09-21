@@ -90,6 +90,19 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler.Test
         }
 
         [TestMethod]
+        public async Task TestGetRepositoryFileStreamKeepsRepositorySubPath()
+        {
+            // Repositories are published with and without a trailing slash (<https://405.sia.ch/models>); both serve
+            // their files from the repository path, not from the host root.
+            var reader = new HttpRepositoryReader(new Uri("https://models.geo.admin.testdata/ARE"), mockHttpClient);
+
+            await using var stream = await reader.GetRepositoryFileStream("SectoralPlans_Catalogues_V1_4.xml");
+
+            Assert.IsNotNull(stream);
+            Assert.AreEqual(1, mockHttp.GetMatchCount(mockRequests["https://models.geo.admin.testdata/ARE/SectoralPlans_Catalogues_V1_4.xml"]));
+        }
+
+        [TestMethod]
         public async Task TestGetRepositoryFileStreamHandlesHttpErrors()
         {
             var reader = new HttpRepositoryReader(new Uri("https://models.geo.admin.testdata/"), mockHttpClient);
