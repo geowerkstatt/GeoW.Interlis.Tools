@@ -73,7 +73,7 @@ public class AttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassName -> Name': is TRANSIENT but has no factor assignment fixing its value."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassName -> Name' at 5:12-5:39: is TRANSIENT but has no factor assignment fixing its value."],
             RefHB: "3.6.1-5",
             AssertOutput: false));
 
@@ -250,7 +250,7 @@ public class AttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr': the value range must not be wider than the inherited range."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:38: the value range must not be wider than the inherited range."],
             RefHB: "3.6.1-7",
             AssertOutput: false));
 
@@ -275,7 +275,7 @@ public class AttributeTest
                 The narrowing check compares what the attribute types stand for: a domain alias is followed to the
                 domain's effective type, so hiding the wider range behind a domain does not evade the check.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr': the value range must not be wider than the inherited range."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 10:12-10:34: the value range must not be wider than the inherited range."],
             RefHB: "3.6.1-7",
             AssertOutput: false));
 
@@ -298,8 +298,8 @@ public class AttributeTest
                 """,
             ExpectedLog:
             [
-                "Type check error in 'Model.ClassA -> inline': must be declared ABSTRACT because its type is not fully defined.",
-                "Type check error in 'Model.ClassA -> aliased': must be declared ABSTRACT because its type is not fully defined.",
+                "Type check error in 'Model.ClassA -> inline' at 6:8-6:25: must be declared ABSTRACT because its type is not fully defined.",
+                "Type check error in 'Model.ClassA -> aliased' at 7:8-7:23: must be declared ABSTRACT because its type is not fully defined.",
             ],
             RefHB: "3.6.1-1",
             AssertOutput: false));
@@ -324,7 +324,7 @@ public class AttributeTest
                 again instead of restricting it — an extended attribute can not shed the inherited numeric bounds
                 the way it inherits omitted enumeration or line-type parts (ili2c agrees on both counts).
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr': an abstract NUMERIC can not extend a concrete numeric range."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:38: an abstract NUMERIC can not extend a concrete numeric range."],
             RefHB: "3.8.5-1",
             AssertOutput: false));
 
@@ -378,8 +378,8 @@ public class AttributeTest
             """,
             ExpectedLog:
             [
-                "Type check error in 'Model.Topic.ClassB -> must': the cardinality must not be wider than the inherited cardinality.",
-                "Type check error in 'Model.Topic.ClassB -> bag': the cardinality must not be wider than the inherited cardinality.",
+                "Type check error in 'Model.Topic.ClassB -> must' at 12:12-12:38: the cardinality must not be wider than the inherited cardinality.",
+                "Type check error in 'Model.Topic.ClassB -> bag' at 13:12-13:45: the cardinality must not be wider than the inherited cardinality.",
             ],
             RefHB: "3.6.1-6",
             AssertOutput: false));
@@ -400,7 +400,7 @@ public class AttributeTest
             END Model.
             """,
             Description: "The unit-extension rules apply to extended attributes like to domain extensions.",
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr': the inherited concrete unit 'm' can not be overridden."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:49: the inherited concrete unit 'm' can not be overridden."],
             RefHB: "3.8.5-10",
             AssertOutput: false));
 
@@ -568,8 +568,8 @@ public class AttributeTest
             RefHB: "3.5.3-13",
             ExpectedLog:
             [
-                "Type check error in 'Model.Topic.B': the class transitively EXTENDS itself.",
-                "Type check error in 'Model.Topic.C': the class transitively EXTENDS itself.",
+                "Type check error in 'Model.Topic.B' at 4:8-5:14: the class transitively EXTENDS itself.",
+                "Type check error in 'Model.Topic.C' at 6:8-7:14: the class transitively EXTENDS itself.",
             ],
             AssertOutput: false));
     }

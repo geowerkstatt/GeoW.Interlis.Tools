@@ -2,7 +2,7 @@
 
 namespace Geowerkstatt.Interlis.Compiler.AST.Expression;
 
-public interface IExpression
+public interface IExpression : ISourceRange
 {
     /// <summary>
     /// The type of the result of the expression

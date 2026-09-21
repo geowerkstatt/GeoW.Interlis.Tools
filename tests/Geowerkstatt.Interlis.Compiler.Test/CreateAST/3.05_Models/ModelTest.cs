@@ -193,7 +193,7 @@ public class ModelTest
             MODEL Model AT "not a URI!" VERSION "1.0.0" =
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:15 Model URI 'not a URI!' is not a valid URI."],
+            ExpectedLog: ["Compile error at 1:15-1:16 Model URI 'not a URI!' is not a valid URI."],
             RefHB: "3.5.1-7",
             Expected: new ModelDef
             {
@@ -258,7 +258,7 @@ public class ModelTest
             MODEL Model AT "http://example.com" =
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:36 mismatched input '=' expecting 'VERSION'."],
+            ExpectedLog: ["Compile error at 1:36-1:37 mismatched input '=' expecting 'VERSION'."],
             RefHB: "3.5.1-9",
             Expected: new ModelDef
             {
@@ -280,7 +280,7 @@ public class ModelTest
             MODEL AT "http://example.com" VERSION "1.0.0" =
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:6 missing IDENTIFIER at 'AT'."],
+            ExpectedLog: ["Compile error at 1:6-1:8 missing IDENTIFIER at 'AT'."],
             RefHB: "3.5.1-9",
             Expected: null));
 
@@ -290,7 +290,7 @@ public class ModelTest
             MODEL Model VERSION "1.0.0" =
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:12 mismatched input 'VERSION' expecting {'(', 'AT', 'NOINCREMENTALTRANSFER'}."],
+            ExpectedLog: ["Compile error at 1:12-1:19 mismatched input 'VERSION' expecting {'(', 'AT', 'NOINCREMENTALTRANSFER'}."],
             RefHB: "3.5.1-9",
             Expected: new ModelDef
             {
@@ -464,7 +464,7 @@ public class ModelTest
             MODEL Deutsch (de_CH) AT "http://example.com" VERSION "1.0.0" = END Deutsch.
             MODEL English (en) AT "http://example.com" VERSION "1.0.0" TRANSLATION OF Deutsch = END English.
             """,
-            ExpectedLog: ["Compile error at line 3:82 mismatched input '=' expecting '['."],
+            ExpectedLog: ["Compile error at 3:82-3:83 mismatched input '=' expecting '['."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -493,8 +493,8 @@ public class ModelTest
                 """,
             ExpectedLog:
             [
-                "Type check error in 'Translated.Theme': the BASKET OID domain does not match the original topic's.",
-                "Type check error in 'Translated.Theme': the OID domain does not match the original topic's.",
+                "Type check error in 'Translated.Theme' at 8:4-12:14: the BASKET OID domain does not match the original topic's.",
+                "Type check error in 'Translated.Theme' at 8:4-12:14: the OID domain does not match the original topic's.",
             ],
             RefHB: "3.5.1-10",
             AssertOutput: false));
@@ -518,7 +518,7 @@ public class ModelTest
                 END Theme;
             END Translated.
             """,
-            ExpectedLog: ["Type check error in 'Translated.Theme': the BASKET OID domain does not match the original topic's."],
+            ExpectedLog: ["Type check error in 'Translated.Theme' at 10:4-14:14: the BASKET OID domain does not match the original topic's."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -583,7 +583,7 @@ public class ModelTest
                 agrees: "The imported models do not match."). Imports are compared through translation chains and
                 independently of their declaration order.
                 """,
-            ExpectedLog: ["Type check error in 'Translated': the imported models do not match the original model's."],
+            ExpectedLog: ["Type check error in 'Translated' at 4:0-6:15: the imported models do not match the original model's."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -641,7 +641,7 @@ public class ModelTest
                 definition (ili2c agrees: "The number of elements in ... do not match." / "There is a mismatch between
                 ... and ...").
                 """,
-            ExpectedLog: ["Type check error in 'Translated.Theme': the number of elements does not match the original 'Original.Thema'."],
+            ExpectedLog: ["Type check error in 'Translated.Theme' at 9:4-11:14: the number of elements does not match the original 'Original.Thema'."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -662,7 +662,7 @@ public class ModelTest
                     Sorte = (a, b);
             END Translated.
             """,
-            ExpectedLog: ["Type check error in 'Translated.Sorte': must be the same kind of definition as the original 'Original.Thema'."],
+            ExpectedLog: ["Type check error in 'Translated.Sorte' at 12:8-12:23: must be the same kind of definition as the original 'Original.Thema'."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -718,7 +718,7 @@ public class ModelTest
                 The constraints of a translated element correspond to the original's by position too (ili2c agrees: "The
                 number of elements in ... do not match." — it counts constraints as container elements).
                 """,
-            ExpectedLog: ["Type check error in 'Translated.Theme.Classe': the number of constraints does not match the original 'Original.Thema.Klasse'."],
+            ExpectedLog: ["Type check error in 'Translated.Theme.Classe' at 12:8-16:19: the number of constraints does not match the original 'Original.Thema.Klasse'."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -769,7 +769,7 @@ public class ModelTest
                 END Theme;
             END Translated.
             """,
-            ExpectedLog: ["Type check error in 'Translated.Theme.Classe': the constraint 'Constraint1' must be the same kind of constraint as the original's 'Constraint1'."],
+            ExpectedLog: ["Type check error in 'Translated.Theme.Classe' at 12:8-15:19: the constraint 'Constraint1' must be the same kind of constraint as the original's 'Constraint1'."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -795,7 +795,7 @@ public class ModelTest
             TYPE MODEL Original (de) AT "http://example.com" VERSION "1.0.0" = END Original.
             MODEL Translated (fr) AT "http://example.com" VERSION "1.0.0" TRANSLATION OF Original ["1.0.0"] = END Translated.
             """,
-            ExpectedLog: ["Type check error in 'Translated': the model kind does not match the original model's."],
+            ExpectedLog: ["Type check error in 'Translated' at 3:0-3:113: the model kind does not match the original model's."],
             RefHB: "3.5.1-10",
             AssertOutput: false));
 
@@ -872,7 +872,7 @@ public class ModelTest
             MODEL Model AT "http://example.com" VERSION "1.0.0" = XMLNS = "https://www.example.com/awesomenamespace";
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:60 extraneous input '=' expecting DOUBLE_QUOTE_OPEN."],
+            ExpectedLog: ["Compile error at 1:60-1:61 extraneous input '=' expecting DOUBLE_QUOTE_OPEN."],
             RefHB: "3.5.1-14",
             Expected: new ModelDef
             {

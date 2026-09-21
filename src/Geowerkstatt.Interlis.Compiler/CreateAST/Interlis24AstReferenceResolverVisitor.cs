@@ -63,7 +63,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             if (reference.Path.Count == 0)
             {
                 // References without a path can occur after parse errors, the offending input already has a compile error logged.
-                logger.LogError("Could not resolve '{Reference}'", reference);
+                logger.LogError("Could not resolve '{Reference}' at {Range}", reference, reference.GetRange());
                 failed.Add(reference);
                 return false;
             }
@@ -75,7 +75,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             switch (mappedTargets.Count)
             {
                 case 0:
-                    logger.LogError("Could not resolve '{Reference}'", reference);
+                    logger.LogError("Could not resolve '{Reference}' at {Range}", reference, reference.GetRange());
                     failed.Add(reference);
                     return false;
 
@@ -85,7 +85,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
                     return true;
 
                 default:
-                    logger.LogError("Ambiguous '{Reference}' could be resolved to multiple targets: {Targets}", reference, string.Join(", ", mappedTargets.Select(d => d.FullyQualifiedName)));
+                    logger.LogError("Ambiguous '{Reference}' at {Range} could be resolved to multiple targets: {Targets}", reference, reference.GetRange(), string.Join(", ", mappedTargets.Select(d => d.FullyQualifiedName)));
                     failed.Add(reference);
                     return false;
             }
@@ -122,7 +122,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             return;
         }
 
-        logger.LogError("'{Reference}' must be fully qualified with its model name.", reference);
+        logger.LogError("'{Reference}' at {Range} must be fully qualified with its model name.", reference, reference.GetRange());
     }
 
     /// <summary>

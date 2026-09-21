@@ -25,7 +25,7 @@ public class NamespaceTest
                 IMPORTS ModelA;
             END ModelB.
             """,
-            ExpectedLog: ["Compile error at line 6:12 Duplicate import ModelA."],
+            ExpectedLog: ["Compile error at 6:12-6:18 Duplicate import ModelA."],
             RefHB: "3.5.4",
             AssertOutput: false,
             Ili2cDivergenceReason: "RefHB-silent (3.5.1 does not forbid a duplicate IMPORTS): we keep the diagnostic, ili2c silently accepts"));
@@ -40,7 +40,7 @@ public class NamespaceTest
                 END TopicA;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:6 An element with name TopicA already exists in the scope Model."],
+            ExpectedLog: ["Compile error at 1:6-1:11 An element with name TopicA already exists in the scope Model."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -74,7 +74,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 2:10 An element with name ClassName already exists in the scope Topic."],
+            ExpectedLog: ["Compile error at 2:10-2:15 An element with name ClassName already exists in the scope Topic."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -119,7 +119,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 3:14 An element with name Attr1 already exists in the scope ClassName."],
+            ExpectedLog: ["Compile error at 3:14-3:23 An element with name Attr1 already exists in the scope ClassName."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -174,7 +174,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:6 An element with name Topic already exists in the scope Model."],
+            ExpectedLog: ["Compile error at 1:6-1:11 An element with name Topic already exists in the scope Model."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -307,7 +307,7 @@ public class NamespaceTest
                 END StructName;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:6 An element with name StructName already exists in the scope Model."],
+            ExpectedLog: ["Compile error at 1:6-1:11 An element with name StructName already exists in the scope Model."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -339,7 +339,7 @@ public class NamespaceTest
                     D1 = TEXT*10;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:6 An element with name D1 already exists in the scope Model."],
+            ExpectedLog: ["Compile error at 1:6-1:11 An element with name D1 already exists in the scope Model."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -373,7 +373,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 2:10 An element with name LocalDom already exists in the scope Topic."],
+            ExpectedLog: ["Compile error at 2:10-2:15 An element with name LocalDom already exists in the scope Topic."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -427,7 +427,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 2:10 An element with name Assoc already exists in the scope Topic."],
+            ExpectedLog: ["Compile error at 2:10-2:15 An element with name Assoc already exists in the scope Topic."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -522,7 +522,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 7:8 An element with name role already exists in the scope Assoc."],
+            ExpectedLog: ["Compile error at 7:8-7:19 An element with name role already exists in the scope Assoc."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -598,7 +598,7 @@ public class NamespaceTest
                     m1 = TEXT*20;
             END Model.
             """,
-            ExpectedLog: ["Compile error at line 1:6 An element with name m1 already exists in the scope Model."],
+            ExpectedLog: ["Compile error at 1:6-1:11 An element with name m1 already exists in the scope Model."],
             RefHB: "3.5.4-1",
             Expected: new ModelDef
             {
@@ -640,7 +640,7 @@ public class NamespaceTest
                 END Topic;
             END ModelB.
             """,
-            ExpectedLog: ["Ambiguous 'reference 'MyDomain' from ModelB.Topic.ClassName' could be resolved to multiple targets: ModelB.MyDomain, ModelA.MyDomain"],
+            ExpectedLog: ["Ambiguous 'reference 'MyDomain' from ModelB.Topic.ClassName' at 12:19-12:27 could be resolved to multiple targets: ModelB.MyDomain, ModelA.MyDomain"],
             RefHB: "3.5.4-11",
             AssertOutput: false,
             Ili2cDivergenceReason: "RefHB-silent (3.5.4 defines no local-vs-UNQUALIFIED-import precedence): we report it ambiguous, ili2c silently accepts (local wins)"));
@@ -678,7 +678,7 @@ public class NamespaceTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Ambiguous 'reference 'ModelDomain' from Model.Topic.ClassName' could be resolved to multiple targets: Model.Topic.ModelDomain, Model.ModelDomain"],
+            ExpectedLog: ["Ambiguous 'reference 'ModelDomain' from Model.Topic.ClassName' at 9:19-9:30 could be resolved to multiple targets: Model.Topic.ModelDomain, Model.ModelDomain"],
             RefHB: "3.5.4-11",
             AssertOutput: false,
             Ili2cDivergenceReason: "RefHB 3.5.4-11 mandates this error (a local name must not collide with a name taken over from the superordinate element): we reject it, ili2c is lenient"));
@@ -699,7 +699,7 @@ public class NamespaceTest
                 END Topic;
             END ModelB.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'ModelA.MyDomain' from ModelB.Topic.ClassName'"],
+            ExpectedLog: ["Could not resolve 'reference 'ModelA.MyDomain' from ModelB.Topic.ClassName' at 9:19-9:34"],
             RefHB: "3.5.4-12",
             AssertOutput: false));
 
@@ -720,7 +720,7 @@ public class NamespaceTest
                 END Topic;
             END ModelB.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'MyDomain' from ModelB.Topic.ClassName'"],
+            ExpectedLog: ["Could not resolve 'reference 'MyDomain' from ModelB.Topic.ClassName' at 10:19-10:27"],
             RefHB: "3.5.4-12",
             AssertOutput: false));
 
@@ -741,7 +741,7 @@ public class NamespaceTest
                 END Name;
             END Name.
             """,
-            ExpectedLog: ["Ambiguous 'reference 'Name' from Name.Name.Name' could be resolved to multiple targets: Name.Name.Name, OtherName.Name"],
+            ExpectedLog: ["Ambiguous 'reference 'Name' from Name.Name.Name' at 10:19-10:23 could be resolved to multiple targets: Name.Name.Name, OtherName.Name"],
             RefHB: "3.5.4-12",
             AssertOutput: false));
 
@@ -767,7 +767,7 @@ public class NamespaceTest
                 END Topic;
             END ModelC.
             """,
-            ExpectedLog: ["Ambiguous 'reference 'SharedName' from ModelC.Topic.ClassName' could be resolved to multiple targets: ModelA.SharedName, ModelB.SharedName"],
+            ExpectedLog: ["Ambiguous 'reference 'SharedName' from ModelC.Topic.ClassName' at 15:19-15:29 could be resolved to multiple targets: ModelA.SharedName, ModelB.SharedName"],
             RefHB: "3.5.4-12",
             AssertOutput: false,
             Ili2cDivergenceReason: "RefHB-silent (3.5.4 defines no resolution for the same unqualified name from several UNQUALIFIED imports): we report it ambiguous, ili2c silently accepts"));
@@ -788,7 +788,7 @@ public class NamespaceTest
                 END TopicB;
             END Model.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'LocalDomain' from Model.TopicB.ClassName'"],
+            ExpectedLog: ["Could not resolve 'reference 'LocalDomain' from Model.TopicB.ClassName' at 9:19-9:30"],
             RefHB: "3.5.4-12",
             AssertOutput: false));
 
@@ -913,7 +913,7 @@ public class NamespaceTest
             // Bestandteilname clash.
             // Scope is "V" (not the full path) because the view is not yet attached to its topic while its own
             // members are being registered during construction.
-            ExpectedLog: ["Compile error at line 8:13 An element with name base already exists in the scope V."],
+            ExpectedLog: ["Compile error at 8:13-8:14 An element with name base already exists in the scope V."],
             RefHB: "3.5.4",
             AssertOutput: false));
     }

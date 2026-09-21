@@ -1,4 +1,5 @@
 using Geowerkstatt.Interlis.Compiler.AST;
+using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.Test;
 using Microsoft.Extensions.Logging;
 
@@ -21,11 +22,11 @@ public class SourceRangeTest
     /// Parses <paramref name="source"/> through the full pipeline and asserts that no diagnostics were reported,
     /// so a test can rely on the returned AST being complete.
     /// </summary>
-    private static async Task<InterlisEnvironment> ReadWithoutErrors(string source)
+    private static async Task<InterlisEnvironment> ReadWithoutErrors(string source, string? sourceUri = null)
     {
         var logProvider = new TestLoggerProvider();
         using var loggerFactory = LoggerFactory.Create(b => b.AddProvider(logProvider));
-        var environment = new InterlisReader(loggerFactory).ReadFile(new StringReader(source));
+        var environment = new InterlisReader(loggerFactory).ReadFile(new StringReader(source), sourceUri);
 
         await Assert.That(logProvider.GetMessages()).IsEquivalentTo(Array.Empty<string>());
         return environment;
@@ -110,5 +111,77 @@ public class SourceRangeTest
         await Assert.That(byDeclaration).IsEquivalentTo(
             ["First", "CONSTRAINTS OF First #1", "Last"],
             TUnit.Assertions.Enums.CollectionOrdering.Matching);
+    }
+
+    [Test]
+    public async Task RangesCarryTheSourceUriOfTheirDocument()
+    {
+        var environment = await ReadWithoutErrors(
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                END Topic;
+            END Model.
+            """,
+            "file:///model.ili");
+
+        var model = (ModelDef)environment.Content["Model"];
+        var topic = (TopicDef)model.Content["Topic"];
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(model.SourceRange?.SourceUri).IsEqualTo("file:///model.ili");
+            await Assert.That(topic.SourceRange?.SourceUri).IsEqualTo("file:///model.ili");
+            await Assert.That(topic.NameLocations.All(location => location.SourceUri == "file:///model.ili")).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task RangesOfSourcesWithoutUriHaveNoSourceUri()
+    {
+        var environment = await ReadWithoutErrors(
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+            END Model.
+            """);
+
+        await Assert.That(((ModelDef)environment.Content["Model"]).SourceRange?.SourceUri).IsNull();
+    }
+
+    [Test]
+    public async Task ExpressionsCarryTheirRange()
+    {
+        // Every node of an expression tree covers exactly the text it was parsed from: the condition as a whole,
+        // each operand, and the constants and paths at the leaves (line 6, zero-based).
+        var environment = await ReadWithoutErrors(
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS ClassName =
+                        Attr : 0 .. 100;
+                        MANDATORY CONSTRAINT Attr > 1 AND DEFINED (Attr);
+                    END ClassName;
+                END Topic;
+            END Model.
+            """);
+
+        var classDef = (ClassDef)((TopicDef)((ModelDef)environment.Content["Model"]).Content["Topic"]).Content["ClassName"];
+        var constraint = (MandatoryConstraint)classDef.Constraints.Single();
+        var condition = (LogicalExpression)constraint.Condition;
+        var comparison = (ComparisonExpression)condition.FirstOperand;
+        var defined = (DefinedExpression)condition.SecondOperand;
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(Describe(condition)).IsEqualTo("5:33..5:60");
+            await Assert.That(Describe(comparison)).IsEqualTo("5:33..5:41");
+            await Assert.That(Describe(comparison.FirstOperand)).IsEqualTo("5:33..5:37");
+            await Assert.That(Describe(comparison.SecondOperand)).IsEqualTo("5:40..5:41");
+            await Assert.That(Describe(defined)).IsEqualTo("5:46..5:60");
+            await Assert.That(Describe(defined.Operand)).IsEqualTo("5:55..5:59");
+        }
     }
 }

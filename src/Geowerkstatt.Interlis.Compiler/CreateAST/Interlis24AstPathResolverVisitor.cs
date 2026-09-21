@@ -205,7 +205,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
             {
                 // The listed attributes must be single-valued like global UNIQUE path elements; the structure
                 // path above is exempt — leading through the collection is the point of the (LOCAL) form.
-                CheckUniquePathElements(ResolveMemberStep(attribute, containers), containers);
+                CheckUniquePathElements(ResolveMemberStep(attribute, containers), containers, attribute.SourceRange);
             }
         }
 
@@ -288,10 +288,10 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// </summary>
     private void CheckInspectionSource(InspectionExpression inspection)
     {
-        if (inspection.Source is InspectionExpression.ViewRef { View.Target: { } target }
+        if (inspection.Source is InspectionExpression.ViewRef { View: { Target: { } target } view }
             && EffectiveFormation(target as IInterlisDefinitionContainer) is not InspectionView)
         {
-            logger.LogError("'{Viewable}' can not be used as an INSPECTION factor because it is not an inspection view", target.FullyQualifiedName);
+            logger.LogError("'{Viewable}' at {Range} can not be used as an INSPECTION factor because it is not an inspection view", target.FullyQualifiedName, view.GetRange());
         }
     }
 
@@ -321,8 +321,9 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         if (name.Length > 0)
         {
             logger.LogError(
-                "'{Element}' can not be used in domain constraint '{Constraint}' of '{Domain}' because the condition can only refer to the domain value itself (THIS)",
+                "'{Element}' at {Range} can not be used in domain constraint '{Constraint}' of '{Domain}' because the condition can only refer to the domain value itself (THIS)",
                 name,
+                path.SourceRange ?? constraint.SourceRange ?? domain.GetNearestSourceRange(),
                 constraint.Name,
                 domain.FullyQualifiedName);
         }
@@ -344,7 +345,8 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
 
         for (var i = 0; i < inspection.Path.Count; i++)
         {
-            var members = ResolveMemberStep(inspection.Path[i], containers);
+            var step = inspection.Path[i];
+            var members = ResolveMemberStep(step, containers);
 
             if (i < inspection.Path.Count - 1)
             {
@@ -352,7 +354,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                 {
                     if (InspectableType(member) is { } type && type is not ObjectType)
                     {
-                        logger.LogError("the inspection path can not continue after '{Member}' because it is not a substructure attribute", member.FullyQualifiedName);
+                        logger.LogError("the inspection path at {Range} can not continue after '{Member}' because it is not a substructure attribute", step.SourceRange, member.FullyQualifiedName);
                     }
                 }
 
@@ -362,7 +364,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
             {
                 foreach (var member in members)
                 {
-                    CheckInspectedTip(inspection.IsArea, member);
+                    CheckInspectedTip(inspection.IsArea, member, step.SourceRange);
                 }
             }
         }
@@ -376,7 +378,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// </summary>
     private List<IInterlisDefinition> ResolveMemberStep(Reference<AttributeDef> step, IReadOnlyList<IInterlisDefinitionContainer> containers)
     {
-        var members = LookupInAll(containers, c => LookupMember(c, step.Path[0]), step.Path[0], report: true);
+        var members = LookupInAll(containers, c => LookupMember(c, step.Path[0]), step.Path[0], report: true, step.SourceRange);
         if (members.Count == 1)
         {
             step.SetTarget(members[0]);
@@ -390,7 +392,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         DescendAll(members, member => member is AttributeDef { TypeDef: ObjectType substructure } ? DescendTargets(substructure) : []);
 
     /// <summary>Checks that the attribute an inspection path reaches can be decomposed (see <see cref="ResolveInspectionPath"/>).</summary>
-    private void CheckInspectedTip(bool isArea, IInterlisDefinition member)
+    private void CheckInspectedTip(bool isArea, IInterlisDefinition member, RangePosition? range)
     {
         if (InspectableType(member) is not { } type)
         {
@@ -401,12 +403,12 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         {
             if (type is not SurfaceType { IsCoverage: true, IsMultiGeometry: false })
             {
-                logger.LogError("'{Member}' can not be inspected by an AREA INSPECTION because its type is not an area partition (AREA)", member.FullyQualifiedName);
+                logger.LogError("'{Member}' at {Range} can not be inspected by an AREA INSPECTION because its type is not an area partition (AREA)", member.FullyQualifiedName, range);
             }
         }
         else if (type is not (ObjectType or PolyLineType { IsMultiGeometry: false } or SurfaceType { IsMultiGeometry: false }))
         {
-            logger.LogError("'{Member}' can not be inspected because its type is not a substructure or a single polyline, surface or area", member.FullyQualifiedName);
+            logger.LogError("'{Member}' at {Range} can not be inspected because its type is not a substructure or a single polyline, surface or area", member.FullyQualifiedName, range);
         }
     }
 
@@ -490,7 +492,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     // definition from a plain viewable path; stop descending (ReturnType still reports an object).
                     if (i == 0)
                     {
-                        CheckKeywordContext(keyword, root);
+                        CheckKeywordContext(keyword, root, path.SourceRange);
                     }
 
                     reached = null;
@@ -498,10 +500,10 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     break;
 
                 case RolePathElement role:
-                    var roles = LookupInAll(containers, c => LookupRole(c, role.Name, role.AssociationName), $"{role.Name}[{role.AssociationName}]", report);
+                    var roles = LookupInAll(containers, c => LookupRole(c, role.Name, role.AssociationName), $"{role.Name}[{role.AssociationName}]", report, path.SourceRange);
                     if (mustBeSingleValued)
                     {
-                        CheckUniquePathElements(roles, containers);
+                        CheckUniquePathElements(roles, containers, path.SourceRange);
                     }
 
                     reached = roles.Count == 1 ? roles[0] : null;
@@ -509,10 +511,10 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     break;
 
                 case AttributePathElement indexed:
-                    var indexedAttributes = LookupInAll(containers, c => LookupMember(c, indexed.Name) as AttributeDef, indexed.Name, report);
+                    var indexedAttributes = LookupInAll(containers, c => LookupMember(c, indexed.Name) as AttributeDef, indexed.Name, report, path.SourceRange);
                     if (mustBeSingleValued)
                     {
-                        CheckUniquePathElements(indexedAttributes, containers);
+                        CheckUniquePathElements(indexedAttributes, containers, path.SourceRange);
                     }
 
                     reached = indexedAttributes.Count == 1 ? indexedAttributes[0] : null;
@@ -522,10 +524,10 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     break;
 
                 case IdentifierPathElement identifier:
-                    var members = LookupInAll(containers, c => LookupMember(c, identifier.Value), identifier.Value, report);
+                    var members = LookupInAll(containers, c => LookupMember(c, identifier.Value), identifier.Value, report, path.SourceRange);
                     if (mustBeSingleValued)
                     {
-                        CheckUniquePathElements(members, containers);
+                        CheckUniquePathElements(members, containers, path.SourceRange);
                     }
 
                     reached = members.Count == 1 ? members[0] : null;
@@ -550,26 +552,27 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// (RefHB 3.13-36) is therefore not enforced at all. The view kind is taken from the formation, following a
     /// view's EXTENDS chain to the defining base.
     /// </summary>
-    private void CheckKeywordContext(KeyWordPathElement keyword, IInterlisDefinitionContainer? root)
+    private void CheckKeywordContext(KeyWordPathElement keyword, IInterlisDefinitionContainer? root, RangePosition? range)
     {
         switch (keyword.Value)
         {
             case KeyWordPathElement.KeyWord.ThisArea or KeyWordPathElement.KeyWord.ThatArea
                 when EffectiveFormation(root) is not InspectionView { IsArea: true }:
-                ReportKeywordContext(keyword, root, "the inspection of an area partition");
+                ReportKeywordContext(keyword, root, range, "the inspection of an area partition");
                 break;
 
             case KeyWordPathElement.KeyWord.Aggregates when EffectiveFormation(root) is not AggregationView:
-                ReportKeywordContext(keyword, root, "an aggregation view");
+                ReportKeywordContext(keyword, root, range, "an aggregation view");
                 break;
         }
     }
 
-    private void ReportKeywordContext(KeyWordPathElement keyword, IInterlisDefinitionContainer? root, string requiredContext)
+    private void ReportKeywordContext(KeyWordPathElement keyword, IInterlisDefinitionContainer? root, RangePosition? range, string requiredContext)
     {
         logger.LogError(
-            "'{Keyword}' can only be used within {RequiredContext}{Where}",
+            "'{Keyword}' at {Range} can only be used within {RequiredContext}{Where}",
             keyword.Value.ToString().ToUpperInvariant(),
+            range,
             requiredContext,
             root is IInterlisDefinition definition ? $" (in '{definition.FullyQualifiedName}')" : string.Empty);
     }
@@ -600,7 +603,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// association itself are exempt — a link instance holds exactly one target per role — matching ili2c, which
     /// only checks class-side role navigations.
     /// </summary>
-    private void CheckUniquePathElements(IEnumerable<IInterlisDefinition> members, IReadOnlyList<IInterlisDefinitionContainer> containers)
+    private void CheckUniquePathElements(IEnumerable<IInterlisDefinition> members, IReadOnlyList<IInterlisDefinitionContainer> containers, RangePosition? range)
     {
         foreach (var member in members)
         {
@@ -616,9 +619,10 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
             }
 
             logger.LogError(
-                "The {Kind} '{Member}' can not be used in a UNIQUE constraint because its maximum cardinality is above 1",
+                "The {Kind} '{Member}' at {Range} can not be used in a UNIQUE constraint because its maximum cardinality is above 1",
                 isRole ? "role" : "attribute",
-                attribute.FullyQualifiedName);
+                attribute.FullyQualifiedName,
+                range);
         }
     }
 
@@ -637,7 +641,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// <c>-&gt;</c> — the parse error is already reported) and when <paramref name="report"/> is
     /// <see langword="false"/> (a view head, whose stricter rule the type checker reports).
     /// </summary>
-    private List<IInterlisDefinition> LookupInAll(IReadOnlyList<IInterlisDefinitionContainer> containers, Func<IInterlisDefinitionContainer, IInterlisDefinition?> lookup, string name, bool report)
+    private List<IInterlisDefinition> LookupInAll(IReadOnlyList<IInterlisDefinitionContainer> containers, Func<IInterlisDefinitionContainer, IInterlisDefinition?> lookup, string name, bool report, RangePosition? range)
     {
         var members = new List<IInterlisDefinition>();
         var missing = new List<IInterlisDefinitionContainer>();
@@ -658,7 +662,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         {
             if (report && name.Length > 0)
             {
-                logger.LogError("Could not resolve '{Name}' in '{Containers}'", name, string.Join("', '", missing.Select(c => c.FullyQualifiedName)));
+                logger.LogError("Could not resolve '{Name}' in '{Containers}' at {Range}", name, string.Join("', '", missing.Select(c => c.FullyQualifiedName)), range);
             }
 
             return [];

@@ -370,7 +370,7 @@ public class ViewTest
                 rejects it on the base source at parse time (ili2c rejects it likewise).
                 """,
             RefHB: "3.15-30",
-            ExpectedLog: ["Compile error at line 1:28 mismatched input '(' expecting ','."],
+            ExpectedLog: ["Compile error at 1:28-1:29 mismatched input '(' expecting ','."],
             AssertOutput: false));
 
         yield return Rule(new(
@@ -848,7 +848,7 @@ public class ViewTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["'THISAREA' can only be used within the inspection of an area partition (in 'Model.Topic.ExpressionView')"],
+            ExpectedLog: ["'THISAREA' at 6:20-6:28 can only be used within the inspection of an area partition (in 'Model.Topic.ExpressionView')"],
             RefHB: "3.13-35",
             AssertOutput: false));
 
@@ -865,7 +865,7 @@ public class ViewTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["'AGGREGATES' can only be used within an aggregation view (in 'Model.Topic.ExpressionView')"],
+            ExpectedLog: ["'AGGREGATES' at 6:20-6:30 can only be used within an aggregation view (in 'Model.Topic.ExpressionView')"],
             RefHB: "3.13-43",
             AssertOutput: false));
 
@@ -950,7 +950,7 @@ public class ViewTest
             END Model.
             """,
             Description: "Each step of an inspection path must name a member of the previous step's structure (the first of the source viewable).",
-            ExpectedLog: ["Could not resolve 'Nope' in 'Model.Topic.ClassA'"],
+            ExpectedLog: ["Could not resolve 'Nope' in 'Model.Topic.ClassA' at 12:38-12:42"],
             RefHB: "3.15-33",
             AssertOutput: false));
 
@@ -976,7 +976,7 @@ public class ViewTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Could not resolve 'Nope' in 'Model.Outer'"],
+            ExpectedLog: ["Could not resolve 'Nope' in 'Model.Outer' at 12:47-12:51"],
             RefHB: "3.15-33",
             AssertOutput: false));
 
@@ -1007,7 +1007,7 @@ public class ViewTest
                 Only the last step of an inspection path may be a line attribute; every earlier step must be a
                 substructure attribute the walk can descend into (RefHB 3.15-15; ili2c: "Path should stop at ...").
                 """,
-            ExpectedLog: ["the inspection path can not continue after 'Model.Topic.ClassA -> Label' because it is not a substructure attribute"],
+            ExpectedLog: ["the inspection path at 13:38-13:43 can not continue after 'Model.Topic.ClassA -> Label' because it is not a substructure attribute"],
             RefHB: "3.15-33",
             AssertOutput: false));
 
@@ -1034,7 +1034,7 @@ public class ViewTest
                 The inspected attribute must be decomposable: a substructure or a line attribute (RefHB 3.15-15;
                 ili2c: "can not decompose ...").
                 """,
-            ExpectedLog: ["'Model.Topic.ClassA -> Label' can not be inspected because its type is not a substructure or a single polyline, surface or area"],
+            ExpectedLog: ["'Model.Topic.ClassA -> Label' at 9:38-9:43 can not be inspected because its type is not a substructure or a single polyline, surface or area"],
             RefHB: "3.15-33",
             AssertOutput: false));
 
@@ -1150,7 +1150,7 @@ public class ViewTest
                 (RefHB 3.15-17; ili2c: "Area decompositions can only be performed on attributes whose type is an
                 area").
                 """,
-            ExpectedLog: ["'Model.Topic.ClassA -> Geom' can not be inspected by an AREA INSPECTION because its type is not an area partition (AREA)"],
+            ExpectedLog: ["'Model.Topic.ClassA -> Geom' at 11:43-11:47 can not be inspected by an AREA INSPECTION because its type is not an area partition (AREA)"],
             RefHB: "3.15-33",
             AssertOutput: false));
 
@@ -1179,7 +1179,7 @@ public class ViewTest
                 A MULTI... geometry is a single value, not a decomposable collection of structure elements
                 (RefHB 3.8.13.3-7), so it can not be inspected — ili2c agrees ("can not decompose ...").
                 """,
-            ExpectedLog: ["'Model.Topic.ClassA -> Geom' can not be inspected because its type is not a substructure or a single polyline, surface or area"],
+            ExpectedLog: ["'Model.Topic.ClassA -> Geom' at 11:38-11:42 can not be inspected because its type is not a substructure or a single polyline, surface or area"],
             RefHB: "3.15-33",
             AssertOutput: false));
 
@@ -1272,7 +1272,7 @@ public class ViewTest
                 RefHB 3.15: 'ALL OF Base' takes over the attributes of a base, so the name must denote a base of the
                 view. (Verified: ili2c rejects with "There is no alias ... for any base of VIEW".)
                 """,
-            ExpectedLog: ["Could not resolve 'reference 'NoSuchBase' from Model.Topic.V'"],
+            ExpectedLog: ["Could not resolve 'reference 'NoSuchBase' from Model.Topic.V' at 12:23-12:33"],
             RefHB: "3.15-38",
             AssertOutput: false));
 
@@ -1300,7 +1300,7 @@ public class ViewTest
                 object-path head must denote a base of the view. Here 'other' is neither a base nor a keyword.
                 (Verified: ili2c rejects with "Name other is not applicable to VIEW".)
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.V': the path must start with a base of the view, but 'other' is not a base."],
+            ExpectedLog: ["Type check error in 'Model.Topic.V' at 12:21-12:34: the path must start with a base of the view, but 'other' is not a base."],
             RefHB: "3.15-38",
             AssertOutput: false));
 
@@ -1328,7 +1328,7 @@ public class ViewTest
                 yields the same implicit base name 'Class' for both. (Verified: ili2c rejects with "The name ... can not
                 be an alias for ... at the same time".)
                 """,
-            ExpectedLog: ["Compile error at line 8:13 An element with name Class already exists in the scope V."],
+            ExpectedLog: ["Compile error at 8:13-8:14 An element with name Class already exists in the scope V."],
             RefHB: "3.5.4",
             AssertOutput: false));
 
@@ -1357,7 +1357,7 @@ public class ViewTest
                 reference). Here TopicB's view is formed over TopicA.Class without a DEPENDS ON.
                 (Verified: ili2c rejects with "This reference to a viewable requires a topic dependency".)
                 """,
-            ExpectedLog: ["Type check error in 'Model.TopicB.V': the base viewable 'Class' is in topic 'TopicA' and requires a topic dependency."],
+            ExpectedLog: ["Type check error in 'Model.TopicB.V' at 9:8-14:14: the base viewable 'Class' is in topic 'TopicA' and requires a topic dependency."],
             RefHB: "3.15-38",
             AssertOutput: false));
 
@@ -1388,8 +1388,8 @@ public class ViewTest
                 (Verified: ili2c also rejects at the '+'.)
                 """,
             ExpectedLog: [
-                "Compile error at line 13:32 mismatched input '+' expecting ';'.",
-                "Type check error in 'Model.Topic.V': the path must start with a base of the view, but 'attr' is not a base.",
+                "Compile error at 13:32-13:33 mismatched input '+' expecting ';'.",
+                "Type check error in 'Model.Topic.V' at 13:27-13:31: the path must start with a base of the view, but 'attr' is not a base.",
             ],
             RefHB: "3.15-38",
             AssertOutput: false));
@@ -1438,7 +1438,7 @@ public class ViewTest
                 single-pass name resolution can not even resolve the self-reference).
                 """,
             RefHB: "3.15-4",
-            ExpectedLog: ["Type check error in 'Model.Topic.V': the view transitively EXTENDS itself."],
+            ExpectedLog: ["Type check error in 'Model.Topic.V' at 4:8-6:14: the view transitively EXTENDS itself."],
             AssertOutput: false));
 
     }

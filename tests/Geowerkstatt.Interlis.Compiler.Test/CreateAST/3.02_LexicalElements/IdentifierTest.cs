@@ -13,7 +13,7 @@ public class IdentifierTest
             MODEL snake-case AT "http://example.com" VERSION "1.0.0" =
             END snake-case.
             """,
-            ExpectedLog: ["Compile error at line 1:11 mismatched input '-' expecting {'(', 'AT', 'NOINCREMENTALTRANSFER'}."],
+            ExpectedLog: ["Compile error at 1:11-1:12 mismatched input '-' expecting {'(', 'AT', 'NOINCREMENTALTRANSFER'}."],
             RefHB: "3.2.2-1",
             Expected: new ModelDef
             {
@@ -28,7 +28,7 @@ public class IdentifierTest
             MODEL ARCS AT "http://example.com" VERSION "1.0.0" =
             END ARCS.
             """,
-            ExpectedLog: ["Compile error at line 1:6 mismatched input 'ARCS' expecting IDENTIFIER."],
+            ExpectedLog: ["Compile error at 1:6-1:10 mismatched input 'ARCS' expecting IDENTIFIER."],
             RefHB: "3.2.2-1",
             Expected: null));
 
@@ -38,7 +38,7 @@ public class IdentifierTest
             MODEL TABLE AT "http://example.com" VERSION "1.0.0" =
             END TABLE.
             """,
-            ExpectedLog: ["Compile error at line 1:6 mismatched input 'TABLE' expecting IDENTIFIER."],
+            ExpectedLog: ["Compile error at 1:6-1:11 mismatched input 'TABLE' expecting IDENTIFIER."],
             RefHB: "3.2.2-1",
             Expected: null,
             Ili2cDivergenceReason: "we reserve TABLE for compatibility with older INTERLIS and reject it as a name, ili2c accepts it"));
@@ -50,8 +50,8 @@ public class IdentifierTest
             END 2Model.
             """,
             ExpectedLog: [
-                "Compile error at line 1:6 extraneous input '2' expecting IDENTIFIER.",
-                "Compile error at line 2:4 extraneous input '2' expecting IDENTIFIER.",
+                "Compile error at 1:6-1:7 extraneous input '2' expecting IDENTIFIER.",
+                "Compile error at 2:4-2:5 extraneous input '2' expecting IDENTIFIER.",
             ],
             RefHB: "3.2.2-1",
             Expected: new ModelDef
@@ -70,8 +70,8 @@ public class IdentifierTest
             END _Model.
             """,
             ExpectedLog: [
-                "Compile error at line 1:6 extraneous input '_' expecting IDENTIFIER.",
-                "Compile error at line 2:4 extraneous input '_' expecting IDENTIFIER.",
+                "Compile error at 1:6-1:7 extraneous input '_' expecting IDENTIFIER.",
+                "Compile error at 2:4-2:5 extraneous input '_' expecting IDENTIFIER.",
             ],
             RefHB: "3.2.2-1",
             Expected: new ModelDef
@@ -89,7 +89,7 @@ public class IdentifierTest
             MODEL my.model AT "http://example.com" VERSION "1.0.0" =
             END my.model.
             """,
-            ExpectedLog: ["Compile error at line 1:8 mismatched input '.' expecting {'(', 'AT', 'NOINCREMENTALTRANSFER'}."],
+            ExpectedLog: ["Compile error at 1:8-1:9 mismatched input '.' expecting {'(', 'AT', 'NOINCREMENTALTRANSFER'}."],
             RefHB: "3.2.2-1",
             Expected: new ModelDef
             {
@@ -104,7 +104,7 @@ public class IdentifierTest
             MODEL Foo AT "http://example.com" VERSION "1.0.0" =
             END foo.
             """,
-            ExpectedLog: ["Compile error at line 2:4 Start name 'Foo' and end name 'foo' do not match."],
+            ExpectedLog: ["Compile error at 2:4-2:7 Start name 'Foo' and end name 'foo' do not match."],
             RefHB: "3.2.2-1",
             Expected: new ModelDef
             {
@@ -155,7 +155,7 @@ public class IdentifierTest
             MODEL CLASS AT "http://example.com" VERSION "1.0.0" =
             END CLASS.
             """,
-            ExpectedLog: ["Compile error at line 1:6 mismatched input 'CLASS' expecting IDENTIFIER."],
+            ExpectedLog: ["Compile error at 1:6-1:11 mismatched input 'CLASS' expecting IDENTIFIER."],
             RefHB: "3.2.7-3",
             Expected: null));
     }

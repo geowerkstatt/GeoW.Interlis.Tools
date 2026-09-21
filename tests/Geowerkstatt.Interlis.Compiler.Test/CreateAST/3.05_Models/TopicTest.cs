@@ -134,7 +134,7 @@ public class TopicTest
                 EXTENDED marks the deliberate reuse of an inherited name; without a same-named element in the base topic
                 chain there is nothing to extend. ili2c rejects this too ("EXTENDED does not make sense").
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.A': is marked EXTENDED but there is no inherited element of the same name."],
+            ExpectedLog: ["Type check error in 'Model.Topic.A' at 4:8-5:14: is marked EXTENDED but there is no inherited element of the same name."],
             RefHB: "3.5.4-11",
             AssertOutput: false));
 
@@ -179,7 +179,7 @@ public class TopicTest
             TOPIC Topic (EXTENDED) =
             END Topic;
             """,
-            ExpectedLog: ["Compile error at line 1:13 Property 'EXTENDED' is not one of the allowed properties ('ABSTRACT', 'FINAL')."],
+            ExpectedLog: ["Compile error at 1:13-1:21 Property 'EXTENDED' is not one of the allowed properties ('ABSTRACT', 'FINAL')."],
             RefHB: "3.5.2-1",
             Expected: new TopicDef
             {
@@ -460,7 +460,7 @@ public class TopicTest
                 END B;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.B': can not extend 'Model.A' because it is declared FINAL."],
+            ExpectedLog: ["Type check error in 'Model.B' at 5:4-6:10: can not extend 'Model.A' because it is declared FINAL."],
             RefHB: "3.5.2-7",
             AssertOutput: false));
 
@@ -484,7 +484,7 @@ public class TopicTest
             TOPIC Topic =
             END WrongName;
             """,
-            ExpectedLog: ["Compile error at line 2:4 Start name 'Topic' and end name 'WrongName' do not match."],
+            ExpectedLog: ["Compile error at 2:4-2:13 Start name 'Topic' and end name 'WrongName' do not match."],
             RefHB: "3.5.2-7",
             Expected: new TopicDef
             {
@@ -930,7 +930,7 @@ public class TopicTest
                 OID AS NO OID;
             END Topic;
             """,
-            ExpectedLog: ["Compile error at line 2:11 mismatched input 'NO' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            ExpectedLog: ["Compile error at 2:11-2:13 mismatched input 'NO' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
             RefHB: "3.5.2-16",
             Expected: new TopicDef
             {
@@ -950,7 +950,7 @@ public class TopicTest
                 BASKET OID AS NO OID;
             END Topic;
             """,
-            ExpectedLog: ["Compile error at line 2:18 mismatched input 'NO' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            ExpectedLog: ["Compile error at 2:18-2:20 mismatched input 'NO' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
             RefHB: "3.5.2-16",
             Expected: new TopicDef
             {
@@ -976,7 +976,7 @@ public class TopicTest
                 END TopicB;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.TopicB': the inherited BASKET OID definition 'UUIDOID' is concrete and can not be changed."],
+            ExpectedLog: ["Type check error in 'Model.TopicB' at 6:4-8:15: the inherited BASKET OID definition 'UUIDOID' is concrete and can not be changed."],
             Ili2cDivergenceReason: """
                 ili2c does not check topic OID assignments; RefHB 3.5.2-16 states an inherited assignment can not
                 be changed (only repeated or refined along the RefHB 3.5.3-2 / 3.8.9-13 ladder), so we reject.
@@ -1040,7 +1040,7 @@ public class TopicTest
                 END TopicB;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.TopicB.DocumentObject -> Document': the cross-topic role requires a topic dependency on 'TopicA'."],
+            ExpectedLog: ["Type check error in 'Model.TopicB.DocumentObject -> Document' at 11:12-11:57: the cross-topic role requires a topic dependency on 'TopicA'."],
             RefHB: "3.5.2-17",
             AssertOutput: false));
 
@@ -1088,7 +1088,7 @@ public class TopicTest
                 END TestA;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.TestA': must declare DEFERRED GENERICS for the generic domain 'Coord'."],
+            ExpectedLog: ["Type check error in 'Model.TestA' at 18:4-22:14: must declare DEFERRED GENERICS for the generic domain 'Coord'."],
             RefHB: "3.5.2-18",
             AssertOutput: false));
 
@@ -1142,8 +1142,8 @@ public class TopicTest
             RefHB: "3.5.2-4",
             ExpectedLog:
             [
-                "Type check error in 'Model.A': the topic transitively EXTENDS itself.",
-                "Type check error in 'Model.B': the topic transitively EXTENDS itself.",
+                "Type check error in 'Model.A' at 3:4-4:10: the topic transitively EXTENDS itself.",
+                "Type check error in 'Model.B' at 5:4-6:10: the topic transitively EXTENDS itself.",
             ],
             AssertOutput: false));
 
@@ -1192,7 +1192,7 @@ public class TopicTest
             END Model.
             """,
             RefHB: "3.5.2-16",
-            ExpectedLog: ["Type check error in 'Model.Extension': the inherited OID definition 'STANDARDOID' is concrete and can not be changed."],
+            ExpectedLog: ["Type check error in 'Model.Extension' at 6:4-8:18: the inherited OID definition 'STANDARDOID' is concrete and can not be changed."],
             Ili2cDivergenceReason: """
                 ili2c does not check topic OID assignments; RefHB 3.5.2-16 states an inherited assignment can not
                 be changed (only repeated or refined along the RefHB 3.5.3-2 / 3.8.9-13 ladder), so we reject.
@@ -1224,9 +1224,9 @@ public class TopicTest
             RefHB: "3.8.9-1",
             ExpectedLog:
             [
-                "Type check error in 'Model.Topic': the OID definition 'NotOid' must be an OID domain.",
-                "Type check error in 'Model.Topic': the BASKET OID definition 'NotOid' must be an OID domain.",
-                "Type check error in 'Model.Topic.A': the OID definition 'NotOid' must be an OID domain.",
+                "Type check error in 'Model.Topic' at 5:4-11:14: the OID definition 'NotOid' must be an OID domain.",
+                "Type check error in 'Model.Topic' at 5:4-11:14: the BASKET OID definition 'NotOid' must be an OID domain.",
+                "Type check error in 'Model.Topic.A' at 8:8-10:14: the OID definition 'NotOid' must be an OID domain.",
             ],
             AssertOutput: false));
 
@@ -1271,8 +1271,8 @@ public class TopicTest
             RefHB: "3.8.9-14",
             ExpectedLog:
             [
-                "Type check error in 'Model.Topic': must be declared ABSTRACT because its OID definition 'ANYOID' is still open.",
-                "Type check error in 'Model.Topic': must be declared ABSTRACT because its BASKET OID definition 'ANYOID' is still open.",
+                "Type check error in 'Model.Topic' at 3:4-6:14: must be declared ABSTRACT because its OID definition 'ANYOID' is still open.",
+                "Type check error in 'Model.Topic' at 3:4-6:14: must be declared ABSTRACT because its BASKET OID definition 'ANYOID' is still open.",
             ],
             Ili2cDivergenceReason: """
                 ili2c accepts ANYOID assignments on concrete classes and topics; RefHB 3.8.9-14 reserves ANYOID

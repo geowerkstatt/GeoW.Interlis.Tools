@@ -10,7 +10,7 @@ namespace Geowerkstatt.Interlis.Compiler.CreateAST;
 /// Performs semantic checks on the resolved AST (run after reference resolution). Reports an error for each
 /// violation; the messages are diagnostic and need not match other tools verbatim.
 /// </summary>
-internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Interlis24AstBaseVisitor<bool>
+public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Interlis24AstBaseVisitor<bool>
 {
     private readonly ILogger logger = loggerFactory.CreateLogger<Interlis24AstTypeCheckerVisitor>();
 
@@ -25,9 +25,15 @@ internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : I
 
     protected internal override bool AggregateResult(bool aggregate, bool nextResult) => aggregate && nextResult;
 
-    private void ReportError(IInterlisDefinition element, string message)
+    private void ReportError(IInterlisDefinition element, string message) => ReportError(element, null, message);
+
+    /// <summary>
+    /// Reports a problem of <paramref name="element"/> located at <paramref name="location"/> (e.g. the offending
+    /// expression inside it), or at the element itself if the location has no range.
+    /// </summary>
+    private void ReportError(IInterlisDefinition element, ISourceRange? location, string message)
     {
-        logger.LogError("Type check error in '{Name}': {Message}.", element.FullyQualifiedName, message);
+        logger.LogError("Type check error in '{Name}' at {Range}: {Message}.", element.FullyQualifiedName, location?.SourceRange ?? element.GetNearestSourceRange(), message);
     }
 
     public override bool VisitModelDef([NotNull] ModelDef modelDef)
@@ -430,7 +436,7 @@ internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : I
     {
         if (condition.ReturnType is not BooleanType and not ObjectType and not UndefinedType and not TypeRef)
         {
-            ReportError(constraint, "the constraint condition must be a boolean expression");
+            ReportError(constraint, condition, "the constraint condition must be a boolean expression");
         }
     }
 
@@ -558,7 +564,7 @@ internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : I
 
         if (head != null && !baseNames.Contains(head))
         {
-            ReportError(viewDef, $"the path must start with a base of the view, but '{head}' is not a base");
+            ReportError(viewDef, path, $"the path must start with a base of the view, but '{head}' is not a base");
         }
     }
 
@@ -692,7 +698,7 @@ internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : I
         {
             if (constraint.Condition.ReturnType is not BooleanType and not ObjectType and not UndefinedType and not TypeRef)
             {
-                ReportError(domainDef, $"the condition of domain constraint '{constraint.Name}' must be a boolean expression");
+                ReportError(domainDef, constraint.Condition.SourceRange != null ? constraint.Condition : constraint, $"the condition of domain constraint '{constraint.Name}' must be a boolean expression");
             }
         }
 

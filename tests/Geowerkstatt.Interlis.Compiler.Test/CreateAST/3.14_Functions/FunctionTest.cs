@@ -128,7 +128,7 @@ public class FunctionTest
                 FUNCTION f (Objects: OBJECTS OF MyClass): BOOLEAN;
             END Model.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'MyClass' from Model'"],
+            ExpectedLog: ["Could not resolve 'reference 'MyClass' from Model' at 3:36-3:43"],
             RefHB: "3.14-11",
             AssertOutput: false));
 
@@ -145,7 +145,7 @@ public class FunctionTest
                 grammar rejects it outright; the merged restricted-reference rule accepts it for uniform parsing, so the
                 type checker enforces the context).
                 """,
-            ExpectedLog: ["Type check error in 'Model.f': the object argument 'Objects' can not take ANYSTRUCTURE; a class, an association or ANYCLASS is required."],
+            ExpectedLog: ["Type check error in 'Model.f' at 3:4-3:59: the object argument 'Objects' can not take ANYSTRUCTURE; a class, an association or ANYCLASS is required."],
             RefHB: "3.14-12",
             AssertOutput: false));
 

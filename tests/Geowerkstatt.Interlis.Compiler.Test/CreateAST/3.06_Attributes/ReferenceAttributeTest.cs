@@ -158,7 +158,7 @@ public class ReferenceAttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr': a reference attribute may only reference a class."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr' at 7:12-7:38: a reference attribute may only reference a class."],
             RefHB: "3.6.3-2",
             AssertOutput: false));
 
@@ -199,7 +199,7 @@ public class ReferenceAttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Source -> attr': a reference attribute may only reference a class."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Source -> attr' at 13:12-13:37: a reference attribute may only reference a class."],
             RefHB: "3.6.3-2",
             AssertOutput: false));
 
@@ -238,7 +238,7 @@ public class ReferenceAttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Source -> attr': RESTRICTION 'Other' must be an extension of 'Base'."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Source -> attr' at 9:12-9:56: RESTRICTION 'Other' must be an extension of 'Base'."],
             RefHB: "3.6.3-2",
             AssertOutput: false));
 
@@ -365,7 +365,7 @@ public class ReferenceAttributeTest
                 END TopicB;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.TopicB.Source -> attr': a cross-topic reference requires property EXTERNAL."],
+            ExpectedLog: ["Type check error in 'Model.TopicB.Source -> attr' at 10:12-10:51: a cross-topic reference requires property EXTERNAL."],
             RefHB: "3.6.3-2",
             AssertOutput: false));
 
@@ -410,7 +410,7 @@ public class ReferenceAttributeTest
                 END TopicB;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.TopicB.Source -> attr': the EXTERNAL reference requires a topic dependency on 'TopicA'."],
+            ExpectedLog: ["Type check error in 'Model.TopicB.Source -> attr' at 9:12-9:62: the EXTERNAL reference requires a topic dependency on 'TopicA'."],
             RefHB: "3.6.3-2",
             AssertOutput: false));
 
@@ -528,7 +528,7 @@ public class ReferenceAttributeTest
                 A reference attribute targets a class or association (RestrictedClassOrAssRef, RefHB 3.6.1-15); ANYSTRUCTURE
                 (a structure placeholder, RefHB 3.6.1-17) is not a valid reference target.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr': ANYSTRUCTURE is not allowed as a reference target."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Class -> attr' at 5:12-5:44: ANYSTRUCTURE is not allowed as a reference target."],
             RefHB: "3.6.3-2",
             AssertOutput: false));
 
@@ -557,9 +557,9 @@ public class ReferenceAttributeTest
                 """,
             ExpectedLog:
             [
-                "Type check error in 'Model.Topic.B': the class transitively EXTENDS itself.",
-                "Type check error in 'Model.Topic.C': the class transitively EXTENDS itself.",
-                "Type check error in 'Model.Topic.D -> r': RESTRICTION 'B' must be an extension of 'Target'.",
+                "Type check error in 'Model.Topic.B' at 6:8-7:14: the class transitively EXTENDS itself.",
+                "Type check error in 'Model.Topic.C' at 8:8-9:14: the class transitively EXTENDS itself.",
+                "Type check error in 'Model.Topic.D -> r' at 11:12-11:52: RESTRICTION 'B' must be an extension of 'Target'.",
             ],
             RefHB: "3.6.3-3",
             AssertOutput: false));
@@ -585,7 +585,7 @@ public class ReferenceAttributeTest
                 explicit opt-out counts: a class without any OID definition stays referenceable.
                 """,
             RefHB: "3.5.3-2",
-            ExpectedLog: ["Type check error in 'Model.Topic.S -> r': can not reference 'N' because it has no stable object identification (NO OID)."],
+            ExpectedLog: ["Type check error in 'Model.Topic.S -> r' at 8:12-8:31: can not reference 'N' because it has no stable object identification (NO OID)."],
             Ili2cDivergenceReason: """
                 ili2c accepts references to classes declared with NO OID; RefHB 3.5.3-2 states such references can
                 not be defined, so we reject.
@@ -638,7 +638,7 @@ public class ReferenceAttributeTest
                 the assignment as an unknown name.
                 """,
             RefHB: "3.5.3-2",
-            ExpectedLog: ["Type check error in 'Model.Topic.S -> r': can not reference 'N' because it has no stable object identification (NO OID)."],
+            ExpectedLog: ["Type check error in 'Model.Topic.S -> r' at 8:12-8:31: can not reference 'N' because it has no stable object identification (NO OID)."],
             AssertOutput: false));
 
 

@@ -225,7 +225,7 @@ public class LineTypeTest
                 If the vertex coordinate type is abstract, the line must itself be declared abstract — the abstract
                 structure alone is not enough, the attribute carrying the line type must be ABSTRACT too.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.LineStruct -> Geom': must be declared ABSTRACT because its type is not fully defined."],
+            ExpectedLog: ["Type check error in 'Model.Topic.LineStruct -> Geom' at 7:12-7:66: must be declared ABSTRACT because its type is not fully defined."],
             RefHB: "3.8.12.2-26",
             AssertOutput: false));
 
@@ -467,7 +467,7 @@ public class LineTypeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'Klothoide' from Model.Topic.ClassA'"],
+            ExpectedLog: ["Could not resolve 'reference 'Klothoide' from Model.Topic.ClassA' at 7:45-7:54"],
             RefHB: "3.8.12.2-30",
             AssertOutput: false));
 

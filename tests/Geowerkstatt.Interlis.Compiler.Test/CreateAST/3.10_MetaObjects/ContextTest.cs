@@ -359,7 +359,7 @@ public class ContextTest
                     Height = 0.000 .. 9000.000 {Heights.LFP1};
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Height': the basket 'Heights' does not declare the meta object 'LFP1'."],
+            ExpectedLog: ["Type check error in 'Model.Height' at 13:8-13:50: the basket 'Heights' does not declare the meta object 'LFP1'."],
             RefHB: "3.10.1-3",
             AssertOutput: false));
 
@@ -426,7 +426,7 @@ public class ContextTest
                 CLASS target stays unresolved (ili2c rejects it too: "There is neither a domain ... nor ..."); the valid
                 meta-object form is pinned by the basket-declared meta object reference cases.
                 """,
-            ExpectedLog: ["Could not resolve 'reference 'RefModel.CoordSystems.HeightSystem' from Model'"],
+            ExpectedLog: ["Could not resolve 'reference 'RefModel.CoordSystems.HeightSystem' from Model' at 24:40-24:74"],
             RefHB: "3.10.3-11",
             AssertOutput: false));
 
@@ -463,7 +463,7 @@ public class ContextTest
                 The refSys form (RefHB 3.8.5): a numeric value referencing a single axis of a coordinate system via the
                 '{System [axis]}' frame form.
                 """,
-            ExpectedLog: ["Could not resolve 'reference 'RefModel.CoordSystems' from Model'"],
+            ExpectedLog: ["Could not resolve 'reference 'RefModel.CoordSystems' from Model' at 24:41-24:62"],
             RefHB: "3.10.3-11",
             AssertOutput: false));
     }
