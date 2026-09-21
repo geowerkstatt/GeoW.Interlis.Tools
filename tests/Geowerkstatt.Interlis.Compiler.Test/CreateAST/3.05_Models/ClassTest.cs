@@ -101,7 +101,7 @@ public class ClassTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.SubClass': can not extend 'Model.Topic.BaseClass' because it is declared FINAL."],
+            ExpectedLog: ["Type check error in 'Model.Topic.SubClass' at 6:8-7:21: can not extend 'Model.Topic.BaseClass' because it is declared FINAL."],
             RefHB: "3.5.3-1",
             AssertOutput: false));
 
@@ -114,7 +114,7 @@ public class ClassTest
                 END ClassName;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.ClassName': must be declared ABSTRACT because it is not part of a topic."],
+            ExpectedLog: ["Type check error in 'Model.ClassName' at 3:4-4:18: must be declared ABSTRACT because it is not part of a topic."],
             RefHB: "3.5.3-1",
             AssertOutput: false));
 
@@ -172,7 +172,7 @@ public class ClassTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Other -> Attr': can not reference 'ClassNoId' because it has no stable object identification (NO OID)."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Other -> Attr' at 9:12-9:42: can not reference 'ClassNoId' because it has no stable object identification (NO OID)."],
             Ili2cDivergenceReason: """
                 ili2c accepts references to classes declared with NO OID; RefHB 3.5.3-2 states such references can
                 not be defined, so we reject.
@@ -233,7 +233,7 @@ public class ClassTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.SubClass': the inherited OID definition 'ANYOID' can not be replaced by NO OID."],
+            ExpectedLog: ["Type check error in 'Model.Topic.SubClass' at 7:8-9:21: the inherited OID definition 'ANYOID' can not be replaced by NO OID."],
             Ili2cDivergenceReason: """
                 ili2c does not check OID redefinitions; RefHB 3.5.3-2 states an inherited ANYOID can not be
                 replaced by NO OID, so we reject.
@@ -298,7 +298,7 @@ public class ClassTest
                 OID AS INTERLIS.UUIDOID;
             END StructureName;
             """,
-            ExpectedLog: ["Compile error at line 2:4 Structure 'StructureName' cannot have an OID definition."],
+            ExpectedLog: ["Compile error at 2:4-2:7 Structure 'StructureName' cannot have an OID definition."],
             RefHB: "3.5.3-4",
             Expected: new ClassDef
             {
@@ -320,7 +320,7 @@ public class ClassTest
                 NO OID;
             END StructureName;
             """,
-            ExpectedLog: ["Compile error at line 2:7 Structure 'StructureName' cannot have an OID definition."],
+            ExpectedLog: ["Compile error at 2:7-2:10 Structure 'StructureName' cannot have an OID definition."],
             RefHB: "3.5.3-4",
             Expected: new ClassDef
             {
@@ -380,7 +380,7 @@ public class ClassTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.SubStructure': a structure can not extend a class."],
+            ExpectedLog: ["Type check error in 'Model.Topic.SubStructure' at 6:8-7:25: a structure can not extend a class."],
             RefHB: "3.5.3-4",
             AssertOutput: false));
 
@@ -469,7 +469,7 @@ public class ClassTest
             CLASS ClassName (GENERIC) =
             END ClassName;
             """,
-            ExpectedLog: ["Compile error at line 1:17 Property 'GENERIC' is not one of the allowed properties ('ABSTRACT', 'EXTENDED', 'FINAL')."],
+            ExpectedLog: ["Compile error at 1:17-1:24 Property 'GENERIC' is not one of the allowed properties ('ABSTRACT', 'EXTENDED', 'FINAL')."],
             RefHB: "3.5.3-6",
             Expected: new ClassDef
             {
@@ -603,7 +603,7 @@ public class ClassTest
                 END SubTopic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.SubTopic.BaseClass': can not use both EXTENDED and EXTENDS."],
+            ExpectedLog: ["Type check error in 'Model.SubTopic.BaseClass' at 8:8-9:22: can not use both EXTENDED and EXTENDS."],
             RefHB: "3.5.3-8",
             AssertOutput: false));
 
@@ -638,7 +638,7 @@ public class ClassTest
             CLASS ClassName =
             END WrongName;
             """,
-            ExpectedLog: ["Compile error at line 2:4 Start name 'ClassName' and end name 'WrongName' do not match."],
+            ExpectedLog: ["Compile error at 2:4-2:13 Start name 'ClassName' and end name 'WrongName' do not match."],
             RefHB: "3.5.3-10",
             Expected: new ClassDef
             {
@@ -697,7 +697,7 @@ public class ClassTest
             STRUCTURE StructureName =
             END WrongName;
             """,
-            ExpectedLog: ["Compile error at line 2:4 Start name 'StructureName' and end name 'WrongName' do not match."],
+            ExpectedLog: ["Compile error at 2:4-2:13 Start name 'StructureName' and end name 'WrongName' do not match."],
             RefHB: "3.5.3-11",
             Expected: new ClassDef
             {
@@ -921,8 +921,8 @@ public class ClassTest
             RefHB: "3.5.3-13",
             ExpectedLog:
             [
-                "Type check error in 'Model.S': the structure transitively EXTENDS itself.",
-                "Type check error in 'Model.Topic.A': the class transitively EXTENDS itself.",
+                "Type check error in 'Model.S' at 3:4-4:10: the structure transitively EXTENDS itself.",
+                "Type check error in 'Model.Topic.A' at 6:8-7:14: the class transitively EXTENDS itself.",
             ],
             AssertOutput: false));
 
@@ -976,7 +976,7 @@ public class ClassTest
                 the inherited STANDARDOID.
                 """,
             RefHB: "3.5.3-2",
-            ExpectedLog: ["Type check error in 'Model.Topic.D': the inherited OID definition 'STANDARDOID' is concrete and can not be changed."],
+            ExpectedLog: ["Type check error in 'Model.Topic.D' at 7:8-9:14: the inherited OID definition 'STANDARDOID' is concrete and can not be changed."],
             Ili2cDivergenceReason: """
                 ili2c does not check OID redefinitions at all; RefHB 3.5.3-2 and 3.8.9-13 only allow replacing an
                 inherited definition by an extension of it, so we reject.
@@ -1002,7 +1002,7 @@ public class ClassTest
                 abstractness: it declares the identification unstable, not undecided.
                 """,
             RefHB: "3.8.9-14",
-            ExpectedLog: ["Type check error in 'Model.Topic.A': must be declared ABSTRACT because its OID definition 'ANYOID' is still open."],
+            ExpectedLog: ["Type check error in 'Model.Topic.A' at 4:8-6:14: must be declared ABSTRACT because its OID definition 'ANYOID' is still open."],
             Ili2cDivergenceReason: """
                 ili2c accepts ANYOID assignments on concrete classes and topics; RefHB 3.8.9-14 reserves ANYOID
                 for abstract topics and classes (otherwise it is only usable as an attribute value range), so we

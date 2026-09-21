@@ -301,7 +301,7 @@ public class EnumerationTypeTest
                 definition can not use one.
                 """,
             RefHB: "3.8.2-17",
-            ExpectedLog: ["Type check error in 'Model.Farbe': the dotted element name '#rot.dunkelrot' is only allowed in an extension of an enumeration."],
+            ExpectedLog: ["Type check error in 'Model.Farbe' at 4:4-4:43: the dotted element name '#rot.dunkelrot' is only allowed in an extension of an enumeration."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -338,8 +338,8 @@ public class EnumerationTypeTest
             RefHB: "3.8.2-17",
             ExpectedLog:
             [
-                "Type check error in 'Model.FarbePlus': the dotted element name '#violett.hell' must identify an element of the inherited enumeration.",
-                "Type check error in 'Model.FarbePlus': the dotted element name '#rot.blass' must identify an element of the inherited enumeration.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:70: the dotted element name '#violett.hell' must identify an element of the inherited enumeration.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:70: the dotted element name '#rot.blass' must identify an element of the inherited enumeration.",
             ],
             Ili2cDivergenceReason: """
                 ili2c accepts dotted names that match no inherited element and nests them as new elements; RefHB
@@ -364,8 +364,8 @@ public class EnumerationTypeTest
             RefHB: "3.8.2-17",
             ExpectedLog:
             [
-                "Type check error in 'Model.FarbePlus': the dotted element name '#rot.dunkelrot' must define a sub-enumeration.",
-                "Type check error in 'Model.FarbePlus': the element '#rot.dunkelrot' is already defined by the inherited enumeration.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:46: the dotted element name '#rot.dunkelrot' must define a sub-enumeration.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:46: the element '#rot.dunkelrot' is already defined by the inherited enumeration.",
             ],
             AssertOutput: false));
 
@@ -386,8 +386,8 @@ public class EnumerationTypeTest
             RefHB: "3.8.2-17",
             ExpectedLog:
             [
-                "Type check error in 'Model.FarbePlus': the element '#gelb' is already defined by the inherited enumeration.",
-                "Type check error in 'Model.FarbePlus': the element '#rot.dunkelrot' is already defined by the inherited enumeration.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:54: the element '#gelb' is already defined by the inherited enumeration.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:54: the element '#rot.dunkelrot' is already defined by the inherited enumeration.",
             ],
             AssertOutput: false));
 
@@ -403,8 +403,8 @@ public class EnumerationTypeTest
             RefHB: "3.8.2-5",
             ExpectedLog:
             [
-                "Type check error in 'Model.Farbe': duplicate enumeration element '#rot.a'.",
-                "Type check error in 'Model.Farbe': duplicate enumeration element '#rot'.",
+                "Type check error in 'Model.Farbe' at 4:4-4:34: duplicate enumeration element '#rot.a'.",
+                "Type check error in 'Model.Farbe' at 4:4-4:34: duplicate enumeration element '#rot'.",
             ],
             AssertOutput: false));
 
@@ -419,7 +419,7 @@ public class EnumerationTypeTest
             END Model.
             """,
             RefHB: "3.8.2-5",
-            ExpectedLog: ["Type check error in 'Model.FarbePlus': duplicate enumeration element '#neu'."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlus' at 5:4-5:41: duplicate enumeration element '#neu'."],
             Ili2cDivergenceReason: """
                 ili2c only checks an extension's elements against the inherited enumeration and accepts re-defining
                 an element the same extension introduced; RefHB 3.8.2-5 requires element names to be unique within
@@ -443,7 +443,7 @@ public class EnumerationTypeTest
                 even though each occurrence legally refines the inherited 'gelb'.
                 """,
             RefHB: "3.8.2-5",
-            ExpectedLog: ["Type check error in 'Model.FarbePlus': duplicate enumeration element '#gelb'."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlus' at 5:4-5:59: duplicate enumeration element '#gelb'."],
             Ili2cDivergenceReason: """
                 ili2c merges repeated deltas for the same inherited element and accepts; RefHB 3.8.2-5 requires
                 element names to be unique within each nesting, so we reject.
@@ -461,7 +461,7 @@ public class EnumerationTypeTest
             END Model.
             """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.FarbePlus': can not add the element '#blau' because the inherited enumeration is FINAL."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlus' at 5:4-5:37: can not add the element '#blau' because the inherited enumeration is FINAL."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -475,7 +475,7 @@ public class EnumerationTypeTest
             END Model.
             """,
             RefHB: "3.8.2-27",
-            ExpectedLog: ["Type check error in 'Model.FarbePlus': can not add the element '#rot.karmin' because the inherited sub-enumeration 'rot' is FINAL."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlus' at 5:4-5:45: can not add the element '#rot.karmin' because the inherited sub-enumeration 'rot' is FINAL."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -494,7 +494,7 @@ public class EnumerationTypeTest
                 the further extension can not add elements any more.
                 """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.FarbePlusPlus': can not add the element '#blau' because the inherited enumeration is FINAL."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlusPlus' at 6:4-6:45: can not add the element '#blau' because the inherited enumeration is FINAL."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -513,7 +513,7 @@ public class EnumerationTypeTest
                 can be.
                 """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.Farbe': the element '#transparent' has no sub-enumeration to declare FINAL."],
+            ExpectedLog: ["Type check error in 'Model.Farbe' at 4:4-4:51: the element '#transparent' has no sub-enumeration to declare FINAL."],
             Ili2cDivergenceReason: """
                 ili2c accepts the bare (FINAL) on an element without a sub-enumeration and silently drops the
                 element from the value set; RefHB 3.8.2-19 only foresees the form for freezing an existing
@@ -539,8 +539,8 @@ public class EnumerationTypeTest
             RefHB: "3.8.2-19",
             ExpectedLog:
             [
-                "Type check error in 'Model.FarbePlus': the element '#gelb' has no sub-enumeration to declare FINAL.",
-                "Type check error in 'Model.FarbePlus': the element '#neu' has no sub-enumeration to declare FINAL.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:58: the element '#gelb' has no sub-enumeration to declare FINAL.",
+                "Type check error in 'Model.FarbePlus' at 5:4-5:58: the element '#neu' has no sub-enumeration to declare FINAL.",
             ],
             Ili2cDivergenceReason: """
                 ili2c accepts the bare (FINAL) on an element without a sub-enumeration and silently drops the
@@ -582,7 +582,7 @@ public class EnumerationTypeTest
             END Model.
             """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.FarbePlusPlus': can not add the element '#rot.dunkelrot.neu' because the inherited sub-enumeration 'rot.dunkelrot' is FINAL."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlusPlus' at 6:4-6:60: can not add the element '#rot.dunkelrot.neu' because the inherited sub-enumeration 'rot.dunkelrot' is FINAL."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -597,7 +597,7 @@ public class EnumerationTypeTest
             END Model.
             """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.FarbePlusPlus': the element '#blau' is already defined by the inherited enumeration."],
+            ExpectedLog: ["Type check error in 'Model.FarbePlusPlus' at 6:4-6:45: the element '#blau' is already defined by the inherited enumeration."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -618,8 +618,8 @@ public class EnumerationTypeTest
             RefHB: "3.8.2-20",
             ExpectedLog:
             [
-                "Type check error in 'Model.WochentagePlus': a CIRCULAR enumeration can not be extended.",
-                "Type check error in 'Model.WochentagePlusPlus': a CIRCULAR enumeration can not be extended.",
+                "Type check error in 'Model.WochentagePlus' at 5:4-5:51: a CIRCULAR enumeration can not be extended.",
+                "Type check error in 'Model.WochentagePlusPlus' at 6:4-6:62: a CIRCULAR enumeration can not be extended.",
             ],
             Ili2cDivergenceReason: """
                 ili2c accepts extensions of circular enumerations; RefHB 3.8.2-20 states circular enumerations can
@@ -643,7 +643,7 @@ public class EnumerationTypeTest
                 with the new leaves.
                 """,
             RefHB: "3.8.2-20",
-            ExpectedLog: ["Type check error in 'Model.WochentagePlus': a CIRCULAR enumeration can not be extended."],
+            ExpectedLog: ["Type check error in 'Model.WochentagePlus' at 5:4-5:72: a CIRCULAR enumeration can not be extended."],
             Ili2cDivergenceReason: """
                 ili2c accepts extensions of circular enumerations; RefHB 3.8.2-20 states circular enumerations can
                 not be extended, so we reject.
@@ -666,7 +666,7 @@ public class EnumerationTypeTest
                 enumeration can not extend it (ili2c: enumeration types can only extend other enumeration types).
                 """,
             RefHB: "3.8.2-13",
-            ExpectedLog: ["Type check error in 'Model.WertePlus': the domain must be of the same kind as its base 'Werte'."],
+            ExpectedLog: ["Type check error in 'Model.WertePlus' at 6:4-6:36: the domain must be of the same kind as its base 'Werte'."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -707,7 +707,7 @@ public class EnumerationTypeTest
             END Model.
             """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr': can not add the element '#blau' because the inherited enumeration is FINAL."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:6-8:31: can not add the element '#blau' because the inherited enumeration is FINAL."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -733,7 +733,7 @@ public class EnumerationTypeTest
                 enumeration duplicates it.
                 """,
             RefHB: "3.8.2-19",
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassC -> attr': the element '#blau' is already defined by the inherited enumeration."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassC -> attr' at 11:6-11:31: the element '#blau' is already defined by the inherited enumeration."],
             AssertOutput: false));
 
         yield return Rule(new(

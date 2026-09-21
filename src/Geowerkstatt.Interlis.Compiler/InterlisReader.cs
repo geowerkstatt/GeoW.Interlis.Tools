@@ -97,11 +97,11 @@ public class InterlisReader
     /// <summary>
     /// Parses the <paramref name="textReader"/> into an <see cref="InterlisEnvironment"/> (including the internal
     /// INTERLIS model), without resolving references. The <see cref="ModelDef.SourceUri"/> of the parsed models is
-    /// set to <paramref name="sourceUri"/>.
+    /// set to <paramref name="sourceUri"/>, as is the <see cref="RangePosition.SourceUri"/> of every range in them.
     /// </summary>
     private InterlisEnvironment ParseModels(TextReader textReader, string? sourceUri)
     {
-        var interlisFile = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()));
+        var interlisFile = ReadRule(textReader, (p, v) => v.VisitInterlis(p.interlis()), sourceUri: sourceUri);
         foreach (var model in interlisFile.Content.Values)
         {
             if (model != InternalModel.Interlis)
@@ -134,10 +134,11 @@ public class InterlisReader
     /// <param name="textReader">The input to compile.</param>
     /// <param name="parseRule">A function to parse the input given the <see cref="Interlis24Parser"/> and <see cref="Interlis24Visitor"/>.</param>
     /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
-    /// <returns>The compiled representation of the <paramref name="textReader"/> input and a list of <see cref="UnresolvedReference"/>s.</returns>
-    public TResult ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0)
+    /// <param name="sourceUri">Optional filepath or URL of the source, recorded as the <see cref="RangePosition.SourceUri"/> of every range in the result and in the logged problems.</param>
+    /// <returns>The compiled representation of the <paramref name="textReader"/> input.</returns>
+    public TResult ReadRule<TResult>(TextReader textReader, Func<Interlis24Parser, Interlis24Visitor, TResult> parseRule, int lineOffset = 0, string? sourceUri = null)
     {
-        var tokenStream = RunLexer(textReader, lineOffset);
+        var tokenStream = RunLexer(textReader, lineOffset, sourceUri);
         var interlisParser = GetParser(tokenStream);
         var astCreator = new Interlis24Visitor(loggerFactory, tokenStream);
         var result = parseRule(interlisParser, astCreator);
@@ -156,10 +157,16 @@ public class InterlisReader
     /// </summary>
     /// <param name="textReader">The input to compile.</param>
     /// <param name="lineOffset">Optional line number offset to get correct positions in error messages when only part of a file is parsed.</param>
+    /// <param name="sourceUri">Optional filepath or URL of the source; becomes the stream's <see cref="IIntStream.SourceName"/> and thereby the <see cref="RangePosition.SourceUri"/> of the ranges built from its tokens.</param>
     /// <returns>A <see cref="CommonTokenStream"/> with the tokens from the lexer.</returns>
-    public CommonTokenStream RunLexer(TextReader textReader, int lineOffset = 0)
+    public CommonTokenStream RunLexer(TextReader textReader, int lineOffset = 0, string? sourceUri = null)
     {
         var inputStream = CharStreams.fromTextReader(textReader);
+        if (sourceUri != null && inputStream is BaseInputCharStream namedStream)
+        {
+            namedStream.name = sourceUri;
+        }
+
 
         var interlisLexer = new Interlis24Lexer(inputStream);
         interlisLexer.TokenFactory = new LineOffsetDecorator(interlisLexer.TokenFactory, lineOffset);

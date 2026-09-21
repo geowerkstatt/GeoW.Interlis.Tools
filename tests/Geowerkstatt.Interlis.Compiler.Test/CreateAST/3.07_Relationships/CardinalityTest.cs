@@ -40,28 +40,28 @@ public class CardinalityTest
         yield return Rule(new(
             "Cardinality with invalid star minimum",
             "{*..5}",
-            ExpectedLog: ["Compile error at line 1:1 Invalid cardinality '{*..5}', did you mean '{0..5}'."],
+            ExpectedLog: ["Compile error at 1:1-1:2 Invalid cardinality '{*..5}', did you mean '{0..5}'."],
             RefHB: "3.7.3-1",
             Expected: new Cardinality { Min = 0, Max = 5 }));
 
         yield return Rule(new(
             "Cardinality with invalid star minimum and maximum",
             "{*..*}",
-            ExpectedLog: ["Compile error at line 1:1 Invalid cardinality '{*..*}', did you mean '{0..*}'."],
+            ExpectedLog: ["Compile error at 1:1-1:2 Invalid cardinality '{*..*}', did you mean '{0..*}'."],
             RefHB: "3.7.3-1",
             Expected: new Cardinality { Min = 0, Max = Cardinality.Unbound }));
 
         yield return Rule(new(
             "Cardinality with swapped range",
             "{8..1}",
-            ExpectedLog: ["Compile error at line 1:0 Invalid cardinality minimal value '8' is larger than maximal value '1'."],
+            ExpectedLog: ["Compile error at 1:0-1:1 Invalid cardinality minimal value '8' is larger than maximal value '1'."],
             RefHB: "3.7.3-1",
             Expected: new Cardinality { Min = 1, Max = 8 }));
 
         yield return Rule(new(
             "Cardinality with too large value",
             "{0..9223372036854775808}",
-            ExpectedLog: ["Compile error at line 1:4 Could not parse value 9223372036854775808."],
+            ExpectedLog: ["Compile error at 1:4-1:23 Could not parse value 9223372036854775808."],
             RefHB: "3.7.3-1",
             Expected: new Cardinality { Min = 0, Max = Cardinality.Unbound }));
     }

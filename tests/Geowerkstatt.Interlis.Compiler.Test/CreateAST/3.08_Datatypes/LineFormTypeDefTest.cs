@@ -145,7 +145,7 @@ public class LineFormTypeDefTest
                 INTERLIS.LineSegment, which carries the segment end point every curve form shares.
                 """,
             RefHB: "3.8.12.3-4",
-            ExpectedLog: ["Type check error in 'Model.Custom': the line structure 'Standalone' must be an extension of the predefined structure INTERLIS.LineSegment."],
+            ExpectedLog: ["Type check error in 'Model.Custom' at 6:14-6:33: the line structure 'Standalone' must be an extension of the predefined structure INTERLIS.LineSegment."],
             Ili2cDivergenceReason: """
                 ili2c does not enforce the line-structure rule and accepts any structure as a line form (the model
                 is CONTRACTED, so its contract rule does not interfere); RefHB 3.8.12.3-4 states a line structure

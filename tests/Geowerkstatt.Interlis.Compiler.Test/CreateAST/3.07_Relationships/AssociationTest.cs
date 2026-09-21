@@ -687,7 +687,7 @@ public class AssociationTest
                 An association role targets a class or association (RestrictedClassOrAssRef); ANYSTRUCTURE (a structure
                 placeholder, RefHB 3.6.1-17) is not a valid role target.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.Assoc -> role2': ANYSTRUCTURE is not allowed as an association role target."],
+            ExpectedLog: ["Type check error in 'Model.Topic.Assoc -> role2' at 8:12-8:34: ANYSTRUCTURE is not allowed as an association role target."],
             RefHB: "3.7.1",
             AssertOutput: false));
 
@@ -709,7 +709,7 @@ public class AssociationTest
                 too: its single-pass name resolution can not even resolve the self-reference).
                 """,
             RefHB: "3.7.1-7",
-            ExpectedLog: ["Type check error in 'Model.Topic.a': the association transitively EXTENDS itself."],
+            ExpectedLog: ["Type check error in 'Model.Topic.a' at 6:8-7:14: the association transitively EXTENDS itself."],
             AssertOutput: false));
 
 
@@ -761,7 +761,7 @@ public class AssociationTest
             END Model.
             """,
             RefHB: "3.7.4-1",
-            ExpectedLog: ["Type check error in 'Model.Topic.A2 -> rx': an unordered role can not extend an ordered one."],
+            ExpectedLog: ["Type check error in 'Model.Topic.A2 -> rx' at 13:12-13:31: an unordered role can not extend an ordered one."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -785,7 +785,7 @@ public class AssociationTest
             END Model.
             """,
             RefHB: "3.7.1-7",
-            ExpectedLog: ["Type check error in 'Model.Topic.A2 -> rx': the cardinality must not be wider than the inherited cardinality."],
+            ExpectedLog: ["Type check error in 'Model.Topic.A2 -> rx' at 13:12-13:38: the cardinality must not be wider than the inherited cardinality."],
             AssertOutput: false));
 
 
@@ -812,7 +812,7 @@ public class AssociationTest
                 may be defined onto the class (RefHB 3.5.3-2).
                 """,
             RefHB: "3.5.3-2",
-            ExpectedLog: ["Type check error in 'Model.Topic.a -> rn': can not reference 'N' because it has no stable object identification (NO OID)."],
+            ExpectedLog: ["Type check error in 'Model.Topic.a -> rn' at 10:12-10:20: can not reference 'N' because it has no stable object identification (NO OID)."],
             Ili2cDivergenceReason: """
                 ili2c accepts roles targeting classes declared with NO OID; RefHB 3.5.3-2 states such references
                 can not be defined, so we reject.

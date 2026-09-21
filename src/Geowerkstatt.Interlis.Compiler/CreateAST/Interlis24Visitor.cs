@@ -39,7 +39,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// <param name="message">The error message.</param>
     private void ReportError(IToken offendingToken, string message)
     {
-        logger.LogError("Compile error at line {Line}:{CharPosition} {Message}.", offendingToken.Line, offendingToken.Column, message);
+        logger.LogError("Compile error at {Range} {Message}.", offendingToken.ToRange(), message);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// <param name="message">The warning message.</param>
     private void ReportWarning(IToken offendingToken, string message)
     {
-        logger.LogWarning("Compile warn at line {Line}:{CharPosition} {Message}.", offendingToken.Line, offendingToken.Column, message);
+        logger.LogWarning("Compile warn at {Range} {Message}.", offendingToken.ToRange(), message);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     [return: NotNullIfNotNull(nameof(referenceContext))]
     private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IInterlisDefinition
     {
-        return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), GetRange(referenceContext), mapTarget);
+        return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), referenceContext.ToRange(), mapTarget);
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             path.Add(context.metaObjectName.Text);
         }
 
-        return new Reference<IInterlisDefinition> { Path = { path }, SourceRange = GetRange(context) };
+        return new Reference<IInterlisDefinition> { Path = { path }, SourceRange = context.ToRange() };
     }
 
     /// <summary>
@@ -120,37 +120,6 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             ReportError(offendingToken, $"Start name '{startName}' and end name '{endName}' do not match");
         }
-    }
-
-    /// <summary>
-    /// Create a <see cref="RangePosition"/> from the given <paramref name="token"/>.
-    /// </summary>
-    /// <remarks>Only works correctly if the <paramref name="token"/> does not span multiple lines.</remarks>
-    private RangePosition GetRange(IToken token)
-    {
-        return GetRange(token, token);
-    }
-
-    /// <summary>
-    /// Create a <see cref="RangePosition"/> from the given <paramref name="context"/>.
-    /// </summary>
-    /// <remarks>Only works correctly if the last <paramref name="token"/> does not span multiple lines.</remarks>
-    private RangePosition GetRange(ParserRuleContext context)
-    {
-        return GetRange(context.Start, context.Stop);
-    }
-
-    /// <summary>
-    /// Create a <see cref="RangePosition"/> spanning from the <paramref name="start"/> token to the <paramref name="stop"/> token.
-    /// </summary>
-    /// <remarks>Only works correctly if the <paramref name="stop"/> token does not span multiple lines.</remarks>
-    private RangePosition GetRange(IToken start, IToken stop)
-    {
-        return new RangePosition
-        {
-            Start = new Position { Line = start.Line - 1, Character = start.Column },
-            End = new Position { Line = stop.Line - 1, Character = stop.Column + stop.Text.Length },
-        };
     }
 
     /// <summary>
@@ -232,7 +201,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
         if (version != 2.4)
         {
-            logger.LogWarning("Unsupported INTERLIS version {Version}. Only version 2.4 is supported.", version);
+            var range = context.numeric() is { } versionContext ? versionContext.ToRange() : context.Start.ToRange();
+            logger.LogWarning("Unsupported INTERLIS version {Version} at {Range}. Only version 2.4 is supported.", version, range);
         }
 
         SetContentDictionary(interlisFile, null, context.Start, context.modelDef().Select(VisitModelDef));
@@ -251,8 +221,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var modelDef = new ModelDef
         {
             Name = context.name.Text,
-            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
-            SourceRange = GetRange(context),
+            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(RangeExtensions.ToRange) },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             Language = context.language?.Text,
@@ -283,7 +253,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             modelDef.TranslationOf = CreateReference<IInterlisDefinition>(
                 [context.translationOf.Text],
-                GetRange(context.translationOf),
+                context.translationOf.ToRange(),
                 element => element as ModelDef,
                 resolvesInEnvironment: true);
         }
@@ -297,7 +267,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             }
 
             var importModelName = import.name.Text;
-            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], GetRange(import.name), resolvesInEnvironment: true))))
+            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], import.name.ToRange(), resolvesInEnvironment: true))))
             {
                 ReportError(import.name, $"Duplicate import {importModelName}");
             }
@@ -344,8 +314,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var topicDef = new TopicDef
         {
             Name = context.name.Text,
-            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
-            SourceRange = GetRange(context),
+            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(RangeExtensions.ToRange) },
+            SourceRange = context.ToRange(),
             IsView = context.VIEW() != null,
             Extends = CreateReference<TopicDef>(context.extends),
             OidType = CreateReference<DomainDef>(context.oid),
@@ -404,8 +374,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var classDef = new ClassDef
         {
             Name = context.name.Text,
-            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
-            SourceRange = GetRange(context),
+            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(RangeExtensions.ToRange) },
+            SourceRange = context.ToRange(),
             IsStructure = context.STRUCTURE() != null,
             Extends = CreateReference<ClassDef>(context.extends),
             DocComments = { GetDocComments(context) },
@@ -448,8 +418,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var associationDef = new AssociationDef
         {
             Name = name,
-            NameLocations = { new [] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
-            SourceRange = GetRange(context),
+            NameLocations = { new [] { context.name, context.endName }.WhereNotNull().Select(RangeExtensions.ToRange) },
+            SourceRange = context.ToRange(),
             Extends = CreateReference<AssociationDef>(context.extends),
             Cardinality = context.cardinality() != null ? VisitCardinality(context.cardinality()) : new Cardinality { Min = 0, Max = Cardinality.Unbound },
             Properties = { properties },
@@ -497,8 +467,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var viewDef = new ViewDef
         {
             Name = context.name.Text,
-            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
-            SourceRange = GetRange(context),
+            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(RangeExtensions.ToRange) },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             Properties = { properties },
@@ -614,7 +584,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         inspection.Path.AddRange(context.IDENTIFIER()
             .Select(identifier => identifier.Symbol)
             .Where(IsValidToken)
-            .Select(token => new Reference<AttributeDef> { Path = { token.Text }, SourceRange = GetRange(token) }));
+            .Select(token => new Reference<AttributeDef> { Path = { token.Text }, SourceRange = token.ToRange() }));
         return inspection;
     }
 
@@ -652,14 +622,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var baseView = new BaseView
         {
             Name = context.@base?.Text ?? viewable?.Path.LastOrDefault() ?? string.Empty,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
             Viewable = viewable,
             IsRenamed = context.@base != null,
         };
 
         if (context.@base is { } baseToken)
         {
-            baseView.NameLocations.Add(GetRange(baseToken));
+            baseView.NameLocations.Add(baseToken.ToRange());
         }
 
         return baseView;
@@ -676,7 +646,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         // The base name is mandatory but may still be missing while typing; VisitViewDef only keeps reference
         // results, so returning null here is silently dropped.
-        return IsValidToken(context.@base) ? CreateReference<BaseView>([context.@base.Text], GetRange(context.@base)) : null;
+        return IsValidToken(context.@base) ? CreateReference<BaseView>([context.@base.Text], context.@base.ToRange()) : null;
     }
 
     public override object? VisitDefinedViewAttribute([NotNull] Interlis24Parser.DefinedViewAttributeContext context)
@@ -690,8 +660,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new AttributeDef
         {
             Name = context.attribute.Text,
-            NameLocations = { GetRange(context.attribute) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.attribute.ToRange() },
+            SourceRange = context.ToRange(),
             TypeDef = UndefinedType.Instance,
             Properties = { properties },
             Values = { VisitFactor(context.factor()) },
@@ -713,8 +683,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var graphicDef = new GraphicDef
         {
             Name = context.name.Text,
-            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(GetRange) },
-            SourceRange = GetRange(context),
+            NameLocations = { new[] { context.name, context.endName }.WhereNotNull().Select(RangeExtensions.ToRange) },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             Properties = { properties },
@@ -735,7 +705,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Name = context.name.Text,
             Sign = CreateReference<IInterlisDefinition>(context.sign),
             Properties = { properties },
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
         rule.Assignments.AddRange(context.condSignParamAssignment().Select(VisitCondSignParamAssignment));
         return rule;
@@ -841,8 +811,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var roleDef = new AttributeDef
         {
             Name = context.name.Text,
-            NameLocations = { GetRange(context.name) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.name.ToRange() },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = target,
@@ -874,7 +844,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Target = VisitRestrictedDefinitionRef(targetRef),
             Properties = { properties },
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -923,8 +893,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new AttributeDef
         {
             Name = context.name.Text,
-            NameLocations = { GetRange(context.name) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.name.ToRange() },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             TypeDef = context.attrTypeDef() == null ? UndefinedType.Instance : VisitAttrTypeDef(context.attrTypeDef()),
@@ -943,8 +913,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var parameterDef = new ParameterDef
         {
             Name = context.parameter.Text,
-            NameLocations = { GetRange(context.parameter) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.parameter.ToRange() },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             Properties = { properties },
@@ -976,8 +946,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             result.Add(new ParameterDef
             {
                 Name = names[i].GetText(),
-                NameLocations = { GetRange(names[i].Symbol) },
-                SourceRange = GetRange(names[i].Symbol, types[i].Stop),
+                NameLocations = { names[i].Symbol.ToRange() },
+                SourceRange = names[i].Symbol.ToRange(types[i].Stop),
                 TypeDef = VisitAttrTypeDef(types[i]),
             });
         }
@@ -1032,7 +1002,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return new UnresolvedNamedType
             {
                 Target = VisitRestrictedDefinitionRef(restrictedDefinitonRef),
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
             };
         }
         else
@@ -1059,12 +1029,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             {
                 Length = IsValidToken(context.maxLength) ? int.Parse(context.maxLength.Text) : null,
                 IsMText = context.MTEXT() != null,
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
             };
         }
         else
         {
-            return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", context.GetText()]), SourceRange = GetRange(context), };
+            return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", context.GetText()]), SourceRange = context.ToRange(), };
         }
     }
 
@@ -1114,15 +1084,15 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
             // The minimum bound decides the notation of the range (a mixed range is already reported above).
             numericTypeDef = minIsMantissa
-                ? new FloatType { MantissaLength = -minPrecision, SourceRange = GetRange(context) }
-                : new DecimalType { Precision = minPrecision, SourceRange = GetRange(context) };
+                ? new FloatType { MantissaLength = -minPrecision, SourceRange = context.ToRange() }
+                : new DecimalType { Precision = minPrecision, SourceRange = context.ToRange() };
             numericTypeDef.Min = minValue;
             numericTypeDef.Max = maxValue;
         }
         else
         {
             // NUMERIC, or a range still incomplete while typing: no bounds and no declared notation.
-            numericTypeDef = new NumericType { SourceRange = GetRange(context) };
+            numericTypeDef = new NumericType { SourceRange = context.ToRange() };
         }
 
         numericTypeDef.Circular = context.CIRCULAR() != null;
@@ -1158,7 +1128,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             {
                 Basket = metaObjectRef.definitionRef() == null ? null : CreateReference<MetaDataBasketDef>(metaObjectRef.definitionRef()),
                 MetaObject = IsValidToken(metaObjectRef.metaObjectName)
-                    ? new Reference<MetaObjectDeclaration> { Path = { metaObjectRef.metaObjectName.Text }, SourceRange = GetRange(metaObjectRef.metaObjectName) }
+                    ? new Reference<MetaObjectDeclaration> { Path = { metaObjectRef.metaObjectName.Text }, SourceRange = metaObjectRef.metaObjectName.ToRange() }
                     : null,
             },
             Axis = axis,
@@ -1174,7 +1144,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             BasedOn = CreateReference<ClassDef>(context.basedOn),
             FormatBaseType = CreateReference<DomainDef>(context.domainRef),
             Format = context.formatDef() == null ? null : VisitFormatDef(context.formatDef()),
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1209,7 +1179,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             // structureAttribute '/' formatted=definitionRef
             return new FormatBaseAttribute
             {
-                Attribute = new Reference<AttributeDef> { Path = { context.structureAttribute.Text }, SourceRange = GetRange(context.structureAttribute) },
+                Attribute = new Reference<AttributeDef> { Path = { context.structureAttribute.Text }, SourceRange = context.structureAttribute.ToRange() },
                 FormattedDomain = CreateReference<DomainDef>(context.formatted),
             };
         }
@@ -1217,7 +1187,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // numericAttribute ('/' intPos=POS_NUMBER)?
         return new FormatBaseAttribute
         {
-            Attribute = new Reference<AttributeDef> { Path = { context.numericAttribute.Text }, SourceRange = GetRange(context.numericAttribute) },
+            Attribute = new Reference<AttributeDef> { Path = { context.numericAttribute.Text }, SourceRange = context.numericAttribute.ToRange() },
             Position = context.intPos == null ? (int?)null : int.Parse(context.intPos.Text),
         };
     }
@@ -1280,7 +1250,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         return new BooleanType
         {
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1292,7 +1262,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Axis = { context._axis.Select(VisitNumericType) },
             Rotation = context.rotationDef() == null ? null : VisitRotationDef(context.rotationDef()),
             RefSysCode = context.refsys == null ? null : VisitString(context.refsys),
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1319,8 +1289,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var unit = new UnitDef
         {
             Name = shortName ?? term,
-            NameLocations = { GetRange(context.unitShortName == null ? context.unitTerm : context.unitShortName) },
-            SourceRange = GetRange(context),
+            NameLocations = { (context.unitShortName == null ? context.unitTerm : context.unitShortName).ToRange() },
+            SourceRange = context.ToRange(),
             Extends = CreateReference<UnitDef>(context.extends),
             Term = term,
             DocComments = { GetDocComments(context) },
@@ -1406,8 +1376,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new MetaDataBasketDef
         {
             Name = context.basketName.Text,
-            NameLocations = { GetRange(context.basketName) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.basketName.ToRange() },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             Properties = { properties },
@@ -1425,9 +1395,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             // The class name is mandatory but may be missing right after 'OBJECTS OF' while typing. The reference
             // is not registered: the class lives in the basket's topic, linked by the reference resolver.
             Class = IsValidToken(context.className)
-                ? new Reference<ClassDef> { Path = { context.className.Text }, SourceRange = GetRange(context.className) }
+                ? new Reference<ClassDef> { Path = { context.className.Text }, SourceRange = context.className.ToRange() }
                 : new Reference<ClassDef>(),
-            MetaObjects = { context._metaObjectName.Select(t => new MetaObjectDeclaration { Name = t.Text, NameLocations = { GetRange(t) } }) },
+            MetaObjects = { context._metaObjectName.Select(t => new MetaObjectDeclaration { Name = t.Text, NameLocations = { t.ToRange() } }) },
         };
     }
 
@@ -1441,8 +1411,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new ContextDef
         {
             Name = context.name.Text,
-            NameLocations = { GetRange(context.name) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.name.ToRange() },
+            SourceRange = context.ToRange(),
             Mappings = { context.contextMapping().Select(VisitContextMapping) },
         };
     }
@@ -1483,8 +1453,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new DomainDef
         {
             Name = context.name.Text,
-            NameLocations = { GetRange(context.name) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.name.ToRange() },
+            SourceRange = context.ToRange(),
             TypeDef = type,
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
@@ -1498,7 +1468,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Name = context.IDENTIFIER().GetText(),
             Condition = Visit(context.expression()) as IExpression ?? new UndefinedConstant(),
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1548,7 +1518,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Name = context.name?.Text ?? "",
             Condition = condition,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1569,7 +1539,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Direction = context.GREATER_EQUAL() != null ? PlausibilityConstraint.Comparison.AtLeast : PlausibilityConstraint.Comparison.AtMost,
             Percentage = percentage,
             Condition = condition,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1582,7 +1552,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Name = context.name?.Text ?? "",
             // The checked path is mandatory but can be missing right after 'EXISTENCE CONSTRAINT' while typing.
             AttributePath = paths.Length > 0 ? VisitObjectOrAttributePath(paths[0]) : new PathExpression(),
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
 
         // REQUIRED IN ref ':' path { OR ref ':' path } — refs[i] pairs with paths[i + 1]. While typing there can be
@@ -1606,7 +1576,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Name = context.name?.Text ?? "",
             IsBasket = context.BASKET() != null,
             Where = context.expression() == null ? null : Visit(context.expression()) as IExpression,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
 
         if (context.localUniqueness() != null)
@@ -1628,9 +1598,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // resolver's member walk, not by the scoped reference resolution.
         var local = new LocalUniqueness();
         local.StructurePath.AddRange(context._structureAttribute.Where(IsValidToken)
-            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = GetRange(t) }));
+            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = t.ToRange() }));
         local.AttributeNames.AddRange(context._attributeName.Where(IsValidToken)
-            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = GetRange(t) }));
+            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = t.ToRange() }));
         return local;
     }
 
@@ -1659,7 +1629,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             IsBasket = context.BASKET() != null,
             Where = whereContext == null ? null : Visit(whereContext) as IExpression,
             Condition = condition,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1684,7 +1654,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             var block = new ConstraintsBlockDef
             {
                 Name = $"CONSTRAINTS OF {targetText} #{ordinal}",
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
                 Target = target,
                 Parent = CurrentScope.Value,
             };
@@ -1708,7 +1678,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Value = context.ANY() != null
                 ? new OidType.AnyOid()
                 : VisitChildrenBase(context) is TypeDef inner ? new OidType.ValueRange { Type = inner } : null,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1718,7 +1688,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             IsStructure = context.STRUCTURE() != null,
             Restrictions = { context.definitionRef().Select(r => CreateReference<IInterlisDefinition>(r)).WhereNotNull() },
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1729,7 +1699,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Of = context.objectOrAttributePath() == null ? null : VisitObjectOrAttributePath(context.objectOrAttributePath()),
             ArgumentName = context.argumentName?.Text,
             Restrictions = { context.attrTypeDef().Select(VisitAttrTypeDef) },
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1738,7 +1708,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new BlackboxType
         {
             Kind = context.XML() != null ? BlackboxType.BlackboxTypeKind.Xml : BlackboxType.BlackboxTypeKind.Binary,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1767,7 +1737,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 WithoutOverlaps = withoutOverlaps,
                 LineForms = { lineForms },
                 VertexType = CreateReference<DomainDef>(context.vertexType),
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
             };
         }
         else
@@ -1779,7 +1749,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 WithoutOverlaps = withoutOverlaps,
                 LineForms = { lineForms },
                 VertexType = CreateReference<DomainDef>(context.vertexType),
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
             };
         }
     }
@@ -1797,7 +1767,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // every line form resolves uniformly to its LineFormTypeDef.
         if (context.STRAIGHTS() != null || context.ARCS() != null)
         {
-            return CreateReference<LineFormTypeDef>([InternalModel.Interlis.Name, context.Start.Text], GetRange(context));
+            return CreateReference<LineFormTypeDef>([InternalModel.Interlis.Name, context.Start.Text], context.ToRange());
         }
 
         // A custom form is a (possibly model-qualified) reference to a LINE FORM type (RefHB 3.8.12.3). Its name
@@ -1818,9 +1788,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             result.Add(new LineFormTypeDef
             {
                 Name = identifiers[i].GetText(),
-                NameLocations = { GetRange(identifiers[i].Symbol) },
-                SourceRange = GetRange(identifiers[i].Symbol, identifiers[i + 1].Symbol),
-                Structure = CreateReference<ClassDef>([identifiers[i + 1].GetText()], GetRange(identifiers[i + 1].Symbol)),
+                NameLocations = { identifiers[i].Symbol.ToRange() },
+                SourceRange = identifiers[i].Symbol.ToRange(identifiers[i + 1].Symbol),
+                Structure = CreateReference<ClassDef>([identifiers[i + 1].GetText()], identifiers[i + 1].Symbol.ToRange()),
             });
         }
 
@@ -1834,7 +1804,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             TargetEnumeration = CreateReference<DomainDef>(context.definitionRef()),
             LeafsOnly = false,
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -1844,7 +1814,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Sequencing = (EnumerationType.Sequencings)(context.sequencing?.Type ?? 0),
             Values = { VisitEnumeration(context.enumeration()) },
-            SourceRange = GetRange(context),
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -2269,7 +2239,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var startToken = context.definitionRef()?.Start ?? context.attribute ?? context.Start;
         var stopToken = context.attribute ?? context.Stop ?? context.Start;
 
-        return new AttributePathConstant { Attribute = CreateReference<AttributeDef>(path, GetRange(startToken, stopToken)) };
+        return new AttributePathConstant { Attribute = CreateReference<AttributeDef>(path, startToken.ToRange(stopToken)) };
     }
 
     public override ClassConstant VisitClassConst([NotNull] Interlis24Parser.ClassConstContext context)
@@ -2282,6 +2252,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new PathExpression
         {
             Path = { context.pathEl().Select(VisitPathEl).ToList() },
+            SourceRange = context.ToRange(),
         };
     }
 
@@ -2335,8 +2306,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new FunctionDef
         {
             Name = context.name.Text,
-            NameLocations = { GetRange(context.name) },
-            SourceRange = GetRange(context),
+            NameLocations = { context.name.ToRange() },
+            SourceRange = context.ToRange(),
             DocComments = { GetDocComments(context) },
             MetaAttributes = { ProcessMetaAttributes(context) },
             // The return type can be missing right after the ':' while typing; fall back to the undefined type.
@@ -2377,7 +2348,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 Cardinality = context.OBJECTS() != null
                     ? new Cardinality { Min = 0, Max = Cardinality.Unbound }
                     : new Cardinality { Min = 1, Max = 1 },
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
             };
         }
         else
@@ -2387,7 +2358,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return new EnumerationValuesType
             {
                 LeafsOnly = context.ENUMVAL() != null,
-                SourceRange = GetRange(context),
+                SourceRange = context.ToRange(),
             };
         }
     }

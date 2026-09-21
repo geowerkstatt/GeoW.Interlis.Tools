@@ -27,7 +27,7 @@ internal class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : I
 
     private void ReportError(IInterlisDefinition element, string message)
     {
-        logger.LogError("Type check error in '{Name}': {Message}.", element.FullyQualifiedName, message);
+        logger.LogError("Type check error in '{Name}' at {Range}: {Message}.", element.FullyQualifiedName, element.GetNearestSourceRange(), message);
     }
 
     public override bool VisitModelDef([NotNull] ModelDef modelDef)

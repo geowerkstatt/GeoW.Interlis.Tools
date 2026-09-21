@@ -71,7 +71,7 @@ public class NumericTypeTest
         yield return Rule(new(
             "Numeric with minimum greater than maximum",
             "999 .. 000",
-            ExpectedLog: ["Compile error at line 1:0 Number minimum <999> must be smaller than maximum <0>."],
+            ExpectedLog: ["Compile error at 1:0-1:3 Number minimum <999> must be smaller than maximum <0>."],
             RefHB: "3.8.5-1",
             Expected: new DecimalType { Min = 0, Max = 999, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 10) }));
 
@@ -84,7 +84,7 @@ public class NumericTypeTest
                 larger. Only EQUAL scalings are deliberately tolerated — they express an unambiguous fixed grid, the
                 ordering is a canonical-form rule, it is undefined for a zero minimum, and ili2c does not enforce it.
                 """,
-            ExpectedLog: ["Compile error at line 1:0 Number minimum <1000000000> must be smaller than maximum <1000000>."],
+            ExpectedLog: ["Compile error at 1:0-1:6 Number minimum <1000000000> must be smaller than maximum <1000000>."],
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 1, Min = 1000000, Max = 1000000000, SourceRange = new RangePosition(0, 0, 0, 15) }));
 
@@ -116,14 +116,14 @@ public class NumericTypeTest
         yield return Rule(new(
             "Numeric with different precision",
             "0.00 .. 10.0",
-            ExpectedLog: ["Compile error at line 1:0 Number minimum and maximum must have the same precision but minimum has precision <0.01> and maximum has precision <0.1>."],
+            ExpectedLog: ["Compile error at 1:0-1:4 Number minimum and maximum must have the same precision but minimum has precision <0.01> and maximum has precision <0.1>."],
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0, Max = 10, Precision = -2, SourceRange = new RangePosition(0, 0, 0, 12) }));
 
         yield return Rule(new(
             "Numeric with mixed exponential and decimal",
             "0.100e-2 .. 1.000",
-            ExpectedLog: ["Compile error at line 1:0 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
+            ExpectedLog: ["Compile error at 1:0-1:8 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 3, Min = 0.001, Max = 1, SourceRange = new RangePosition(0, 0, 0, 17) },
             Ili2cDivergenceReason: "ili2c accepts a range mixing mantissa and decimal notation (it compares only the digit counts); RefHB 3.8.5-3 requires both bounds in mantissa notation for float ranges, so we reject the mix."));
@@ -135,7 +135,7 @@ public class NumericTypeTest
                 The reverse mixing direction (decimal minimum, mantissa maximum); the Stellenzahl matches deliberately so
                 only the notation mixing is reported.
                 """,
-            ExpectedLog: ["Compile error at line 1:0 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
+            ExpectedLog: ["Compile error at 1:0-1:5 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0.001, Max = 1, Precision = -3, SourceRange = new RangePosition(0, 0, 0, 16) },
             Ili2cDivergenceReason: "ili2c accepts a range mixing mantissa and decimal notation (it compares only the digit counts); RefHB 3.8.5-3 requires both bounds in mantissa notation for float ranges, so we reject the mix."));
@@ -148,8 +148,8 @@ public class NumericTypeTest
                 and the notations are mixed.
                 """,
             ExpectedLog: [
-                "Compile error at line 1:0 Number minimum and maximum must have the same precision but minimum has precision <1> and maximum has precision <0.1>.",
-                "Compile error at line 1:0 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation.",
+                "Compile error at 1:0-1:1 Number minimum and maximum must have the same precision but minimum has precision <1> and maximum has precision <0.1>.",
+                "Compile error at 1:0-1:1 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation.",
             ],
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0, Max = 100, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 10) }));
@@ -157,7 +157,7 @@ public class NumericTypeTest
         yield return Rule(new(
             "Numeric inappropriate for double",
             "0.00000 .. 100000000000000.00000",
-            ExpectedLog: ["Compile error at line 1:0 The given range <0 .. 100000000000000> with a precision of <1E-05> cannot be represented by a double precision floating point number."],
+            ExpectedLog: ["Compile error at 1:0-1:7 The given range <0 .. 100000000000000> with a precision of <1E-05> cannot be represented by a double precision floating point number."],
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0, Max = 100000000000000, Precision = -5, SourceRange = new RangePosition(0, 0, 0, 32) },
             Ili2cDivergenceReason: "we reject ranges not representable as a double, ili2c accepts them"));
@@ -176,7 +176,7 @@ public class NumericTypeTest
                 the mantissa digit count alone (not on the scaling): 17 significant digits exceed a double's ~16
                 decimal digits at every magnitude.
                 """,
-            ExpectedLog: ["Compile error at line 1:0 The given range <1 .. 200> with a precision of <1E-17> cannot be represented by a double precision floating point number."],
+            ExpectedLog: ["Compile error at 1:0-1:21 The given range <1 .. 200> with a precision of <1E-17> cannot be represented by a double precision floating point number."],
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 17, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 46) },
             Ili2cDivergenceReason: "we reject ranges not representable as a double, ili2c accepts them"));
@@ -194,7 +194,7 @@ public class NumericTypeTest
                 The Stellenzahl of the minimum and the maximum must match. In mantissa notation the digits of the
                 mantissa count, so a differing scaling can not compensate the difference.
                 """,
-            ExpectedLog: ["Compile error at line 1:0 Number minimum and maximum must have the same precision but minimum has precision <0.1> and maximum has precision <0.0001>."],
+            ExpectedLog: ["Compile error at 1:0-1:5 Number minimum and maximum must have the same precision but minimum has precision <0.1> and maximum has precision <0.0001>."],
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 1, Min = 1000000, Max = 1000000000, SourceRange = new RangePosition(0, 0, 0, 18) }));
 
@@ -336,7 +336,7 @@ public class NumericTypeTest
                 (Stellenzahl) may not be changed. The example itself marks Genau as invalid ("falsch, da Stellenzahl
                 grösser"); Eingeschraenkt narrows the range at the same precision and is valid.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Genau': the precision must match the inherited precision."],
+            ExpectedLog: ["Type check error in 'Model.Genau' at 5:8-5:48: the precision must match the inherited precision."],
             RefHB: "3.8.5-5",
             Ili2cDivergenceReason: "ili2c does not enforce the precision rule and accepts Genau although RefHB 3.8.5-5 itself marks it as invalid (falsch, da Stellenzahl grösser); we reject per RefHB 3.8.5-4.",
             AssertOutput: false));
@@ -366,8 +366,8 @@ public class NumericTypeTest
                 """,
             ExpectedLog:
             [
-                "Type check error in 'Model.KurzeFuesse2': an abstract NUMERIC can not extend a concrete numeric range.",
-                "Type check error in 'Model.KurzeFuesse2': the inherited concrete unit 'm' can not be overridden.",
+                "Type check error in 'Model.KurzeFuesse2' at 11:8-11:66: an abstract NUMERIC can not extend a concrete numeric range.",
+                "Type check error in 'Model.KurzeFuesse2' at 11:8-11:66: the inherited concrete unit 'm' can not be overridden.",
             ],
             RefHB: "3.8.5-13",
             AssertOutput: false));

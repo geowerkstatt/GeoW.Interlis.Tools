@@ -24,7 +24,7 @@ public class UnitTest
         yield return Rule(new(
             "Abstract unit with abbreviation",
             "Length [m] (ABSTRACT);",
-            ExpectedLog: ["Compile error at line 1:11 mismatched input '(' expecting {';', '=', 'EXTENDS'}."],
+            ExpectedLog: ["Compile error at 1:11-1:12 mismatched input '(' expecting {';', '=', 'EXTENDS'}."],
             RefHB: "3.9.1-1",
             Expected: new UnitDef
             {
@@ -44,7 +44,7 @@ public class UnitTest
                     CoolMeter [x] EXTENDS m;
             END ModelName.
             """,
-            ExpectedLog: ["Type check error in 'ModelName.x': can not extend 'ModelName.m' because it is not ABSTRACT."],
+            ExpectedLog: ["Type check error in 'ModelName.x' at 5:8-5:32: can not extend 'ModelName.m' because it is not ABSTRACT."],
             RefHB: "3.9.1-1",
             AssertOutput: false));
 
@@ -392,7 +392,7 @@ public class UnitTest
                 single-pass name resolution can not even resolve the self-reference).
                 """,
             RefHB: "3.9.1-4",
-            ExpectedLog: ["Type check error in 'Model.u': the unit transitively EXTENDS itself."],
+            ExpectedLog: ["Type check error in 'Model.u' at 4:8-4:31: the unit transitively EXTENDS itself."],
             AssertOutput: false));
 
     }

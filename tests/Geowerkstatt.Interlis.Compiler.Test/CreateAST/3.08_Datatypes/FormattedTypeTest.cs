@@ -54,7 +54,7 @@ public class FormattedTypeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassName -> attr': a formatted range without a format definition must extend a formatted domain."],
+            ExpectedLog: ["Type check error in 'Model.Topic.ClassName -> attr' at 5:12-5:30: a formatted range without a format definition must extend a formatted domain."],
             RefHB: "3.8.6-3",
             AssertOutput: false));
 
