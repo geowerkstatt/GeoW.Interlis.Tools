@@ -41,8 +41,9 @@ public sealed class FormatSeparator : IFormatComponent
 public sealed class FormatBaseAttribute : IFormatComponent
 {
     /// <summary>
-    /// The referenced attribute within the base structure. Not registered — the attribute is a member of the
-    /// <c>BASED ON</c> structure, not a scoped name — so the path resolver sets the target via member lookup.
+    /// The referenced attribute within the base structure. Resolves as <see cref="ReferenceResolution.Member"/> —
+    /// the attribute is a member of the <c>BASED ON</c> structure, not a scoped name — so the reference resolver
+    /// sets the target via member lookup.
     /// </summary>
     public required Reference<AttributeDef> Attribute { get; init; }
 

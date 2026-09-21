@@ -42,9 +42,9 @@ public sealed class UniquenessConstraint : ConstraintDef
 public sealed class LocalUniqueness
 {
     /// <summary>
-    /// The substructure attribute path (<c>structureAttr -&gt; structureAttr ...</c>). The references are not
-    /// registered — each step is a member of the previous substructure, not a scoped name — so the path resolver
-    /// sets their targets while walking the members.
+    /// The substructure attribute path (<c>structureAttr -&gt; structureAttr ...</c>). The references resolve as
+    /// <see cref="ReferenceResolution.Member"/> — each step is a member of the previous substructure, not a scoped
+    /// name — so the path resolver sets their targets while walking the members.
     /// </summary>
     public List<Reference<AttributeDef>> StructurePath { get; } = new List<Reference<AttributeDef>>();
 

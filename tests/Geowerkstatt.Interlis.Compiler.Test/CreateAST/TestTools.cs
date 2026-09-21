@@ -111,7 +111,8 @@ public class TestTools
                     && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
                     && (nameof(Reference<IInterlisDefinition>.Source).Equals(p.Name) // Ignore reference source to break circular references
                         || nameof(Reference<IInterlisDefinition>.MapTarget).Equals(p.Name) // Ignore Func property
-                        || nameof(Reference<IInterlisDefinition>.ResolvesInEnvironment).Equals(p.Name))) // Ignore resolution plumbing
+                        || nameof(Reference<IInterlisDefinition>.ResolvesInEnvironment).Equals(p.Name) // Ignore resolution plumbing
+                        || nameof(Reference<IInterlisDefinition>.Resolution).Equals(p.Name))) // Ignore resolution plumbing (asserted by ReferenceRegistrationTest)
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
             .IgnoreProperty<ModelDef>(m => m.Dependencies) // Ignore calculated property (derived from Imports and TranslationOf)
             // Ignore definitions' own declaration spans (uniform clutter, like NameLocations); TypeDef spans stay compared

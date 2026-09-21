@@ -67,15 +67,18 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// Create a new <see cref="Reference{T}"/> from the given <paramref name="referenceContext"/>.
     /// </summary>
     [return: NotNullIfNotNull(nameof(referenceContext))]
-    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IInterlisDefinition
+    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IReferenceTarget
     {
         return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), referenceContext.ToRange(), mapTarget);
     }
 
     /// <summary>
-    /// Create a new <see cref="Reference{T}"/> with the given <paramref name="path"/>.
+    /// Create a new <see cref="Reference{T}"/> with the given <paramref name="path"/> and register it with the
+    /// enclosing container. Every reference standing for a name written in the source goes through here, whatever
+    /// its <paramref name="resolution"/>, so <see cref="IInterlisDefinitionContainer.ContainerReferences"/> holds
+    /// all of them for navigation and rename.
     /// </summary>
-    private Reference<T> CreateReference<T>(IEnumerable<string> path, RangePosition? location = null, Func<IInterlisDefinition, T?>? mapTarget = null, bool resolvesInEnvironment = false) where T : class, IInterlisDefinition
+    private Reference<T> CreateReference<T>(IEnumerable<string> path, RangePosition? location = null, Func<IInterlisDefinition, T?>? mapTarget = null, bool resolvesInEnvironment = false, ReferenceResolution resolution = ReferenceResolution.Scoped) where T : class, IReferenceTarget
     {
         var reference = new Reference<T>
         {
@@ -84,6 +87,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             MapTarget = mapTarget ?? (element => element as T),
             SourceRange = location,
             ResolvesInEnvironment = resolvesInEnvironment,
+            Resolution = resolution,
         };
 
         CurrentScope.Value?.ContainerReferences.Add(reference);
@@ -92,8 +96,19 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     }
 
     /// <summary>
-    /// Create an unregistered <see cref="Reference{T}"/> from a <c>metaObjectRef</c>
-    /// (<c>[ MetaDataBasketRef '.' ] Metaobject-Name</c>, RefHB 3.10.1).
+    /// Create a registered <see cref="ReferenceResolution.Member"/> reference for a single name
+    /// <paramref name="token"/>: a name the scoped resolver must not look up, because it denotes a member of the
+    /// container its context establishes (a path step's structure, a basket's topic).
+    /// </summary>
+    private Reference<T> CreateMemberReference<T>(IToken token) where T : class, IReferenceTarget
+    {
+        return CreateReference<T>([token.Text], token.ToRange(), resolution: ReferenceResolution.Member);
+    }
+
+    /// <summary>
+    /// Create a <see cref="ReferenceResolution.Member"/> reference from a <c>metaObjectRef</c>
+    /// (<c>[ MetaDataBasketRef '.' ] Metaobject-Name</c>, RefHB 3.10.1). The trailing segment names a declared
+    /// meta-object, not a definition, so the scoped resolver leaves the whole path alone.
     /// </summary>
     private Reference<IInterlisDefinition> CreateMetaObjectReference(Interlis24Parser.MetaObjectRefContext context)
     {
@@ -108,7 +123,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             path.Add(context.metaObjectName.Text);
         }
 
-        return new Reference<IInterlisDefinition> { Path = { path }, SourceRange = context.ToRange() };
+        return CreateReference<IInterlisDefinition>(path, context.ToRange(), resolution: ReferenceResolution.Member);
     }
 
     /// <summary>
@@ -579,12 +594,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Source = VisitRenamedViewableRef(context.renamedViewableRef()),
         };
 
-        // Unregistered references: each step is a member of the previous step's structure, resolved by the path
+        // Member references: each step is a member of the previous step's structure, resolved by the path
         // resolver's member walk, not by the scoped reference resolution.
         inspection.Path.AddRange(context.IDENTIFIER()
             .Select(identifier => identifier.Symbol)
             .Where(IsValidToken)
-            .Select(token => new Reference<AttributeDef> { Path = { token.Text }, SourceRange = token.ToRange() }));
+            .Select(CreateMemberReference<AttributeDef>));
         return inspection;
     }
 
@@ -1117,10 +1132,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return new RefSys { Value = new RefSys.CoordDomainRef { Domain = CreateReference<DomainDef>(context.coord) }, Axis = axis };
         }
 
-        // { metaObjectRef [axis] } — the basket prefix is a registered reference (resolved like any definition
-        // reference); the meta-object name is a declared name, not a definition (RefHB 3.10.1-2), so its
-        // reference stays unregistered. While either form is still being typed (a lone '<' or '{'), neither
-        // form's content exists yet and the referenced system stays null.
+        // { metaObjectRef [axis] } — the basket prefix is a scoped reference (resolved like any definition
+        // reference); the meta-object name is a declared name, not a definition (RefHB 3.10.1-2), so it is a
+        // member reference the basket link writes. While either form is still being typed (a lone '<' or '{'),
+        // neither form's content exists yet and the referenced system stays null.
         var metaObjectRef = context.metaObjectRef();
         return new RefSys
         {
@@ -1128,7 +1143,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             {
                 Basket = metaObjectRef.definitionRef() == null ? null : CreateReference<MetaDataBasketDef>(metaObjectRef.definitionRef()),
                 MetaObject = IsValidToken(metaObjectRef.metaObjectName)
-                    ? new Reference<MetaObjectDeclaration> { Path = { metaObjectRef.metaObjectName.Text }, SourceRange = metaObjectRef.metaObjectName.ToRange() }
+                    ? CreateMemberReference<MetaObjectDeclaration>(metaObjectRef.metaObjectName)
                     : null,
             },
             Axis = axis,
@@ -1172,14 +1187,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override FormatBaseAttribute VisitBaseAttrRef([NotNull] Interlis24Parser.BaseAttrRefContext context)
     {
-        // The attribute references are not registered: they are members of the BASED ON structure, resolved by
-        // the path resolver's member lookup.
+        // The attribute references are member references: they name members of the BASED ON structure, resolved
+        // by the path resolver's member lookup rather than the scoped one.
         if (context.formatted != null)
         {
             // structureAttribute '/' formatted=definitionRef
             return new FormatBaseAttribute
             {
-                Attribute = new Reference<AttributeDef> { Path = { context.structureAttribute.Text }, SourceRange = context.structureAttribute.ToRange() },
+                Attribute = CreateMemberReference<AttributeDef>(context.structureAttribute),
                 FormattedDomain = CreateReference<DomainDef>(context.formatted),
             };
         }
@@ -1187,7 +1202,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // numericAttribute ('/' intPos=POS_NUMBER)?
         return new FormatBaseAttribute
         {
-            Attribute = new Reference<AttributeDef> { Path = { context.numericAttribute.Text }, SourceRange = context.numericAttribute.ToRange() },
+            Attribute = CreateMemberReference<AttributeDef>(context.numericAttribute),
             Position = context.intPos == null ? (int?)null : int.Parse(context.intPos.Text),
         };
     }
@@ -1396,10 +1411,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         return new MetaObjectsClause
         {
-            // The class name is mandatory but may be missing right after 'OBJECTS OF' while typing. The reference
-            // is not registered: the class lives in the basket's topic, linked by the reference resolver.
+            // The class name is mandatory but may be missing right after 'OBJECTS OF' while typing. It is a member
+            // reference: the class lives in the basket's topic, linked by the reference resolver.
             Class = IsValidToken(context.className)
-                ? new Reference<ClassDef> { Path = { context.className.Text }, SourceRange = context.className.ToRange() }
+                ? CreateMemberReference<ClassDef>(context.className)
                 : new Reference<ClassDef>(),
             MetaObjects = { context._metaObjectName.Select(t => new MetaObjectDeclaration { Name = t.Text, NameLocations = { t.ToRange() } }) },
         };
@@ -1598,13 +1613,13 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override LocalUniqueness VisitLocalUniqueness([NotNull] Interlis24Parser.LocalUniquenessContext context)
     {
-        // Unregistered references: each step is a member of the previous substructure, resolved by the path
+        // Member references: each step is a member of the previous substructure, resolved by the path
         // resolver's member walk, not by the scoped reference resolution.
         var local = new LocalUniqueness();
         local.StructurePath.AddRange(context._structureAttribute.Where(IsValidToken)
-            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = t.ToRange() }));
+            .Select(CreateMemberReference<AttributeDef>));
         local.AttributeNames.AddRange(context._attributeName.Where(IsValidToken)
-            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = t.ToRange() }));
+            .Select(CreateMemberReference<AttributeDef>));
         return local;
     }
 

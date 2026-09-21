@@ -1,10 +1,16 @@
 ﻿namespace Geowerkstatt.Interlis.Compiler.AST;
 
 /// <summary>
-/// A reference to another element of the model. Usually the target is an <see cref="IInterlisDefinition"/> and the
-/// reference is registered for scoped resolution; a target outside the definition world (e.g. a
-/// <see cref="MetaObjectDeclaration"/>) rides the same carrier unregistered, with its <see cref="Target"/> written
-/// by the pass that owns the lookup.
+/// A reference to another element of the model. Every reference that stands for a name written in the source is
+/// registered in its container's <see cref="IInterlisDefinitionContainer.ContainerReferences"/> — whatever its
+/// <see cref="Resolution"/>, and whether or not its target is an <see cref="IInterlisDefinition"/> (a
+/// <see cref="MetaObjectDeclaration"/> rides the same carrier) — so a consumer walking references sees every
+/// occurrence that navigation and rename have to cover.
+/// <para>
+/// A synthetic reference carries a <see cref="Target"/> for a link that was never written down (an implicit
+/// <c>EXTENDS</c>, a translation link, the predefined <see cref="InternalModel"/>). It has no path and no source
+/// range, nothing to navigate from, and stays unregistered.
+/// </para>
 /// </summary>
 /// <typeparam name="T">The type of the target.</typeparam>
 public class Reference<T> : IReference where T : class, IReferenceTarget
@@ -34,6 +40,9 @@ public class Reference<T> : IReference where T : class, IReferenceTarget
 
     /// <inheritdoc />
     public List<string> Path { get; } = new List<string>();
+
+    /// <inheritdoc />
+    public ReferenceResolution Resolution { get; init; } = ReferenceResolution.Scoped;
 
     /// <summary>
     /// The span of the reference's path in the INTERLIS source file.

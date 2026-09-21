@@ -411,8 +411,8 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// <summary>
     /// Links the attribute references of a <c>FORMAT BASED ON</c> definition to the members of its base structure
     /// (including inherited ones): the format's attributes are members of the <c>BASED ON</c> target, not scoped
-    /// names, so their unregistered references are linked here like the other anchored lookups (meta objects,
-    /// basket classes). Unknown names stay unresolved without a report — format validation is a separate concern,
+    /// names, so their member references are linked here like the other anchored lookups (meta objects, basket
+    /// classes). Unknown names stay unresolved without a report — format validation is a separate concern,
     /// the linked attribute serves navigation.
     /// </summary>
     private void LinkFormatAttributes(TypeDef type)
@@ -441,8 +441,8 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// <summary>
     /// Resolves the meta-object link of the reference systems of a numeric type or the axes of a coordinate type:
     /// the declared name the <c>{basket.metaObject}</c> form references is not an <see cref="IInterlisDefinition"/>
-    /// (a meta object is data, its declared name in the basket is its model-world anchor), so it is not registered
-    /// for scoped resolution — the target of <see cref="RefSys.MetaObjectRef.MetaObject"/> is written here instead, searching the
+    /// (a meta object is data, its declared name in the basket is its model-world anchor), so it resolves as
+    /// <see cref="ReferenceResolution.Member"/> — the target of <see cref="RefSys.MetaObjectRef.MetaObject"/> is written here instead, searching the
     /// basket and its inherited definitions in the runtime order (RefHB 3.10.1-3). The basket itself is resolved on
     /// demand (it may live in a model visited later).
     /// </summary>
@@ -493,7 +493,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     public override bool VisitMetaDataBasketDef([NotNull] MetaDataBasketDef metaDataBasketDef)
     {
         // The OBJECTS OF classes live in the basket's topic (RefHB 3.10.1-6), not the enclosing scope, so their
-        // unregistered references are linked here against the topic's (inherited) content. Unknown names stay
+        // member references are linked here against the topic's (inherited) content. Unknown names stay
         // unresolved without a report — the reference tool is lenient about basket contents, and the linked class
         // serves navigation.
         Resolve(metaDataBasketDef.Topic);
@@ -655,9 +655,16 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         return reference;
     }
 
+    /// <summary>
+    /// Resolves a <see cref="ReferenceResolution.Scoped"/> reference against the lexical scopes. A
+    /// <see cref="ReferenceResolution.Member"/> reference names a member of a container its context establishes
+    /// and is written by the pass that owns that context (<see cref="LinkMetaObject"/>,
+    /// <see cref="VisitMetaDataBasketDef"/>, <see cref="Interlis24AstPathResolverVisitor"/>); resolving it here
+    /// would risk binding the name to an unrelated same-named definition that happens to be in scope.
+    /// </summary>
     public override bool VisitReference<T>([NotNull] Reference<T> reference)
     {
-        return Resolve(reference);
+        return reference.Resolution != ReferenceResolution.Scoped || Resolve(reference);
     }
 
     /// <summary>

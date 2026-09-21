@@ -20,6 +20,12 @@ public interface IReference : IVisitable, ISourceRange
     public List<string> Path { get; }
 
     /// <summary>
+    /// Which lookup resolves this reference. Every reference written in the source is registered regardless of its
+    /// resolution; see <see cref="ReferenceResolution"/>.
+    /// </summary>
+    public ReferenceResolution Resolution { get; }
+
+    /// <summary>
     /// The source of the reference.
     /// </summary>
     public IInterlisDefinitionContainer? Source { get; init; }

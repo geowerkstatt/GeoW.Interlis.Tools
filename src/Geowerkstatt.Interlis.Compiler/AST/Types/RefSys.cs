@@ -53,7 +53,8 @@ public class RefSys
 
         /// <summary>
         /// The meta-object name. A meta object is not a model definition — it is a NAME declared by a basket
-        /// (RefHB 3.10.1-2) — so the reference is not registered; the reference resolver writes its target, the
+        /// (RefHB 3.10.1-2) — so the reference resolves as <see cref="ReferenceResolution.Member"/>: the scoped
+        /// resolver leaves it alone and the reference resolver writes its target, the
         /// matching <see cref="MetaObjectDeclaration"/> of the basket or one it extends, searched in the runtime
         /// order (RefHB 3.10.1-3). The target stays <see langword="null"/> for an unqualified name, an unresolved
         /// basket, or a name the basket chain does not declare (which the type checker reports). The reference
