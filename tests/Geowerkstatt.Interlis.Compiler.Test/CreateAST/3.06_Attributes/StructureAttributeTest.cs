@@ -18,7 +18,7 @@ public class StructureAttributeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new UnresolvedNamedType
                 {
-                    Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 14, 0, 20) } },
+                    Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } } },
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound, Ordered = true },
                     SourceRange = new RangePosition(0, 14, 0, 20),
                 },
@@ -34,7 +34,7 @@ public class StructureAttributeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new UnresolvedNamedType
                 {
-                    Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 13, 0, 19) } },
+                    Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } } },
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                     SourceRange = new RangePosition(0, 13, 0, 19),
                 },
@@ -52,7 +52,7 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 6, 0, 12) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 12),
@@ -71,7 +71,7 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 20, 0, 26) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                     },
                     Cardinality = new Cardinality { Min = 1, Max = 5 },
                     SourceRange = new RangePosition(0, 20, 0, 26),
@@ -90,7 +90,7 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 21, 0, 27) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                     },
                     Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound, Ordered = true },
                     SourceRange = new RangePosition(0, 21, 0, 27),
@@ -109,9 +109,9 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 6, 0, 12) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                         Restrictions = {
-                            new Reference<IInterlisDefinition> { Path = { "Sub1" }, SourceRange = new RangePosition(0, 26, 0, 30) },
+                            new Reference<IInterlisDefinition> { Path = { new("Sub1") } },
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -131,10 +131,10 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 6, 0, 12) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                         Restrictions = {
-                            new Reference<IInterlisDefinition> { Path = { "Sub1" }, SourceRange = new RangePosition(0, 26, 0, 30) },
-                            new Reference<IInterlisDefinition> { Path = { "Sub2" }, SourceRange = new RangePosition(0, 32, 0, 36) },
+                            new Reference<IInterlisDefinition> { Path = { new("Sub1") } },
+                            new Reference<IInterlisDefinition> { Path = { new("Sub2") } },
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -154,9 +154,9 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 14, 0, 20) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                         Restrictions = {
-                            new Reference<IInterlisDefinition> { Path = { "Sub1" }, SourceRange = new RangePosition(0, 34, 0, 38) },
+                            new Reference<IInterlisDefinition> { Path = { new("Sub1") } },
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound, Ordered = true },
@@ -176,7 +176,7 @@ public class StructureAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 16, 0, 22) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                     },
                     Cardinality = new Cardinality { Min = 1, Max = 1 },
                     SourceRange = new RangePosition(0, 16, 0, 22),
@@ -229,7 +229,7 @@ public class StructureAttributeTest
                     {
                         Value = RestrictedRef.AnyKind.Structure,
                         Restrictions = {
-                            new Reference<IInterlisDefinition> { Path = { "Struct" }, SourceRange = new RangePosition(0, 32, 0, 38) },
+                            new Reference<IInterlisDefinition> { Path = { new("Struct") } },
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },

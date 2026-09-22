@@ -18,7 +18,7 @@ public class GraphicTest
             {
                 Name = "G",
                 NameLocations = { new RangePosition(0, 8, 0, 9), new RangePosition(0, 49, 0, 50) },
-                BasedOn = new Reference<IInterlisDefinition> { Path = { "BaseClass" }, SourceRange = new RangePosition(0, 19, 0, 28) },
+                BasedOn = new Reference<IInterlisDefinition> { Path = { new("BaseClass") } },
                 DrawingRules =
                 {
                     new DrawingRule
@@ -112,7 +112,7 @@ public class GraphicTest
                                     Operator = ComparisonExpression.ComparisonOperator.Equal,
                                     FirstOperand = new PathExpression
                                     {
-                                        Path = { new IdentifierPathElement { Value = "Art" } },
+                                        Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                     },
                                     SecondOperand = new NumericConstant { Value = 1 },
                                 },
@@ -160,7 +160,7 @@ public class GraphicTest
             {
                 Name = "G",
                 NameLocations = { new RangePosition(0, 8, 0, 9), new RangePosition(0, 66, 0, 67) },
-                BasedOn = new Reference<IInterlisDefinition> { Path = { "BaseClass" }, SourceRange = new RangePosition(0, 19, 0, 28) },
+                BasedOn = new Reference<IInterlisDefinition> { Path = { new("BaseClass") } },
                 Selections =
                 {
                     new ComparisonExpression
@@ -168,7 +168,7 @@ public class GraphicTest
                         Operator = ComparisonExpression.ComparisonOperator.Equal,
                         FirstOperand = new PathExpression
                         {
-                            Path = { new IdentifierPathElement { Value = "Attr" } },
+                            Reference = new Reference<IInterlisDefinition> { Path = { new("Attr") } },
                         },
                         SecondOperand = new NumericConstant { Value = 5 },
                     },
@@ -232,7 +232,7 @@ public class GraphicTest
             {
                 Name = "G",
                 NameLocations = { new RangePosition(0, 8, 0, 9), new RangePosition(0, 44, 0, 45) },
-                Extends = new Reference<GraphicDef> { Path = { "BaseG" }, SourceRange = new RangePosition(0, 18, 0, 23) },
+                Extends = new Reference<GraphicDef> { Path = { new("BaseG") } },
                 DrawingRules =
                 {
                     new DrawingRule
@@ -262,7 +262,7 @@ public class GraphicTest
             {
                 Name = "G",
                 NameLocations = { new RangePosition(0, 8, 0, 9), new RangePosition(0, 58, 0, 59) },
-                Extends = new Reference<GraphicDef> { Path = { "ModelN", "TopicN", "BaseG" }, SourceRange = new RangePosition(0, 18, 0, 37) },
+                Extends = new Reference<GraphicDef> { Path = { new("ModelN"), new("TopicN"), new("BaseG") } },
                 DrawingRules =
                 {
                     new DrawingRule
@@ -331,7 +331,7 @@ public class GraphicTest
                     {
                         Name = "R",
                         SourceRange = new RangePosition(0, 12, 0, 38),
-                        Sign = new Reference<IInterlisDefinition> { Path = { "SignClass" }, SourceRange = new RangePosition(0, 17, 0, 26) },
+                        Sign = new Reference<IInterlisDefinition> { Path = { new("SignClass") } },
                         Assignments =
                         {
                             new CondSignParamAssignment
@@ -362,7 +362,7 @@ public class GraphicTest
                         Name = "R",
                         SourceRange = new RangePosition(0, 12, 0, 49),
                         Properties = { Property.Extended },
-                        Sign = new Reference<IInterlisDefinition> { Path = { "SignClass" }, SourceRange = new RangePosition(0, 28, 0, 37) },
+                        Sign = new Reference<IInterlisDefinition> { Path = { new("SignClass") } },
                         Assignments =
                         {
                             new CondSignParamAssignment
@@ -541,7 +541,7 @@ public class GraphicTest
                                     new SignParamAssignment
                                     {
                                         ParameterName = "Sign",
-                                        MetaObject = new Reference<IInterlisDefinition> { Path = { "Punktsignatur" }, SourceRange = new RangePosition(0, 26, 0, 39) },
+                                        MetaObject = new Reference<IInterlisDefinition> { Path = { new("Punktsignatur") } },
                                     },
                                 },
                             },
@@ -576,7 +576,7 @@ public class GraphicTest
                                         ParameterName = "Pos",
                                         Value = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Lage" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Lage") } },
                                         },
                                     },
                                 },
@@ -612,14 +612,14 @@ public class GraphicTest
                                         ParameterName = "Sign",
                                         According = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Art" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                         },
                                         EnumAssignments =
                                         {
                                             new EnumAssignment
                                             {
-                                                MetaObject = new Reference<IInterlisDefinition> { Path = { "Quadratsignatur" }, SourceRange = new RangePosition(0, 41, 0, 56) },
-                                                RangeFrom = new EnumerationConstant { Path = { "Stein" } },
+                                                MetaObject = new Reference<IInterlisDefinition> { Path = { new("Quadratsignatur") } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Stein") } },
                                             },
                                         },
                                     },
@@ -656,19 +656,19 @@ public class GraphicTest
                                         ParameterName = "Sign",
                                         According = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Art" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                         },
                                         EnumAssignments =
                                         {
                                             new EnumAssignment
                                             {
                                                 Value = new NumericConstant { Value = 5 },
-                                                RangeFrom = new EnumerationConstant { Path = { "Stein" } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Stein") } },
                                             },
                                             new EnumAssignment
                                             {
                                                 Value = new NumericConstant { Value = 6 },
-                                                RangeFrom = new EnumerationConstant { Path = { "Bolzen" } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Bolzen") } },
                                             },
                                         },
                                     },
@@ -705,15 +705,15 @@ public class GraphicTest
                                         ParameterName = "Sign",
                                         According = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Art" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                         },
                                         EnumAssignments =
                                         {
                                             new EnumAssignment
                                             {
-                                                MetaObject = new Reference<IInterlisDefinition> { Path = { "Kreuzsignatur" }, SourceRange = new RangePosition(0, 41, 0, 54) },
-                                                RangeFrom = new EnumerationConstant { Path = { "Rohr" } },
-                                                RangeTo = new EnumerationConstant { Path = { "Kreuz" } },
+                                                MetaObject = new Reference<IInterlisDefinition> { Path = { new("Kreuzsignatur") } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Rohr") } },
+                                                RangeTo = new EnumerationConstant { Path = { new("Kreuz") } },
                                             },
                                         },
                                     },
@@ -748,9 +748,9 @@ public class GraphicTest
                                     Operator = ComparisonExpression.ComparisonOperator.Equal,
                                     FirstOperand = new PathExpression
                                     {
-                                        Path = { new IdentifierPathElement { Value = "Art" } },
+                                        Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                     },
-                                    SecondOperand = new EnumerationConstant { Path = { "Stein", "klein" } },
+                                    SecondOperand = new EnumerationConstant { Path = { new("Stein"), new("klein") } },
                                 },
                                 Assignments =
                                 {
@@ -880,14 +880,14 @@ public class GraphicTest
             {
                 Name = "SimplePunktGrafik",
                 NameLocations = { new RangePosition(0, 8, 0, 25), new RangePosition(2, 4, 2, 21) },
-                BasedOn = new Reference<IInterlisDefinition> { Path = { "Punkt" }, SourceRange = new RangePosition(0, 35, 0, 40) },
+                BasedOn = new Reference<IInterlisDefinition> { Path = { new("Punkt") } },
                 DrawingRules =
                 {
                     new DrawingRule
                     {
                         Name = "Symbol",
                         SourceRange = new RangePosition(1, 2, 1, 93),
-                        Sign = new Reference<IInterlisDefinition> { Path = { "SimpleSignsSymbology", "SignsTopic", "Symbol" }, SourceRange = new RangePosition(1, 12, 1, 50) },
+                        Sign = new Reference<IInterlisDefinition> { Path = { new("SimpleSignsSymbology"), new("SignsTopic"), new("Symbol") } },
                         Assignments =
                         {
                             new CondSignParamAssignment
@@ -897,14 +897,14 @@ public class GraphicTest
                                     new SignParamAssignment
                                     {
                                         ParameterName = "Sign",
-                                        MetaObject = new Reference<IInterlisDefinition> { Path = { "Punktsignatur" }, SourceRange = new RangePosition(1, 63, 1, 76) },
+                                        MetaObject = new Reference<IInterlisDefinition> { Path = { new("Punktsignatur") } },
                                     },
                                     new SignParamAssignment
                                     {
                                         ParameterName = "Pos",
                                         Value = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Lage" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Lage") } },
                                         },
                                     },
                                 },
@@ -928,7 +928,7 @@ public class GraphicTest
             {
                 Name = "PunktGrafikPlus",
                 NameLocations = { new RangePosition(0, 8, 0, 23), new RangePosition(4, 4, 4, 19) },
-                Extends = new Reference<GraphicDef> { Path = { "SimplePunktGrafik" }, SourceRange = new RangePosition(0, 32, 0, 49) },
+                Extends = new Reference<GraphicDef> { Path = { new("SimplePunktGrafik") } },
                 DrawingRules =
                 {
                     new DrawingRule
@@ -936,7 +936,7 @@ public class GraphicTest
                         Name = "Symbol",
                         SourceRange = new RangePosition(1, 2, 2, 25),
                         Properties = { Property.Extended },
-                        Sign = new Reference<IInterlisDefinition> { Path = { "ScalableSignsSymbology", "ScalableSignsTopic", "Symbol" }, SourceRange = new RangePosition(1, 23, 1, 71) },
+                        Sign = new Reference<IInterlisDefinition> { Path = { new("ScalableSignsSymbology"), new("ScalableSignsTopic"), new("Symbol") } },
                         Assignments =
                         {
                             new CondSignParamAssignment
@@ -948,25 +948,25 @@ public class GraphicTest
                                         ParameterName = "Sign",
                                         According = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Art" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                         },
                                         EnumAssignments =
                                         {
                                             new EnumAssignment
                                             {
-                                                MetaObject = new Reference<IInterlisDefinition> { Path = { "Quadratsignatur" }, SourceRange = new RangePosition(1, 100, 1, 115) },
-                                                RangeFrom = new EnumerationConstant { Path = { "Stein" } },
+                                                MetaObject = new Reference<IInterlisDefinition> { Path = { new("Quadratsignatur") } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Stein") } },
                                             },
                                             new EnumAssignment
                                             {
-                                                MetaObject = new Reference<IInterlisDefinition> { Path = { "Kreissignatur" }, SourceRange = new RangePosition(1, 134, 1, 147) },
-                                                RangeFrom = new EnumerationConstant { Path = { "Bolzen" } },
+                                                MetaObject = new Reference<IInterlisDefinition> { Path = { new("Kreissignatur") } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Bolzen") } },
                                             },
                                             new EnumAssignment
                                             {
-                                                MetaObject = new Reference<IInterlisDefinition> { Path = { "Kreuzsignatur" }, SourceRange = new RangePosition(1, 167, 1, 180) },
-                                                RangeFrom = new EnumerationConstant { Path = { "Rohr" } },
-                                                RangeTo = new EnumerationConstant { Path = { "Kreuz" } },
+                                                MetaObject = new Reference<IInterlisDefinition> { Path = { new("Kreuzsignatur") } },
+                                                RangeFrom = new EnumerationConstant { Path = { new("Rohr") } },
+                                                RangeTo = new EnumerationConstant { Path = { new("Kreuz") } },
                                             },
                                         },
                                     },
@@ -979,9 +979,9 @@ public class GraphicTest
                                     Operator = ComparisonExpression.ComparisonOperator.Equal,
                                     FirstOperand = new PathExpression
                                     {
-                                        Path = { new IdentifierPathElement { Value = "Art" } },
+                                        Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                                     },
-                                    SecondOperand = new EnumerationConstant { Path = { "Stein", "klein" } },
+                                    SecondOperand = new EnumerationConstant { Path = { new("Stein"), new("klein") } },
                                 },
                                 Assignments =
                                 {
@@ -994,7 +994,7 @@ public class GraphicTest
                     {
                         Name = "Text",
                         SourceRange = new RangePosition(3, 2, 3, 108),
-                        Sign = new Reference<IInterlisDefinition> { Path = { "SimpleSignsSymbology", "SignsTopic", "Textlabel" }, SourceRange = new RangePosition(3, 10, 3, 51) },
+                        Sign = new Reference<IInterlisDefinition> { Path = { new("SimpleSignsSymbology"), new("SignsTopic"), new("Textlabel") } },
                         Assignments =
                         {
                             new CondSignParamAssignment
@@ -1004,14 +1004,14 @@ public class GraphicTest
                                     new SignParamAssignment
                                     {
                                         ParameterName = "Sign",
-                                        MetaObject = new Reference<IInterlisDefinition> { Path = { "Schrift1" }, SourceRange = new RangePosition(3, 64, 3, 72) },
+                                        MetaObject = new Reference<IInterlisDefinition> { Path = { new("Schrift1") } },
                                     },
                                     new SignParamAssignment
                                     {
                                         ParameterName = "Pos",
                                         Value = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "Lage" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("Lage") } },
                                         },
                                     },
                                     new SignParamAssignment
@@ -1019,7 +1019,7 @@ public class GraphicTest
                                         ParameterName = "Text",
                                         Value = new PathExpression
                                         {
-                                            Path = { new IdentifierPathElement { Value = "PunktName" } },
+                                            Reference = new Reference<IInterlisDefinition> { Path = { new("PunktName") } },
                                         },
                                     },
                                 },

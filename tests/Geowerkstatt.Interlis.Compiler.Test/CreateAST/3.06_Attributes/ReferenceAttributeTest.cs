@@ -20,7 +20,7 @@ public class ReferenceAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(0, 19, 0, 25) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Target") } },
                     },                    Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 25),
                 },
@@ -38,8 +38,8 @@ public class ReferenceAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Base" }, SourceRange = new RangePosition(0, 19, 0, 23) },
-                        Restrictions = { new Reference<IInterlisDefinition> { Path = { "Sub" }, SourceRange = new RangePosition(0, 37, 0, 40) } },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Base") } },
+                        Restrictions = { new Reference<IInterlisDefinition> { Path = { new("Sub") } } },
                     },                    Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 41),
                 },
@@ -57,11 +57,11 @@ public class ReferenceAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Base" }, SourceRange = new RangePosition(0, 19, 0, 23) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Base") } },
                         Restrictions =
                         {
-                            new Reference<IInterlisDefinition> { Path = { "SubA" }, SourceRange = new RangePosition(0, 37, 0, 41) },
-                            new Reference<IInterlisDefinition> { Path = { "SubB" }, SourceRange = new RangePosition(0, 43, 0, 47) },
+                            new Reference<IInterlisDefinition> { Path = { new("SubA") } },
+                            new Reference<IInterlisDefinition> { Path = { new("SubB") } },
                         },
                     },                    Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 48),
@@ -80,7 +80,7 @@ public class ReferenceAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(0, 30, 0, 36) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Target") } },
                     },
                     Properties = { Property.External },                    Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 36),
@@ -99,8 +99,8 @@ public class ReferenceAttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Base" }, SourceRange = new RangePosition(0, 30, 0, 34) },
-                        Restrictions = { new Reference<IInterlisDefinition> { Path = { "Sub" }, SourceRange = new RangePosition(0, 48, 0, 51) } },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Base") } },
+                        Restrictions = { new Reference<IInterlisDefinition> { Path = { new("Sub") } } },
                     },
                     Properties = { Property.External },                    Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 52),
@@ -135,7 +135,7 @@ public class ReferenceAttributeTest
                     Target = new RestrictedRef
                     {
                         Value = RestrictedRef.AnyKind.Class,
-                        Restrictions = { new Reference<IInterlisDefinition> { Path = { "Base" }, SourceRange = new RangePosition(0, 41, 0, 45) } },
+                        Restrictions = { new Reference<IInterlisDefinition> { Path = { new("Base") } } },
                     },                    Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 46),
                 },

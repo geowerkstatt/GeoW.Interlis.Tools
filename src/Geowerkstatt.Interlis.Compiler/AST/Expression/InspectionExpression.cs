@@ -35,7 +35,7 @@ public class InspectionExpression : IExpression
     public TypeDef ReturnType => Source switch
     {
         ViewRef viewRef => new ObjectType { Targets = [new RestrictedRef { Value = viewRef.View }] },
-        InlineInspection { Inspection.Path: [.., { Target.TypeDef: ObjectType substructure }] } => new ObjectType { Targets = substructure.Targets },
+        InlineInspection { Inspection.Path.Target.TypeDef: ObjectType substructure } => new ObjectType { Targets = substructure.Targets },
         _ => new ObjectType(),
     };
 

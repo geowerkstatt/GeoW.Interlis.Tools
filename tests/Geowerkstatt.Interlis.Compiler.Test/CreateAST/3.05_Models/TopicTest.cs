@@ -270,18 +270,18 @@ public class TopicTest
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
                 IsView = true,
-                Extends = new Reference<TopicDef> { Path = { "Test_B" }, SourceRange = new RangePosition(2, 44, 2, 50) },
-                BasketOidType = new Reference<DomainDef> { Path = { "oidDomain" }, SourceRange = new RangePosition(3, 18, 3, 27) },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, SourceRange = new RangePosition(4, 11, 4, 27) },
+                Extends = new Reference<TopicDef> { Path = { new("Test_B") } },
+                BasketOidType = new Reference<DomainDef> { Path = { new("oidDomain") } },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("UUIDOID") } },
                 DependsOn =
                 {
-                    new Reference<TopicDef> { Path = { "Test_C" }, SourceRange = new RangePosition(5, 15, 5, 21) },
-                    new Reference<TopicDef> { Path = { "Test_D" }, SourceRange = new RangePosition(5, 23, 5, 29) },
+                    new Reference<TopicDef> { Path = { new("Test_C") } },
+                    new Reference<TopicDef> { Path = { new("Test_D") } },
                 },
                 DeferredGenerics =
                 {
-                    new Reference<DomainDef> { Path = { "genericA" }, SourceRange = new RangePosition(6, 22, 6, 30) },
-                    new Reference<DomainDef> { Path = { "genericB" }, SourceRange = new RangePosition(6, 32, 6, 40) },
+                    new Reference<DomainDef> { Path = { new("genericA") } },
+                    new Reference<DomainDef> { Path = { new("genericB") } },
                 },
                 Properties = { Property.Abstract, Property.Final }
             }));
@@ -301,7 +301,7 @@ public class TopicTest
                     new RangePosition(0, 6, 0, 11),
                     new RangePosition(1, 4, 1, 9)
                 },
-                Extends = new Reference<TopicDef> { Path = { "BaseTopic" }, SourceRange = new RangePosition(0, 20, 0, 29) },
+                Extends = new Reference<TopicDef> { Path = { new("BaseTopic") } },
             }));
 
         yield return Rule(new(
@@ -319,7 +319,7 @@ public class TopicTest
                     new RangePosition(0, 6, 0, 11),
                     new RangePosition(1, 4, 1, 9)
                 },
-                Extends = new Reference<TopicDef> { Path = { "BaseModel", "BaseTopic" }, SourceRange = new RangePosition(0, 20, 0, 39) },
+                Extends = new Reference<TopicDef> { Path = { new("BaseModel"), new("BaseTopic") } },
             }));
 
         yield return Rule(new(
@@ -341,8 +341,8 @@ public class TopicTest
                 },
                 DependsOn =
                 {
-                    new Reference<TopicDef> { Path = { "TopicA" }, SourceRange = new RangePosition(1, 15, 1, 21) },
-                    new Reference<TopicDef> { Path = { "TopicB" }, SourceRange = new RangePosition(2, 15, 2, 21) },
+                    new Reference<TopicDef> { Path = { new("TopicA") } },
+                    new Reference<TopicDef> { Path = { new("TopicB") } },
                 },
             }));
 
@@ -670,7 +670,7 @@ public class TopicTest
                                             {
                                                 new RestrictedRef
                                                 {
-                                                    Value = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(4, 24, 4, 25) },
+                                                    Value = new Reference<IInterlisDefinition> { Path = { new("A") } },
                                                 },
                                             },
                                             Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
@@ -689,7 +689,7 @@ public class TopicTest
                                             {
                                                 new RestrictedRef
                                                 {
-                                                    Value = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(5, 24, 5, 25) },
+                                                    Value = new Reference<IInterlisDefinition> { Path = { new("A") } },
                                                 },
                                             },
                                             Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
@@ -728,7 +728,7 @@ public class TopicTest
                             Name = "RefBasket",
                             NameLocations = { new RangePosition(1, 21, 1, 30) },
                             Kind = MetaDataBasketDef.BasketKind.Refsystem,
-                            Topic = new Reference<TopicDef> { Path = { "INTERLIS", "REFSYSTEM" }, SourceRange = new RangePosition(1, 33, 1, 51) },
+                            Topic = new Reference<TopicDef> { Path = { new("INTERLIS"), new("REFSYSTEM") } },
                         }
                     }
                 },
@@ -772,7 +772,7 @@ public class TopicTest
                         new ConstraintsBlockDef
                         {
                             Name = "CONSTRAINTS OF A #1",
-                            Target = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(3, 19, 3, 20) },
+                            Target = new Reference<IInterlisDefinition> { Path = { new("A") } },
                         }
                     }
                 },
@@ -825,11 +825,11 @@ public class TopicTest
                             },
                             Content =
                             {
-                                { "A", new BaseView { Name = "A", Viewable = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(4, 22, 4, 23) } } },
+                                { "A", new BaseView { Name = "A", Viewable = new Reference<IInterlisDefinition> { Path = { new("A") } } } },
                             },
                             Formation = new ProjectionView
                             {
-                                Source = new BaseView { Name = "A", Viewable = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(4, 22, 4, 23) } },
+                                Source = new BaseView { Name = "A", Viewable = new Reference<IInterlisDefinition> { Path = { new("A") } } },
                             },
                         }
                     }
@@ -879,7 +879,7 @@ public class TopicTest
                                 new RangePosition(3, 12, 3, 23),
                                 new RangePosition(4, 8, 4, 19)
                             },
-                            BasedOn = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(3, 33, 3, 34) },
+                            BasedOn = new Reference<IInterlisDefinition> { Path = { new("A") } },
                         }
                     }
                 },
@@ -901,7 +901,7 @@ public class TopicTest
                     new RangePosition(0, 6, 0, 11),
                     new RangePosition(2, 4, 2, 9)
                 },
-                BasketOidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, SourceRange = new RangePosition(1, 18, 1, 34) },
+                BasketOidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("UUIDOID") } },
             }));
 
         yield return Rule(new(
@@ -920,7 +920,7 @@ public class TopicTest
                     new RangePosition(0, 6, 0, 11),
                     new RangePosition(2, 4, 2, 9)
                 },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "STANDARDOID" }, SourceRange = new RangePosition(1, 11, 1, 31) },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("STANDARDOID") } },
             }));
 
         yield return Rule(new(
@@ -940,7 +940,7 @@ public class TopicTest
                     new RangePosition(0, 6, 0, 11),
                     new RangePosition(2, 4, 2, 9)
                 },
-                OidType = new Reference<DomainDef> { SourceRange = new RangePosition(1, 11, 1, 17) },
+                OidType = new Reference<DomainDef> { },
             }));
 
         yield return Rule(new(
@@ -960,7 +960,7 @@ public class TopicTest
                     new RangePosition(0, 6, 0, 11),
                     new RangePosition(2, 4, 2, 9)
                 },
-                BasketOidType = new Reference<DomainDef> { SourceRange = new RangePosition(1, 18, 1, 24) },
+                BasketOidType = new Reference<DomainDef> { },
             }));
 
         yield return FullFile(new(
@@ -1002,7 +1002,7 @@ public class TopicTest
                 },
                 DependsOn =
                 {
-                    new Reference<TopicDef> { Path = { "TopicA" }, SourceRange = new RangePosition(1, 15, 1, 21) },
+                    new Reference<TopicDef> { Path = { new("TopicA") } },
                 },
             }));
 

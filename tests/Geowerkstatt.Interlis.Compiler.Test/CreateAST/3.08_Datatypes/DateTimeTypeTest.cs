@@ -18,7 +18,7 @@ public class DateTimeTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new TypeRef
                 {
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDate" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("XMLDate") } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                 },
             }));
@@ -33,7 +33,7 @@ public class DateTimeTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new TypeRef
                 {
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "XMLTime" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("XMLTime") } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                 },
             }));
@@ -48,7 +48,7 @@ public class DateTimeTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new TypeRef
                 {
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("XMLDateTime") } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                 },
             }));
@@ -63,7 +63,7 @@ public class DateTimeTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 5) },
                 TypeDef = new FormattedType
                 {
-                    FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" }, SourceRange = new RangePosition(0, 15, 0, 35) },
+                    FormatBaseType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("XMLDateTime") } },
                     Min = "2000-01-01T00:00:00.000",
                     Max = "2005-12-31T23:59:59.999",
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
@@ -129,7 +129,7 @@ public class DateTimeTypeTest
                                                     Name = "Date",
                                                     TypeDef = new TypeRef
                                                     {
-                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["XMLDate"], Path = { "INTERLIS", "XMLDate" } },
+                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["XMLDate"], Path = { new("INTERLIS"), new("XMLDate") } },
                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                     },
                                                 }
@@ -141,7 +141,7 @@ public class DateTimeTypeTest
                                                     Name = "Time",
                                                     TypeDef = new TypeRef
                                                     {
-                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["XMLTime"], Path = { "INTERLIS", "XMLTime" } },
+                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["XMLTime"], Path = { new("INTERLIS"), new("XMLTime") } },
                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                     },
                                                 }
@@ -153,7 +153,7 @@ public class DateTimeTypeTest
                                                     Name = "DateTime",
                                                     TypeDef = new TypeRef
                                                     {
-                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["XMLDateTime"], Path = { "INTERLIS", "XMLDateTime" } },
+                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["XMLDateTime"], Path = { new("INTERLIS"), new("XMLDateTime") } },
                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                     },
                                                 }
@@ -164,7 +164,7 @@ public class DateTimeTypeTest
                             },
                             Imports =
                             {
-                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                             },
                         }
                     }

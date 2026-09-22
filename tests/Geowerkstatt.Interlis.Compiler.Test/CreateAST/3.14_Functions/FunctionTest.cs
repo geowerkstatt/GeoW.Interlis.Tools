@@ -100,7 +100,7 @@ public class FunctionTest
                         Type = new ObjectType
                         {
                             Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                            Targets = [new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "MyClass" }, SourceRange = new RangePosition(0, 32, 0, 39) } }],
+                            Targets = [new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("MyClass") } } }],
                             SourceRange = new RangePosition(0, 21, 0, 39),
                         },
                     },

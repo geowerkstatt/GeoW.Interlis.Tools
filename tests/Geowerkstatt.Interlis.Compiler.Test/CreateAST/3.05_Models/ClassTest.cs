@@ -134,7 +134,7 @@ public class ClassTest
                     new RangePosition(0, 6, 0, 15),
                     new RangePosition(2, 4, 2, 13)
                 },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, SourceRange = new RangePosition(1, 11, 1, 27) },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("UUIDOID") } },
             }));
 
         yield return Rule(new(
@@ -153,7 +153,7 @@ public class ClassTest
                     new RangePosition(0, 6, 0, 15),
                     new RangePosition(2, 4, 2, 13)
                 },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "NOOID" } },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("NOOID") } },
             }));
 
         yield return FullFile(new(
@@ -260,13 +260,10 @@ public class ClassTest
                         NameIndex = 1,
                         Condition = new PathExpression
                         {
-                            Path =
+                            Reference = new Reference<IInterlisDefinition> { Path =
                             {
-                                new IdentifierPathElement
-                                {
-                                    Value = "TRUE",
-                                },
-                            },
+                                new("TRUE"),
+                            } },
                         },
                         SourceRange = new RangePosition(1, 4, 1, 30),
                     },
@@ -309,7 +306,7 @@ public class ClassTest
                     new RangePosition(2, 4, 2, 17)
                 },
                 IsStructure = true,
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, SourceRange = new RangePosition(1, 11, 1, 27) },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("UUIDOID") } },
             },
             Ili2cDivergenceReason: "RefHB 3.5.3-12 (StructureDef) has no OID clause (only ClassDef 3.5.3-10 does), so we reject this; ili2c leniently accepts it"));
 
@@ -331,7 +328,7 @@ public class ClassTest
                     new RangePosition(2, 4, 2, 17)
                 },
                 IsStructure = true,
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "NOOID" } },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("NOOID") } },
             },
             Ili2cDivergenceReason: "RefHB 3.5.3-12 (StructureDef) has no OID clause (only ClassDef 3.5.3-10 does), so we reject this; ili2c leniently accepts it"));
 
@@ -627,8 +624,8 @@ public class ClassTest
                 },
                 DocComments = { "/** Doc-Comment */" },
                 MetaAttributes = { { "key", "value" } },
-                Extends = new Reference<ClassDef> { Path = { "Test_B" }, SourceRange = new RangePosition(2, 42, 2, 48) },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "UUIDOID" }, SourceRange = new RangePosition(3, 11, 3, 27) },
+                Extends = new Reference<ClassDef> { Path = { new("Test_B") } },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("UUIDOID") } },
                 Properties = { Property.Abstract, Property.Extended },
             }));
 
@@ -864,7 +861,7 @@ public class ClassTest
             {
                 Name = "SubClass",
                 NameLocations = { new RangePosition(0, 6, 0, 14), new RangePosition(1, 4, 1, 12) },
-                Extends = new Reference<ClassDef> { Path = { "Other", "Topic", "Base" }, SourceRange = new RangePosition(0, 23, 0, 39) },
+                Extends = new Reference<ClassDef> { Path = { new("Other"), new("Topic"), new("Base") } },
             }));
 
         yield return Rule(new(
@@ -878,7 +875,7 @@ public class ClassTest
             {
                 Name = "Sub",
                 NameLocations = { new RangePosition(0, 10, 0, 13), new RangePosition(1, 4, 1, 7) },
-                Extends = new Reference<ClassDef> { Path = { "Other", "Topic", "Base" }, SourceRange = new RangePosition(0, 22, 0, 38) },
+                Extends = new Reference<ClassDef> { Path = { new("Other"), new("Topic"), new("Base") } },
                 IsStructure = true,
             }));
 
@@ -897,7 +894,7 @@ public class ClassTest
                     new RangePosition(0, 6, 0, 14),
                     new RangePosition(1, 4, 1, 12)
                 },
-                Extends = new Reference<ClassDef> { Path = { "NonExistent" }, SourceRange = new RangePosition(0, 23, 0, 34) },
+                Extends = new Reference<ClassDef> { Path = { new("NonExistent") } },
             }));
 
         yield return FullFile(new(

@@ -57,7 +57,7 @@ public class UnitTest
                 Name = "m",
                 Term = "Meter",
                 NameLocations = { new RangePosition(0, 7, 0, 8) },
-                Extends = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 18, 0, 24) },
+                Extends = new Reference<UnitDef> { Path = { new("Length") } },
             }));
 
         yield return Rule(new(
@@ -102,7 +102,7 @@ public class UnitTest
                         },
                         SecondOperand = new NumericConstant { Value = NumericConstant.PredefinedConstant.Pi },
                     },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "rad" }, SourceRange = new RangePosition(0, 34, 0, 37) } }
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("rad") } } }
                 }
             }));
 
@@ -116,7 +116,7 @@ public class UnitTest
                 Term = "Celsius",
                 NameLocations = { new RangePosition(0, 0, 0, 7) },
                 Explanation = " conv ",
-                Expression = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "K" }, SourceRange = new RangePosition(0, 31, 0, 32) } },
+                Expression = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("K") } } },
             }));
 
         yield return Rule(new(
@@ -135,7 +135,7 @@ public class UnitTest
                     {
                         Value = 1000,
                     },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "m" }, SourceRange = new RangePosition(0, 23, 0, 24) } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("m") } } },
                 },
             }));
 
@@ -163,7 +163,7 @@ public class UnitTest
                             Value = 100,
                         },
                     },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "m" }, SourceRange = new RangePosition(0, 27, 0, 28) } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("m") } } },
                 },
             }));
 
@@ -183,7 +183,7 @@ public class UnitTest
                     {
                         Value = 0.0254,
                     },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "m" }, SourceRange = new RangePosition(0, 20, 0, 21) } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("m") } } },
                 },
             }));
 
@@ -196,7 +196,7 @@ public class UnitTest
                 Term = "Fahrenheit",
                 Name = "oF",
                 NameLocations = { new RangePosition(0, 12, 0, 14) },
-                Expression = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "K" }, SourceRange = new RangePosition(0, 54, 0, 55) } },
+                Expression = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("K") } } },
                 Explanation = " (oF + 459.67) / 1.8 ",
             }));
 
@@ -213,8 +213,8 @@ public class UnitTest
                 Expression = new ArithmeticExpression
                 {
                     Operator = ArithmeticExpression.ArithmeticOperator.Multiplication,
-                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 19, 0, 25) } },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 28, 0, 34) } }
+                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } }
                 }
             }));
 
@@ -227,12 +227,12 @@ public class UnitTest
                 Name = "kmh",
                 Term = "KilometersPerHour",
                 NameLocations = { new RangePosition(0, 19, 0, 22) },
-                Extends = new Reference<UnitDef> { Path = { "Speed" }, SourceRange = new RangePosition(0, 32, 0, 37) },
+                Extends = new Reference<UnitDef> { Path = { new("Speed") } },
                 Expression = new ArithmeticExpression
                 {
                     Operator = ArithmeticExpression.ArithmeticOperator.Division,
-                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "km" }, SourceRange = new RangePosition(0, 41, 0, 43) } },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "h" }, SourceRange = new RangePosition(0, 46, 0, 47) } }
+                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("km") } } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("h") } } }
                 }
             }));
 
@@ -249,8 +249,8 @@ public class UnitTest
                 Expression = new ArithmeticExpression
                 {
                     Operator = ArithmeticExpression.ArithmeticOperator.Division,
-                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 21, 0, 27) } },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Time" }, SourceRange = new RangePosition(0, 30, 0, 34) } },
+                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Time") } } },
                 },
             }));
 
@@ -270,10 +270,10 @@ public class UnitTest
                     FirstOperand = new ArithmeticExpression
                     {
                         Operator = ArithmeticExpression.ArithmeticOperator.Multiplication,
-                        FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 22, 0, 28) } },
-                        SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 31, 0, 37) } },
+                        FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } },
+                        SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } },
                     },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 40, 0, 46) } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } },
                 },
             }));
 
@@ -293,10 +293,10 @@ public class UnitTest
                     FirstOperand = new ArithmeticExpression
                     {
                         Operator = ArithmeticExpression.ArithmeticOperator.Division,
-                        FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Length" }, SourceRange = new RangePosition(0, 28, 0, 34) } },
-                        SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Time" }, SourceRange = new RangePosition(0, 37, 0, 41) } },
+                        FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Length") } } },
+                        SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Time") } } },
                     },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "Time" }, SourceRange = new RangePosition(0, 44, 0, 48) } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("Time") } } },
                 },
             }));
 
@@ -309,12 +309,12 @@ public class UnitTest
                 Term = "kmh",
                 Name = "kmh",
                 NameLocations = { new RangePosition(0, 5, 0, 8) },
-                Extends = new Reference<UnitDef> { Path = { "Speed" }, SourceRange = new RangePosition(0, 18, 0, 23) },
+                Extends = new Reference<UnitDef> { Path = { new("Speed") } },
                 Expression = new ArithmeticExpression
                 {
                     Operator = ArithmeticExpression.ArithmeticOperator.Division,
-                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "OtherModel", "km" }, SourceRange = new RangePosition(0, 28, 0, 41) } },
-                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { "OtherModel", "h" }, SourceRange = new RangePosition(0, 44, 0, 56) } },
+                    FirstOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("OtherModel"), new("km") } } },
+                    SecondOperand = new UnitReferenceExpression { Unit = new Reference<UnitDef> { Path = { new("OtherModel"), new("h") } } },
                 },
             }));
 
@@ -334,7 +334,7 @@ public class UnitTest
             Expected: TestTools.Build(() =>
             {
                 var lengthUnit = new UnitDef { Name = "Length", Term = "Length", Properties = { Property.Abstract } };
-                var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = new Reference<UnitDef> { Target = lengthUnit, Path = { "Length" } } };
+                var meterUnit = new UnitDef { Name = "m", Term = "Meter", Extends = new Reference<UnitDef> { Target = lengthUnit, Path = { new("Length") } } };
 
                 var heightDomain = new DomainDef
                 {
@@ -345,7 +345,7 @@ public class UnitTest
                         Max = 10,
                         Precision = -2,
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                        Unit = new Reference<UnitDef> { Target = meterUnit, Path = { "m" } },
+                        Unit = new Reference<UnitDef> { Target = meterUnit, Path = { new("m") } },
                     }
                 };
 
@@ -364,7 +364,7 @@ public class UnitTest
                                 Version = "123",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {

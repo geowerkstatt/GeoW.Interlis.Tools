@@ -47,14 +47,14 @@ public class AssociationTest
                     new RangePosition(4, 4, 4, 10),
                 },
                 Cardinality = new Cardinality { Min = 5, Max = 42 },
-                Extends = new Reference<AssociationDef> { Path = { "Test_B" }, SourceRange = new RangePosition(0, 48, 0, 54) },
-                DerivedFrom = new BaseView { Name = "Base", NameLocations = { new RangePosition(0, 68, 0, 72) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Test_C" }, SourceRange = new RangePosition(0, 75, 0, 81) } },
+                Extends = new Reference<AssociationDef> { Path = { new("Test_B") } },
+                DerivedFrom = new BaseView { Name = "Base", NameLocations = { new RangePosition(0, 68, 0, 72) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Test_C") } } },
                 // The DERIVED FROM base is also registered in Content under its base name (same instance as DerivedFrom).
                 Content =
                 {
-                    { "Base", new BaseView { Name = "Base", NameLocations = { new RangePosition(0, 68, 0, 72) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Test_C" }, SourceRange = new RangePosition(0, 75, 0, 81) } } },
+                    { "Base", new BaseView { Name = "Base", NameLocations = { new RangePosition(0, 68, 0, 72) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Test_C") } } } },
                 },
-                OidType = new Reference<DomainDef> { Path = { "oidType" }, SourceRange = new RangePosition(1, 11, 1, 18) },
+                OidType = new Reference<DomainDef> { Path = { new("oidType") } },
                 Properties = { Property.Abstract, Property.Extended },
             }));
 
@@ -83,7 +83,7 @@ public class AssociationTest
                             TypeDef = new RoleType
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "DocumentClass" }, SourceRange = new RangePosition(1, 16, 1, 29) } } },
+                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("DocumentClass") } } } },
                             }
                         }
                     },
@@ -96,7 +96,7 @@ public class AssociationTest
                             TypeDef = new RoleType
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ActionClass" }, SourceRange = new RangePosition(2, 14, 2, 25) } } },
+                                Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("ActionClass") } } } },
                             }
                         }
                     },
@@ -128,7 +128,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "K" }, SourceRange = new RangePosition(1, 5, 1, 6) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("K") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -144,8 +144,8 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "K" }, SourceRange = new RangePosition(2, 6, 2, 7) } },
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "L" }, SourceRange = new RangePosition(2, 11, 2, 12) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("K") } } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("L") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -167,7 +167,7 @@ public class AssociationTest
             {
                 Name = "A1",
                 NameLocations = { new RangePosition(0, 12, 0, 14), new RangePosition(2, 4, 2, 6) },
-                Extends = new Reference<AssociationDef> { Path = { "A" }, SourceRange = new RangePosition(0, 23, 0, 24) },
+                Extends = new Reference<AssociationDef> { Path = { new("A") } },
                 Content =
                 {
                     {
@@ -182,8 +182,8 @@ public class AssociationTest
                                 {
                                     new RestrictedRef
                                     {
-                                        Value = new Reference<IInterlisDefinition> { Path = { "L" }, SourceRange = new RangePosition(1, 17, 1, 18) },
-                                        Restrictions = { new Reference<IInterlisDefinition> { Path = { "L1" }, SourceRange = new RangePosition(1, 32, 1, 34) } },
+                                        Value = new Reference<IInterlisDefinition> { Path = { new("L") } },
+                                        Restrictions = { new Reference<IInterlisDefinition> { Path = { new("L1") } } },
                                     },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
@@ -207,7 +207,7 @@ public class AssociationTest
             {
                 Name = "A1",
                 NameLocations = { new RangePosition(0, 12, 0, 14), new RangePosition(2, 4, 2, 6) },
-                Extends = new Reference<AssociationDef> { Path = { "A" }, SourceRange = new RangePosition(0, 23, 0, 24) },
+                Extends = new Reference<AssociationDef> { Path = { new("A") } },
                 Content =
                 {
                     {
@@ -220,7 +220,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "K1" }, SourceRange = new RangePosition(1, 24, 1, 26) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("K1") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -257,7 +257,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(2, 8, 2, 14) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -273,7 +273,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target2" }, SourceRange = new RangePosition(3, 9, 3, 16) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target2") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -281,7 +281,7 @@ public class AssociationTest
                     },
                 },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                OidType = new Reference<DomainDef> { Path = { "INTERLIS", "NOOID" } },
+                OidType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("NOOID") } },
             }));
 
         yield return Rule(new(
@@ -295,7 +295,7 @@ public class AssociationTest
             {
                 Name = "A1",
                 NameLocations = { new RangePosition(0, 12, 0, 14), new RangePosition(1, 4, 1, 6) },
-                Extends = new Reference<AssociationDef> { Path = { "Other", "Sub", "A" }, SourceRange = new RangePosition(0, 23, 0, 34) },
+                Extends = new Reference<AssociationDef> { Path = { new("Other"), new("Sub"), new("A") } },
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
             }));
 
@@ -324,7 +324,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(1, 15, 1, 21) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 1, Max = 5 },
                             },
@@ -340,7 +340,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target2" }, SourceRange = new RangePosition(2, 9, 2, 16) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target2") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -375,7 +375,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(1, 19, 1, 25) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -392,7 +392,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target2" }, SourceRange = new RangePosition(2, 17, 2, 24) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target2") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -428,7 +428,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(1, 8, 1, 14) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -436,7 +436,7 @@ public class AssociationTest
                             {
                                 new PathExpression
                                 {
-                                    Path = { new IdentifierPathElement { Value = "thePath" } },
+                                    Reference = new Reference<IInterlisDefinition> { Path = { new("thePath") } },
                                 },
                             },
                         }
@@ -451,7 +451,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target2" }, SourceRange = new RangePosition(2, 9, 2, 16) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target2") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -486,7 +486,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Whole" }, SourceRange = new RangePosition(1, 10, 1, 15) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Whole") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                 Relationship = RoleType.RelationshipType.Aggregation,
@@ -503,7 +503,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Part" }, SourceRange = new RangePosition(2, 8, 2, 12) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Part") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -538,7 +538,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Whole" }, SourceRange = new RangePosition(1, 11, 1, 16) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Whole") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
                                 Relationship = RoleType.RelationshipType.Composition,
@@ -555,7 +555,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Part" }, SourceRange = new RangePosition(2, 8, 2, 12) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Part") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -590,7 +590,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(1, 18, 1, 24) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound, Ordered = true },
                             },
@@ -606,7 +606,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target2" }, SourceRange = new RangePosition(2, 9, 2, 16) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target2") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -641,7 +641,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, SourceRange = new RangePosition(1, 19, 1, 25) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },
@@ -658,7 +658,7 @@ public class AssociationTest
                             {
                                 Targets =
                                 {
-                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target2" }, SourceRange = new RangePosition(2, 9, 2, 16) } },
+                                    new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target2") } } },
                                 },
                                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                             },

@@ -19,7 +19,7 @@ public class IdentifierTest
             {
                 Name = "snake",
                 NameLocations = { new RangePosition(0, 6, 0, 11) },
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
             }));
 
         yield return Rule(new(
@@ -58,7 +58,7 @@ public class IdentifierTest
             {
                 Name = "Model",
                 NameLocations = { new RangePosition(0, 7, 0, 12), new RangePosition(1, 5, 1, 10) },
-                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) } },
+                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) } },
                 URI = "http://example.com",
                 Version = "1.0.0",
             }));
@@ -78,7 +78,7 @@ public class IdentifierTest
             {
                 Name = "Model",
                 NameLocations = { new RangePosition(0, 7, 0, 12), new RangePosition(1, 5, 1, 10) },
-                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) } },
+                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) } },
                 URI = "http://example.com",
                 Version = "1.0.0",
             }));
@@ -95,7 +95,7 @@ public class IdentifierTest
             {
                 Name = "my",
                 NameLocations = { new RangePosition(0, 6, 0, 8) },
-                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) } },
+                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) } },
             }));
 
         yield return Rule(new(
@@ -110,7 +110,7 @@ public class IdentifierTest
             {
                 Name = "Foo",
                 NameLocations = { new RangePosition(0, 6, 0, 9), new RangePosition(1, 4, 1, 7) },
-                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) } },
+                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) } },
                 URI = "http://example.com",
                 Version = "1.0.0",
             }));
@@ -127,7 +127,7 @@ public class IdentifierTest
             {
                 Name = "MyModel_2",
                 NameLocations = { new RangePosition(0, 6, 0, 15), new RangePosition(1, 4, 1, 13) },
-                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) } },
+                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) } },
                 URI = "http://example.com",
                 Version = "1.0.0",
             }));
@@ -144,7 +144,7 @@ public class IdentifierTest
             {
                 Name = "model",
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(1, 4, 1, 9) },
-                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) } },
+                Imports = { { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) } },
                 URI = "http://example.com",
                 Version = "1.0.0",
             }));

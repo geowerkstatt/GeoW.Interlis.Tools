@@ -23,7 +23,7 @@ public sealed class ModelDef : InterlisDefinition, IInterlisDefinitionContainer
 
             if (TranslationOf is { Path: { Count: > 0 } translationPath } translationOf)
             {
-                yield return (translationPath[0], translationOf);
+                yield return (translationPath[0].Name, translationOf);
             }
         }
     }

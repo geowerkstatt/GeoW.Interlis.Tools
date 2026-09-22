@@ -200,7 +200,7 @@ public class EnumerationTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new EnumerationValuesType
                 {
-                    TargetEnumeration = new Reference<DomainDef> { Path = { "Wochentage" }, SourceRange = new RangePosition(0, 14, 0, 24) },
+                    TargetEnumeration = new Reference<DomainDef> { Path = { new("Wochentage") } },
                     LeafsOnly = false,
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 24),
@@ -747,7 +747,7 @@ public class EnumerationTypeTest
                 TypeDef = new TypeRef
                 {
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "HALIGNMENT" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("HALIGNMENT") } },
                 },
             }));
 
@@ -762,7 +762,7 @@ public class EnumerationTypeTest
                 TypeDef = new TypeRef
                 {
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "VALIGNMENT" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("VALIGNMENT") } },
                 },
             }));
     }

@@ -115,9 +115,9 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new PolyLineType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 46, 0, 52) },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     WithoutOverlaps = new WithoutOverlapsDef.Explicit { Tolerance = 0.005 },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 22, 0, 31) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 33, 0, 37) } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 77),
                 },
@@ -134,7 +134,7 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new PolyLineType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 23, 0, 29) },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     WithoutOverlaps = new WithoutOverlapsDef.Implicit(),
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 46),
@@ -153,8 +153,8 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new SurfaceType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 39, 0, 45) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 21, 0, 30) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 45),
                 },
@@ -241,8 +241,8 @@ public class LineTypeTest
                 TypeDef = new PolyLineType
                 {
                     IsDirected = true,
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 55, 0, 61) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 31, 0, 40) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 42, 0, 46) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 61),
                 },
@@ -260,8 +260,8 @@ public class LineTypeTest
                 TypeDef = new PolyLineType
                 {
                     IsMultiGeometry = true,
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 51, 0, 57) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 27, 0, 36) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 38, 0, 42) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 57),
                 },
@@ -280,8 +280,8 @@ public class LineTypeTest
                 {
                     IsMultiGeometry = true,
                     IsDirected = true,
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 60, 0, 66) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 36, 0, 45) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 47, 0, 51) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 66),
                 },
@@ -298,9 +298,9 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new SurfaceType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 45, 0, 51) },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     WithoutOverlaps = new WithoutOverlapsDef.Explicit { Tolerance = 0.005 },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 21, 0, 30) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 32, 0, 36) } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 76),
                 },
@@ -319,8 +319,8 @@ public class LineTypeTest
                 TypeDef = new SurfaceType
                 {
                     IsCoverage = true,
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 42, 0, 48) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 18, 0, 27) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 29, 0, 33) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 48),
                 },
@@ -339,8 +339,8 @@ public class LineTypeTest
                 TypeDef = new SurfaceType
                 {
                     IsMultiGeometry = true,
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 50, 0, 56) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 26, 0, 35) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 37, 0, 41) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 56),
                 },
@@ -360,8 +360,8 @@ public class LineTypeTest
                 {
                     IsMultiGeometry = true,
                     IsCoverage = true,
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 47, 0, 53) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 23, 0, 32) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 34, 0, 38) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 53),
                 },
@@ -377,8 +377,8 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new PolyLineType
                 {
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 22, 0, 31) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 33, 0, 37) } },
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 46, 0, 52) },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 52),
                 },
@@ -395,9 +395,9 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new PolyLineType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 40, 0, 46) },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     WithoutOverlaps = new WithoutOverlapsDef.Explicit { Tolerance = 0.01 },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 22, 0, 31) } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 71),
                 },
@@ -419,8 +419,8 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new PolyLineType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 68, 0, 74) },
-                    LineForms = { new Reference<LineFormTypeDef> { Path = { "INTERLIS", "STRAIGHTS" }, SourceRange = new RangePosition(0, 22, 0, 31) }, new Reference<LineFormTypeDef> { Path = { "INTERLIS", "ARCS" }, SourceRange = new RangePosition(0, 33, 0, 37) }, new Reference<LineFormTypeDef> { Path = { "OtherModel", "Klothoide" }, SourceRange = new RangePosition(0, 39, 0, 59) } },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
+                    LineForms = { new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Path = { new("INTERLIS"), new("ARCS") } }, new Reference<LineFormTypeDef> { Path = { new("OtherModel"), new("Klothoide") } } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 74),
                 },
@@ -482,7 +482,7 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new PolyLineType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 23, 0, 29) },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 29),
                 },
@@ -499,7 +499,7 @@ public class LineTypeTest
                 NameLocations = { new RangePosition(0, 0, 0, 4) },
                 TypeDef = new SurfaceType
                 {
-                    VertexType = new Reference<DomainDef> { Path = { "CoordD" }, SourceRange = new RangePosition(0, 22, 0, 28) },
+                    VertexType = new Reference<DomainDef> { Path = { new("CoordD") } },
                     WithoutOverlaps = new WithoutOverlapsDef.Implicit(),
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 45),

@@ -27,10 +27,10 @@ public class ContextTest
                     {
                         new ContextMapping
                         {
-                            GenericCoord = new Reference<DomainDef> { Path = { "GCoord" }, SourceRange = new RangePosition(0, 14, 0, 20) },
+                            GenericCoord = new Reference<DomainDef> { Path = { new("GCoord") } },
                             Concrete =
                             {
-                                new Reference<DomainDef> { Path = { "CCoord" }, SourceRange = new RangePosition(0, 23, 0, 29) },
+                                new Reference<DomainDef> { Path = { new("CCoord") } },
                             },
                         },
                     },

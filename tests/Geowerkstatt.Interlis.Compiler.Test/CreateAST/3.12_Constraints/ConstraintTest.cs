@@ -20,21 +20,16 @@ public class ConstraintTest
                     Operator = ComparisonExpression.ComparisonOperator.Equal,
                     FirstOperand = new PathExpression
                     {
-                        Path = {
-                            new IdentifierPathElement
-                            {
-                                Value = "Art",
-                            },
-                        },
+                        Reference = new Reference<IInterlisDefinition> { Path = { new("Art") } },
                     },
                     SecondOperand = new EnumerationConstant
                     {
-                        Path = { "a" },
+                        Path = { new("a") },
                     },
                 },
                 Condition = new FunctionCall
                 {
-                    FunctionDef = new Reference<FunctionDef> { Path = { "areAreas" }, SourceRange = new RangePosition(0, 32, 0, 40) },
+                    FunctionDef = new Reference<FunctionDef> { Path = { new("areAreas") } },
                     Arguments = {
                         new AllExpression
                         {
@@ -44,7 +39,7 @@ public class ConstraintTest
                         },
                         new AttributePathConstant
                         {
-                            Attribute = new Reference<AttributeDef> { Path = { "Geometrie" }, SourceRange = new RangePosition(0, 60, 0, 69) },
+                            Attribute = new Reference<AttributeDef> { Path = { new("Geometrie") } },
                         },
                     },
                 },
@@ -59,18 +54,18 @@ public class ConstraintTest
             {
                 Condition = new FunctionCall
                 {
-                    FunctionDef = new Reference<FunctionDef> { Path = { "areAreas" }, SourceRange = new RangePosition(0, 15, 0, 23) },
+                    FunctionDef = new Reference<FunctionDef> { Path = { new("areAreas") } },
                     Arguments = {
                         new AllExpression
                         {
                         },
                         new AttributePathConstant
                         {
-                            Attribute = new Reference<AttributeDef> { Path = { "Flaechen" }, SourceRange = new RangePosition(0, 32, 0, 40) },
+                            Attribute = new Reference<AttributeDef> { Path = { new("Flaechen") } },
                         },
                         new AttributePathConstant
                         {
-                            Attribute = new Reference<AttributeDef> { Path = { "F", "Geometrie" }, SourceRange = new RangePosition(0, 45, 0, 57) },
+                            Attribute = new Reference<AttributeDef> { Path = { new("F"), new("Geometrie") } },
                         },
                     },
                 },
@@ -146,13 +141,13 @@ public class ConstraintTest
             RefHB: "3.12-34",
             Expected: new ExistenceConstraint
             {
-                AttributePath = new PathExpression { Path = { new IdentifierPathElement { Value = "a" } } },
+                AttributePath = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("a") } } },
                 RequiredIn =
                 {
                     new ExistenceRequirement
                     {
-                        Viewable = new Reference<IInterlisDefinition> { Path = { "Other" }, SourceRange = new RangePosition(0, 35, 0, 40) },
-                        AttributePath = new PathExpression { Path = { new IdentifierPathElement { Value = "b" } } },
+                        Viewable = new Reference<IInterlisDefinition> { Path = { new("Other") } },
+                        AttributePath = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("b") } } },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 44),
@@ -164,18 +159,18 @@ public class ConstraintTest
             RefHB: "3.12-34",
             Expected: new ExistenceConstraint
             {
-                AttributePath = new PathExpression { Path = { new IdentifierPathElement { Value = "a" } } },
+                AttributePath = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("a") } } },
                 RequiredIn =
                 {
                     new ExistenceRequirement
                     {
-                        Viewable = new Reference<IInterlisDefinition> { Path = { "Other" }, SourceRange = new RangePosition(0, 35, 0, 40) },
-                        AttributePath = new PathExpression { Path = { new IdentifierPathElement { Value = "b" } } },
+                        Viewable = new Reference<IInterlisDefinition> { Path = { new("Other") } },
+                        AttributePath = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("b") } } },
                     },
                     new ExistenceRequirement
                     {
-                        Viewable = new Reference<IInterlisDefinition> { Path = { "Third" }, SourceRange = new RangePosition(0, 47, 0, 52) },
-                        AttributePath = new PathExpression { Path = { new IdentifierPathElement { Value = "c" } } },
+                        Viewable = new Reference<IInterlisDefinition> { Path = { new("Third") } },
+                        AttributePath = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("c") } } },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 56),
@@ -189,8 +184,8 @@ public class ConstraintTest
             {
                 GlobalUnique =
                 {
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "a" } } },
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "b" } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("a") } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("b") } } },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 12),
             }));
@@ -203,8 +198,8 @@ public class ConstraintTest
             {
                 GlobalUnique =
                 {
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "a" } } },
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "b" } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("a") } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("b") } } },
                 },
                 Name = "Check",
                 SourceRange = new RangePosition(0, 0, 0, 19),
@@ -219,8 +214,8 @@ public class ConstraintTest
                 IsBasket = true,
                 GlobalUnique =
                 {
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "a" } } },
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "b" } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("a") } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("b") } } },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 21),
             }));
@@ -252,11 +247,11 @@ public class ConstraintTest
                 {
                     new PathExpression
                     {
-                        Path =
+                        Reference = new Reference<IInterlisDefinition> { Path =
                         {
-                            new IdentifierPathElement { Value = "a" },
-                            new IdentifierPathElement { Value = "b" },
-                        },
+                            new("a"),
+                            new("b"),
+                        } },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 14),
@@ -442,8 +437,8 @@ public class ConstraintTest
             {
                 Local = new LocalUniqueness
                 {
-                    StructurePath = { new Reference<AttributeDef> { Path = { "sub" }, SourceRange = new RangePosition(0, 15, 0, 18) } },
-                    AttributeNames = { new Reference<AttributeDef> { Path = { "a" }, SourceRange = new RangePosition(0, 20, 0, 21) }, new Reference<AttributeDef> { Path = { "b" }, SourceRange = new RangePosition(0, 23, 0, 24) } },
+                    StructurePath = new Reference<AttributeDef> { Path = { new("sub") } },
+                    AttributeNames = { new Reference<AttributeDef> { Path = { new("a") } }, new Reference<AttributeDef> { Path = { new("b") } } },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 25),
             }));
@@ -456,8 +451,8 @@ public class ConstraintTest
             {
                 Local = new LocalUniqueness
                 {
-                    StructurePath = { new Reference<AttributeDef> { Path = { "sub" }, SourceRange = new RangePosition(0, 15, 0, 18) }, new Reference<AttributeDef> { Path = { "deeper" }, SourceRange = new RangePosition(0, 22, 0, 28) } },
-                    AttributeNames = { new Reference<AttributeDef> { Path = { "a" }, SourceRange = new RangePosition(0, 30, 0, 31) }, new Reference<AttributeDef> { Path = { "b" }, SourceRange = new RangePosition(0, 33, 0, 34) } },
+                    StructurePath = new Reference<AttributeDef> { Path = { new("sub"), new("deeper") } },
+                    AttributeNames = { new Reference<AttributeDef> { Path = { new("a") } }, new Reference<AttributeDef> { Path = { new("b") } } },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 35),
             }));
@@ -541,7 +536,7 @@ public class ConstraintTest
                             Condition = new ComparisonExpression
                             {
                                 Operator = ComparisonExpression.ComparisonOperator.NotEqual,
-                                FirstOperand = new PathExpression { Path = { new IdentifierPathElement { Value = "Value" } }, Target = value },
+                                FirstOperand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Value") }, Target = value }},
                                 SecondOperand = new NumericConstant { Value = 50 },
                             },
                         },
@@ -563,7 +558,7 @@ public class ConstraintTest
                                 Version = "1.0.0",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {
@@ -580,7 +575,7 @@ public class ConstraintTest
                                                     new ConstraintsBlockDef
                                                     {
                                                         Name = "CONSTRAINTS OF C #1",
-                                                        Target = new Reference<IInterlisDefinition> { Target = classC, Path = { "C" } },
+                                                        Target = new Reference<IInterlisDefinition> { Target = classC, Path = { new("C") } },
                                                         Constraints =
                                                         {
                                                             new MandatoryConstraint
@@ -589,7 +584,7 @@ public class ConstraintTest
                                                                 Condition = new ComparisonExpression
                                                                 {
                                                                     Operator = ComparisonExpression.ComparisonOperator.Greater,
-                                                                    FirstOperand = new PathExpression { Path = { new IdentifierPathElement { Value = "Value" } }, Target = value },
+                                                                    FirstOperand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Value") }, Target = value }},
                                                                     SecondOperand = new NumericConstant { Value = 0 },
                                                                 },
                                                             },
@@ -601,7 +596,7 @@ public class ConstraintTest
                                                     new ConstraintsBlockDef
                                                     {
                                                         Name = "CONSTRAINTS OF C #2",
-                                                        Target = new Reference<IInterlisDefinition> { Target = classC, Path = { "C" } },
+                                                        Target = new Reference<IInterlisDefinition> { Target = classC, Path = { new("C") } },
                                                         Constraints =
                                                         {
                                                             new MandatoryConstraint
@@ -610,7 +605,7 @@ public class ConstraintTest
                                                                 Condition = new ComparisonExpression
                                                                 {
                                                                     Operator = ComparisonExpression.ComparisonOperator.Less,
-                                                                    FirstOperand = new PathExpression { Path = { new IdentifierPathElement { Value = "Value" } }, Target = value },
+                                                                    FirstOperand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Value") }, Target = value }},
                                                                     SecondOperand = new NumericConstant { Value = 100 },
                                                                 },
                                                             },

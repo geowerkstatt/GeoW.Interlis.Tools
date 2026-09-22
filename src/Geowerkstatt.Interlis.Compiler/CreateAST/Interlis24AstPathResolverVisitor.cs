@@ -75,6 +75,13 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     {
         using var frame = currentViewable.NewFrame(viewDef);
 
+        // The inspected path first: PARENT, THISAREA and THATAREA in the selections and attributes below denote the
+        // object it leads through, read off its resolved steps (see KeywordContext).
+        if (viewDef.Formation is InspectionView inspection)
+        {
+            ResolveInspectionPath(inspection);
+        }
+
         // Selections (WHERE) and the AGGREGATION grouping paths are rooted at the view's base names (RefHB 3.15).
         foreach (var selection in viewDef.Selections)
         {
@@ -87,11 +94,6 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
             {
                 ResolvePath(path, viewDef);
             }
-        }
-
-        if (viewDef.Formation is InspectionView inspection)
-        {
-            ResolveInspectionPath(inspection);
         }
 
         return base.VisitViewDef(viewDef);
@@ -190,15 +192,15 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         }
 
         // The (LOCAL) form (RefHB 3.12): the structure path leads through substructure attributes of the enclosing
-        // viewable, and the listed attributes are members of the reached substructure. Both are plain names, not
-        // PathExpressions, so they are resolved here with the same member lookup the path walk uses (an unknown
-        // step empties the container set, so followers stay silent like in a path).
+        // viewable, and the listed attributes are members of the reached substructure — resolved with the same
+        // member lookup the path walk uses (an unknown step empties the container set, so followers stay silent
+        // like in a path).
         if (uniquenessConstraint.Local is { } local)
         {
             IReadOnlyList<IInterlisDefinitionContainer> containers = currentViewable.Value is { } viewable ? [viewable] : [];
-            foreach (var step in local.StructurePath)
+            foreach (var step in local.StructurePath.Path)
             {
-                containers = DescendSubstructures(ResolveMemberStep(step, containers));
+                containers = DescendSubstructures(ResolveMemberStep(local.StructurePath, step, containers));
             }
 
             foreach (var attribute in local.AttributeNames)
@@ -304,18 +306,12 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// </summary>
     private void CheckDomainConstraintPath(PathExpression path, DomainDef domain, DomainConstraint constraint)
     {
-        var offending = path.Path.FirstOrDefault() is KeyWordPathElement { Value: KeyWordPathElement.KeyWord.This }
-            ? path.Path.Count > 1 ? path.Path[1] : null
-            : path.Path.FirstOrDefault();
+        var steps = path.Reference.Path;
+        var offending = steps is [KeywordPathSegment { Keyword: PathKeyword.This }, ..]
+            ? steps.Count > 1 ? steps[1] : null
+            : steps.FirstOrDefault();
 
-        var name = offending switch
-        {
-            IdentifierPathElement identifier => identifier.Value,
-            AttributePathElement indexed => indexed.Name,
-            RolePathElement role => role.Name,
-            KeyWordPathElement keyword => keyword.Value.ToString().ToUpperInvariant(),
-            _ => string.Empty,
-        };
+        var name = offending?.Name ?? string.Empty;
 
         // An empty name is a partially typed element (the parse error is already reported) or no offender at all.
         if (name.Length > 0)
@@ -342,19 +338,20 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     private void ResolveInspectionPath(InspectionView inspection)
     {
         var containers = InspectionRoots(inspection.Source.Viewable?.Target as IInterlisDefinitionContainer);
+        var steps = inspection.Path.Path;
 
-        for (var i = 0; i < inspection.Path.Count; i++)
+        for (var i = 0; i < steps.Count; i++)
         {
-            var step = inspection.Path[i];
-            var members = ResolveMemberStep(step, containers);
+            var step = steps[i];
+            var members = ResolveMemberStep(inspection.Path, step, containers);
 
-            if (i < inspection.Path.Count - 1)
+            if (i < steps.Count - 1)
             {
                 foreach (var member in members)
                 {
                     if (InspectableType(member) is { } type && type is not ObjectType)
                     {
-                        logger.LogError("the inspection path at {Range} can not continue after '{Member}' because it is not a substructure attribute", step.SourceRange, member.FullyQualifiedName);
+                        logger.LogError("the inspection path at {Range} can not continue after '{Member}' because it is not a substructure attribute", step.Range, member.FullyQualifiedName);
                     }
                 }
 
@@ -364,31 +361,41 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
             {
                 foreach (var member in members)
                 {
-                    CheckInspectedTip(inspection.IsArea, member, step.SourceRange);
+                    CheckInspectedTip(inspection.IsArea, member, step.Range);
                 }
             }
         }
     }
 
     /// <summary>
-    /// Resolves one plain-name member step (a <see cref="LocalUniqueness"/> or <see cref="InspectionView"/> path
-    /// element) against the current container set with the same member lookup a path walk uses, records the
-    /// target on the reference, and returns the member definition(s) found — empty (and reported) when the name
-    /// is missing somewhere or the context is unknown, so followers stay silent like in a path.
+    /// Resolves one plain-name step of a member path (a <see cref="LocalUniqueness"/> structure path, an
+    /// <see cref="InspectionView"/> path) or a single member reference against the current container set with the
+    /// same member lookup a path walk uses. Records the member on the step; when the step is the path's last, the
+    /// path reaches it and it becomes the path's target. Returns the member definition(s) found — empty (and
+    /// reported) when the name is missing somewhere or the context is unknown, so followers stay silent like in a
+    /// path.
     /// </summary>
-    private List<IInterlisDefinition> ResolveMemberStep(Reference<AttributeDef> step, IReadOnlyList<IInterlisDefinitionContainer> containers)
+    private List<IInterlisDefinition> ResolveMemberStep(Reference<AttributeDef> path, PathSegment step, IReadOnlyList<IInterlisDefinitionContainer> containers)
     {
-        var members = LookupInAll(containers, c => LookupMember(c, step.Path[0]), step.Path[0], report: true, step.SourceRange);
-        if (members.Count == 1)
+        var members = LookupInAll(containers, c => LookupMember(c, step.Name), step.Name, report: true, step.Range);
+        if (members is [var member])
         {
-            step.SetTarget(members[0]);
+            step.Target = member;
+            if (ReferenceEquals(step, path.Path[^1]))
+            {
+                path.SetTarget(member);
+            }
         }
 
         return members;
     }
 
+    /// <summary>Resolves a single-segment <see cref="ReferenceResolution.Member"/> reference; see <see cref="ResolveMemberStep(Reference{AttributeDef}, PathSegment, IReadOnlyList{IInterlisDefinitionContainer})"/>.</summary>
+    private List<IInterlisDefinition> ResolveMemberStep(Reference<AttributeDef> member, IReadOnlyList<IInterlisDefinitionContainer> containers)
+        => member.Path is [var name] ? ResolveMemberStep(member, name, containers) : [];
+
     /// <summary>The substructure(s) the found member attribute(s) descend into; empty for any non-substructure member (see <see cref="DescendAll"/>).</summary>
-    private static IReadOnlyList<IInterlisDefinitionContainer> DescendSubstructures(List<IInterlisDefinition> members) =>
+    private static IReadOnlyList<IInterlisDefinitionContainer> DescendSubstructures(IReadOnlyList<IInterlisDefinition> members) =>
         DescendAll(members, member => member is AttributeDef { TypeDef: ObjectType substructure } ? DescendTargets(substructure) : []);
 
     /// <summary>Checks that the attribute an inspection path reaches can be decomposed (see <see cref="ResolveInspectionPath"/>).</summary>
@@ -436,7 +443,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// </summary>
     private static IReadOnlyList<IInterlisDefinitionContainer> InspectedElements(InspectionView inspection)
     {
-        var tip = inspection.Path.Count > 0 ? inspection.Path[^1].Target : null;
+        var tip = inspection.Path.Target;
         return (tip?.TypeDef.Underlying(), inspection.IsArea) switch
         {
             (ObjectType substructure, false) => DescendTargets(substructure),
@@ -459,10 +466,11 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
 
     /// <summary>
     /// Walks <paramref name="path"/> from <paramref name="root"/> (the viewable its head resolves against), recording
-    /// the definition reached at its last element onto <see cref="PathExpression.Target"/>. The tip type is not stored;
-    /// <see cref="PathExpression.ReturnType"/> derives it from that target and the last path element. An element that
+    /// what each step reached on its segment and what the last one reached as the reference's target — a rename of
+    /// an attribute has to reach every step that names it, not only the paths ending on it. The tip type is not
+    /// stored; <see cref="PathExpression.ReturnType"/> derives it from that target and the last step. A step that
     /// names no member of a known viewable is reported as an error. With <paramref name="mustBeSingleValued"/> every
-    /// element must contribute at most one value (a UNIQUE path, see <see cref="CheckUniquePathElements"/>).
+    /// step must contribute at most one value (a UNIQUE path, see <see cref="CheckUniquePathElements"/>).
     /// </summary>
     private void ResolvePath(PathExpression path, IInterlisDefinitionContainer? root, bool mustBeSingleValued = false)
     {
@@ -471,46 +479,56 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         // descent can not continue or the context is unknown.
         IReadOnlyList<IInterlisDefinitionContainer> containers = root == null ? [] : [root];
         IInterlisDefinition? reached = null;
+        var steps = path.Reference.Path;
 
-        for (var i = 0; i < path.Path.Count; i++)
+        for (var i = 0; i < steps.Count; i++)
         {
-            var element = path.Path[i];
+            var step = steps[i];
 
             // The head of a path rooted at a view must name a base of the view — a stricter rule than membership,
             // reported by the type checker (CheckPathHead) — so an unknown view head is not reported here as well.
             var report = !(i == 0 && root is ViewDef);
 
-            switch (element)
+            switch (step)
             {
-                case KeyWordPathElement { Value: KeyWordPathElement.KeyWord.This }:
-                    // THIS is the context object; a following element continues from the same viewable(s).
+                case KeywordPathSegment { Keyword: PathKeyword.This }:
+                    // THIS is the context object; a following step continues from the same viewable(s).
                     reached = containers.Count == 1 ? containers[0] : null;
                     break;
 
-                case KeyWordPathElement keyword:
-                    // PARENT / AGGREGATES / THISAREA / THATAREA denote an object but are not resolvable to a concrete
-                    // definition from a plain viewable path; stop descending (ReturnType still reports an object).
+                case KeywordPathSegment keyword:
+                    // PARENT, THISAREA and THATAREA denote the object the inspected attribute belongs to, AGGREGATES
+                    // the aggregated base objects: the view's formation says which viewable(s), so the walk continues
+                    // from there. A keyword outside its context (reported for a head) denotes nothing and stops it.
                     if (i == 0)
                     {
                         CheckKeywordContext(keyword, root, path.SourceRange);
                     }
 
-                    reached = null;
-                    containers = [];
+                    containers = KeywordContext(keyword, root);
+                    reached = containers.Count == 1 ? containers[0] : null;
                     break;
 
-                case RolePathElement role:
-                    var roles = LookupInAll(containers, c => LookupRole(c, role.Name, role.AssociationName), $"{role.Name}[{role.AssociationName}]", report, path.SourceRange);
+                case RolePathSegment role:
+                    var accesses = LookupInAll(containers, c => LookupRole(c, role.Name, role.Association.Name), role.ToString(), report, path.SourceRange);
+                    var roles = accesses.Select(access => access.Role).ToList();
                     if (mustBeSingleValued)
                     {
                         CheckUniquePathElements(roles, containers, path.SourceRange);
                     }
 
                     reached = roles.Count == 1 ? roles[0] : null;
+                    if (accesses is [var access])
+                    {
+                        // The step writes two names; both point into the access the role was found through.
+                        role.Target = access.Role;
+                        role.Association.Target = access.Association;
+                    }
+
                     containers = DescendAll(roles, member => DescendTargets((member as AttributeDef)?.TypeDef));
                     break;
 
-                case AttributePathElement indexed:
+                case IndexedPathSegment indexed:
                     var indexedAttributes = LookupInAll(containers, c => LookupMember(c, indexed.Name) as AttributeDef, indexed.Name, report, path.SourceRange);
                     if (mustBeSingleValued)
                     {
@@ -518,30 +536,62 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     }
 
                     reached = indexedAttributes.Count == 1 ? indexedAttributes[0] : null;
+                    indexed.Target = reached;
+
                     // An indexed step only descends into the element structure of an ordered LIST OF substructure
                     // (a coordinate axis or a non-indexable attribute yields no viewable).
                     containers = DescendSubstructures(indexedAttributes);
                     break;
 
-                case IdentifierPathElement identifier:
-                    var members = LookupInAll(containers, c => LookupMember(c, identifier.Value), identifier.Value, report, path.SourceRange);
+                default:
+                    var members = LookupInAll(containers, c => LookupMember(c, step.Name), step.Name, report, path.SourceRange);
                     if (mustBeSingleValued)
                     {
                         CheckUniquePathElements(members, containers, path.SourceRange);
                     }
 
                     reached = members.Count == 1 ? members[0] : null;
+                    step.Target = reached;
                     containers = DescendAll(members, DescendMember);
-                    break;
-
-                default:
-                    reached = null;
-                    containers = [];
                     break;
             }
         }
 
-        path.Target = reached;
+        // A THIS tip reaches the context viewable, which SetTarget leaves off the keyword segment.
+        if (reached != null)
+        {
+            path.Reference.SetTarget(reached);
+        }
+    }
+
+    /// <summary>
+    /// The viewable(s) whose object a keyword step denotes, from the formation of the view the path is written in:
+    /// for PARENT, THISAREA and THATAREA the object the inspected attribute belongs to (RefHB 3.13-35/-36), for
+    /// AGGREGATES the aggregated objects of the aggregation's source (RefHB 3.13-43). Empty where the keyword has no
+    /// such context — misuse, which <see cref="CheckKeywordContext"/> reports, or an unresolved source.
+    /// </summary>
+    private static IReadOnlyList<IInterlisDefinitionContainer> KeywordContext(KeywordPathSegment keyword, IInterlisDefinitionContainer? root) => (keyword.Keyword, EffectiveFormation(root)) switch
+    {
+        (PathKeyword.Parent, InspectionView inspection) => InspectedParents(inspection),
+        (PathKeyword.ThisArea or PathKeyword.ThatArea, InspectionView { IsArea: true } inspection) => InspectedParents(inspection),
+        (PathKeyword.Aggregates, AggregationView aggregation) => aggregation.Source.Viewable?.Target is IInterlisDefinitionContainer viewable ? [viewable] : [],
+        _ => [],
+    };
+
+    /// <summary>
+    /// The viewable(s) whose object the inspected attribute belongs to: the source viewable for a one-step path (or
+    /// the elements of a source that is itself an inspection, see <see cref="InspectionRoots"/>), the substructure
+    /// the previous step reaches for a longer one. Empty while a step is unresolved.
+    /// </summary>
+    private static IReadOnlyList<IInterlisDefinitionContainer> InspectedParents(InspectionView inspection)
+    {
+        var steps = inspection.Path.Path;
+        return steps.Count switch
+        {
+            0 => [],
+            1 => InspectionRoots(inspection.Source.Viewable?.Target as IInterlisDefinitionContainer),
+            _ => steps[^2].Target is AttributeDef { TypeDef: ObjectType substructure } ? DescendTargets(substructure) : [],
+        };
     }
 
     /// <summary>
@@ -552,26 +602,26 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// (RefHB 3.13-36) is therefore not enforced at all. The view kind is taken from the formation, following a
     /// view's EXTENDS chain to the defining base.
     /// </summary>
-    private void CheckKeywordContext(KeyWordPathElement keyword, IInterlisDefinitionContainer? root, RangePosition? range)
+    private void CheckKeywordContext(KeywordPathSegment keyword, IInterlisDefinitionContainer? root, RangePosition? range)
     {
-        switch (keyword.Value)
+        switch (keyword.Keyword)
         {
-            case KeyWordPathElement.KeyWord.ThisArea or KeyWordPathElement.KeyWord.ThatArea
+            case PathKeyword.ThisArea or PathKeyword.ThatArea
                 when EffectiveFormation(root) is not InspectionView { IsArea: true }:
                 ReportKeywordContext(keyword, root, range, "the inspection of an area partition");
                 break;
 
-            case KeyWordPathElement.KeyWord.Aggregates when EffectiveFormation(root) is not AggregationView:
+            case PathKeyword.Aggregates when EffectiveFormation(root) is not AggregationView:
                 ReportKeywordContext(keyword, root, range, "an aggregation view");
                 break;
         }
     }
 
-    private void ReportKeywordContext(KeyWordPathElement keyword, IInterlisDefinitionContainer? root, RangePosition? range, string requiredContext)
+    private void ReportKeywordContext(KeywordPathSegment keyword, IInterlisDefinitionContainer? root, RangePosition? range, string requiredContext)
     {
         logger.LogError(
             "'{Keyword}' at {Range} can only be used within {RequiredContext}{Where}",
-            keyword.Value.ToString().ToUpperInvariant(),
+            keyword.Name,
             range,
             requiredContext,
             root is IInterlisDefinition definition ? $" (in '{definition.FullyQualifiedName}')" : string.Empty);
@@ -641,9 +691,10 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// <c>-&gt;</c> — the parse error is already reported) and when <paramref name="report"/> is
     /// <see langword="false"/> (a view head, whose stricter rule the type checker reports).
     /// </summary>
-    private List<IInterlisDefinition> LookupInAll(IReadOnlyList<IInterlisDefinitionContainer> containers, Func<IInterlisDefinitionContainer, IInterlisDefinition?> lookup, string name, bool report, RangePosition? range)
+    private List<T> LookupInAll<T>(IReadOnlyList<IInterlisDefinitionContainer> containers, Func<IInterlisDefinitionContainer, T?> lookup, string name, bool report, RangePosition? range)
+        where T : class
     {
-        var members = new List<IInterlisDefinition>();
+        var members = new List<T>();
         var missing = new List<IInterlisDefinitionContainer>();
         foreach (var container in containers)
         {
@@ -676,7 +727,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// further checking — as soon as any member yields no viewable, so a scalar branch or an only partially known
     /// target set never produces a false error on a later element.
     /// </summary>
-    private static IReadOnlyList<IInterlisDefinitionContainer> DescendAll(List<IInterlisDefinition> members, Func<IInterlisDefinition, IReadOnlyList<IInterlisDefinitionContainer>> descend)
+    private static IReadOnlyList<IInterlisDefinitionContainer> DescendAll(IReadOnlyList<IInterlisDefinition> members, Func<IInterlisDefinition, IReadOnlyList<IInterlisDefinitionContainer>> descend)
     {
         var result = new List<IInterlisDefinitionContainer>();
         foreach (var member in members)
@@ -763,8 +814,15 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         return null;
     }
 
+    /// <summary>
+    /// A role reached through one of a class's association accesses ("Beziehungszugang", RefHB 2.7): the role and
+    /// the association granting the access, the two definitions a <c>Role-Name '[' Association-Name ']'</c> step
+    /// names.
+    /// </summary>
+    private sealed record RoleAccess(AttributeDef Role, AssociationDef Association);
+
     /// <summary>Resolves a <c>Role-Name '[' Association-Name ']'</c> step against the current object's association accesses (RefHB 3.13-38).</summary>
-    private static AttributeDef? LookupRole(IInterlisDefinitionContainer? container, string roleName, string associationName)
+    private static RoleAccess? LookupRole(IInterlisDefinitionContainer? container, string roleName, string associationName)
     {
         foreach (var current in SelfAndBases(container))
         {
@@ -772,7 +830,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                 && identifiable.AssociationAccess.GetValueOrDefault(associationName) is { } association
                 && association.Content.GetValueOrDefault(roleName) is AttributeDef { TypeDef: RoleType } role)
             {
-                return role;
+                return new RoleAccess(role, association);
             }
         }
 

@@ -215,7 +215,7 @@ public class AttributeTest
                     new NumericConstant
                     {
                         Value = NumericConstant.PredefinedConstant.Pi,
-                        Unit = new Reference<UnitDef> { Path = { "INTERLIS", "m" }, SourceRange = new RangePosition(0, 41, 0, 51) },
+                        Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
                     },
                 },
             }));
@@ -519,7 +519,7 @@ public class AttributeTest
                 {
                     Target = new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "MyDomain" }, SourceRange = new RangePosition(0, 7, 0, 15) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("MyDomain") } },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 15),

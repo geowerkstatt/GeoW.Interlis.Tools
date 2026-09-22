@@ -20,7 +20,7 @@ public class NumericTypeTest
             RefHB: "3.8.5-6",
             Expected: new NumericType
             {
-                Unit = new Reference<UnitDef> { Path = { "INTERLIS", "LENGTH" }, SourceRange = new RangePosition(0, 9, 0, 24) },
+                Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("LENGTH") } },
                 SourceRange = new RangePosition(0, 0, 0, 25),
             }));
 
@@ -64,7 +64,7 @@ public class NumericTypeTest
                 Max = 359.99,
                 Precision = -2,
                 Circular = true,
-                Unit = new Reference<UnitDef> { Path = { "INTERLIS", "m" }, SourceRange = new RangePosition(0, 25, 0, 35) },
+                Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
                 SourceRange = new RangePosition(0, 0, 0, 36),
             }));
 
@@ -97,7 +97,7 @@ public class NumericTypeTest
                 Min = 0,
                 Max = 100,
                 Precision = 0,
-                Unit = new Reference<UnitDef> { Path = { "INTERLIS", "m" }, SourceRange = new RangePosition(0, 10, 0, 20) },
+                Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
                 SourceRange = new RangePosition(0, 0, 0, 21),
             }));
 
@@ -220,7 +220,7 @@ public class NumericTypeTest
                 Max = 359.99,
                 Precision = -2,
                 Circular = true,
-                Unit = new Reference<UnitDef> { Path = { "INTERLIS", "m" }, SourceRange = new RangePosition(0, 25, 0, 35) },
+                Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
                 Orientation = NumericType.AngleOrientation.Clockwise,
                 SourceRange = new RangePosition(0, 0, 0, 46),
             }));
@@ -235,7 +235,7 @@ public class NumericTypeTest
                 Max = 359.99,
                 Precision = -2,
                 Circular = true,
-                Unit = new Reference<UnitDef> { Path = { "INTERLIS", "m" }, SourceRange = new RangePosition(0, 25, 0, 35) },
+                Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
                 Orientation = NumericType.AngleOrientation.CounterClockwise,
                 SourceRange = new RangePosition(0, 0, 0, 53),
             }));
@@ -253,7 +253,7 @@ public class NumericTypeTest
                 {
                     Value = new RefSys.CoordDomainRef
                     {
-                        Domain = new Reference<DomainDef> { Path = { "Refsys", "CoordDomain" }, SourceRange = new RangePosition(0, 10, 0, 28) },
+                        Domain = new Reference<DomainDef> { Path = { new("Refsys"), new("CoordDomain") } },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 29),
@@ -272,7 +272,7 @@ public class NumericTypeTest
                 {
                     Value = new RefSys.CoordDomainRef
                     {
-                        Domain = new Reference<DomainDef> { Path = { "Refsys", "CoordDomain" }, SourceRange = new RangePosition(0, 10, 0, 28) },
+                        Domain = new Reference<DomainDef> { Path = { new("Refsys"), new("CoordDomain") } },
                     },
                     Axis = 1,
                 },
@@ -292,8 +292,8 @@ public class NumericTypeTest
                 {
                     Value = new RefSys.MetaObjectRef
                     {
-                        Basket = new Reference<MetaDataBasketDef> { Path = { "Refsys" }, SourceRange = new RangePosition(0, 10, 0, 16) },
-                        MetaObject = new Reference<MetaObjectDeclaration> { Path = { "MetaObj" }, SourceRange = new RangePosition(0, 17, 0, 24) },
+                        Basket = new Reference<MetaDataBasketDef> { Path = { new("Refsys") } },
+                        MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("MetaObj") } },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 25),
@@ -312,8 +312,8 @@ public class NumericTypeTest
                 {
                     Value = new RefSys.MetaObjectRef
                     {
-                        Basket = new Reference<MetaDataBasketDef> { Path = { "Refsys" }, SourceRange = new RangePosition(0, 10, 0, 16) },
-                        MetaObject = new Reference<MetaObjectDeclaration> { Path = { "MetaObj" }, SourceRange = new RangePosition(0, 17, 0, 24) },
+                        Basket = new Reference<MetaDataBasketDef> { Path = { new("Refsys") } },
+                        MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("MetaObj") } },
                     },
                     Axis = 2,
                 },

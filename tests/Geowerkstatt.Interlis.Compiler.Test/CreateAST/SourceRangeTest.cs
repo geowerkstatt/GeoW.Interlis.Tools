@@ -1,7 +1,6 @@
 using Geowerkstatt.Interlis.Compiler.AST;
 using Geowerkstatt.Interlis.Compiler.AST.Expression;
-using Geowerkstatt.Interlis.Compiler.Test;
-using Microsoft.Extensions.Logging;
+using static Geowerkstatt.Interlis.Compiler.TestTools;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -18,34 +17,12 @@ namespace Geowerkstatt.Interlis.Compiler;
 /// </summary>
 public class SourceRangeTest
 {
-    /// <summary>
-    /// Parses <paramref name="source"/> through the full pipeline and asserts that no diagnostics were reported,
-    /// so a test can rely on the returned AST being complete.
-    /// </summary>
-    private static async Task<InterlisEnvironment> ReadWithoutErrors(string source, string? sourceUri = null)
-    {
-        var logProvider = new TestLoggerProvider();
-        using var loggerFactory = LoggerFactory.Create(b => b.AddProvider(logProvider));
-        var environment = new InterlisReader(loggerFactory).ReadFile(new StringReader(source), sourceUri);
-
-        await Assert.That(logProvider.GetMessages()).IsEquivalentTo(Array.Empty<string>());
-        return environment;
-    }
-
-    /// <summary>Renders a range as <c>startLine:startCharacter..endLine:endCharacter</c> for readable assertions.</summary>
-    private static string Describe(ISourceRange element)
-    {
-        var range = element.SourceRange;
-        return range == null
-            ? "<none>"
-            : $"{range.Start.Line}:{range.Start.Character}..{range.End.Line}:{range.End.Character}";
-    }
-
     [Test]
     public async Task DefinitionsCarryTheirDeclarationRange()
     {
-        // Lines are zero-based, so MODEL is line 1 and DOMAIN is line 2. Each declaration ends at the character
-        // after its final token: 'END Model.' ends at character 10 of line 9, the domain ';' at 24 of line 3, ...
+        // Rendered like a diagnostic location (RangePosition.ToString): one-based lines, zero-based characters. Each
+        // declaration ends at the character after its final token: 'END Model.' ends at character 10 of line 10, the
+        // domain ';' at 22 of line 4, ...
         var environment = await ReadWithoutErrors(
             """
             INTERLIS 2.4;
@@ -68,11 +45,11 @@ public class SourceRangeTest
 
         using (Assert.Multiple())
         {
-            await Assert.That(Describe(model)).IsEqualTo("1:0..9:10");
-            await Assert.That(Describe(domain)).IsEqualTo("3:8..3:22");
-            await Assert.That(Describe(topic)).IsEqualTo("4:4..8:14");
-            await Assert.That(Describe(classDef)).IsEqualTo("5:8..7:22");
-            await Assert.That(Describe(attribute)).IsEqualTo("6:12..6:27");
+            await Assert.That(model.SourceRange?.ToString()).IsEqualTo("2:0-10:10");
+            await Assert.That(domain.SourceRange?.ToString()).IsEqualTo("4:8-4:22");
+            await Assert.That(topic.SourceRange?.ToString()).IsEqualTo("5:4-9:14");
+            await Assert.That(classDef.SourceRange?.ToString()).IsEqualTo("6:8-8:22");
+            await Assert.That(attribute.SourceRange?.ToString()).IsEqualTo("7:12-7:27");
         }
     }
 
@@ -154,7 +131,7 @@ public class SourceRangeTest
     public async Task ExpressionsCarryTheirRange()
     {
         // Every node of an expression tree covers exactly the text it was parsed from: the condition as a whole,
-        // each operand, and the constants and paths at the leaves (line 6, zero-based).
+        // each operand, and the constants and paths at the leaves (line 6, counted one-based as diagnostics do).
         var environment = await ReadWithoutErrors(
             """
             INTERLIS 2.4;
@@ -176,12 +153,12 @@ public class SourceRangeTest
 
         using (Assert.Multiple())
         {
-            await Assert.That(Describe(condition)).IsEqualTo("5:33..5:60");
-            await Assert.That(Describe(comparison)).IsEqualTo("5:33..5:41");
-            await Assert.That(Describe(comparison.FirstOperand)).IsEqualTo("5:33..5:37");
-            await Assert.That(Describe(comparison.SecondOperand)).IsEqualTo("5:40..5:41");
-            await Assert.That(Describe(defined)).IsEqualTo("5:46..5:60");
-            await Assert.That(Describe(defined.Operand)).IsEqualTo("5:55..5:59");
+            await Assert.That(condition.SourceRange?.ToString()).IsEqualTo("6:33-6:60");
+            await Assert.That(comparison.SourceRange?.ToString()).IsEqualTo("6:33-6:41");
+            await Assert.That(comparison.FirstOperand.SourceRange?.ToString()).IsEqualTo("6:33-6:37");
+            await Assert.That(comparison.SecondOperand.SourceRange?.ToString()).IsEqualTo("6:40-6:41");
+            await Assert.That(defined.SourceRange?.ToString()).IsEqualTo("6:46-6:60");
+            await Assert.That(defined.Operand.SourceRange?.ToString()).IsEqualTo("6:55-6:59");
         }
     }
 }

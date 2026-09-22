@@ -537,8 +537,8 @@ public static class InternalModel
                 Topic = new Reference<TopicDef> { Target = (TopicDef)Interlis.Content["TIMESYSTEMS"] },
                 Objects =
                 {
-                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { "CALENDAR" } }, MetaObjects = { new MetaObjectDeclaration { Name = "GregorianCalendar" } } },
-                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { "TIMEOFDAYSYS" } }, MetaObjects = { new MetaObjectDeclaration { Name = "UTC" } } },
+                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { new("CALENDAR") } }, MetaObjects = { new MetaObjectDeclaration { Name = "GregorianCalendar" } } },
+                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { new("TIMEOFDAYSYS") } }, MetaObjects = { new MetaObjectDeclaration { Name = "UTC" } } },
                 },
             },
 
@@ -621,7 +621,7 @@ public static class InternalModel
                                 Min = 0,
                                 Max = 23,
                                 Precision = 0,
-                                RefSystem = new RefSys { Value = new RefSys.MetaObjectRef { MetaObject = new Reference<MetaObjectDeclaration> { Path = { "UTC" } } } },
+                                RefSystem = new RefSys { Value = new RefSys.MetaObjectRef { MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("UTC") } } } },
                             },
                         }
                     },
@@ -638,7 +638,7 @@ public static class InternalModel
                     Max = 2999,
                     Precision = 0,
                     Unit = new Reference<UnitDef> { Target = (UnitDef)Interlis.Content["Y"] },
-                    RefSystem = new RefSys { Value = new RefSys.MetaObjectRef { MetaObject = new Reference<MetaObjectDeclaration> { Path = { "GregorianCalendar" } } } },
+                    RefSystem = new RefSys { Value = new RefSys.MetaObjectRef { MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("GregorianCalendar") } } } },
                 },
             },
             () => new ClassDef
@@ -715,7 +715,7 @@ public static class InternalModel
                                 Precision = 0,
                                 Unit = new Reference<UnitDef> { Target = (UnitDef)Interlis.Content["h"] },
                                 Circular = true,
-                                RefSystem = new RefSys { Value = new RefSys.MetaObjectRef { MetaObject = new Reference<MetaObjectDeclaration> { Path = { "UTC" } } } },
+                                RefSystem = new RefSys { Value = new RefSys.MetaObjectRef { MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("UTC") } } } },
                             },
                         }
                     },
@@ -766,11 +766,11 @@ public static class InternalModel
                     {
                         Components =
                         {
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Hours" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Hours") } }, Position = 2 },
                             new FormatSeparator { Value = ":" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Minutes" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Minutes") } }, Position = 2 },
                             new FormatSeparator { Value = ":" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Seconds" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Seconds") } }, Position = 2 },
                         },
                     },
                 }
@@ -785,11 +785,11 @@ public static class InternalModel
                     {
                         Components =
                         {
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Year" } }, Position = 4 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Year") } }, Position = 4 },
                             new FormatSeparator { Value = "-" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Month" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Month") } }, Position = 2 },
                             new FormatSeparator { Value = "-" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Day" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Day") } }, Position = 2 },
                         },
                     },
                 }
@@ -807,11 +807,11 @@ public static class InternalModel
                         Components =
                         {
                             new FormatSeparator { Value = "T" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Hours" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Hours") } }, Position = 2 },
                             new FormatSeparator { Value = ":" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Minutes" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Minutes") } }, Position = 2 },
                             new FormatSeparator { Value = ":" },
-                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Seconds" } }, Position = 2 },
+                            new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Seconds") } }, Position = 2 },
                         },
                     },
                 }
@@ -892,12 +892,12 @@ public static class InternalModel
             () => new LineFormTypeDef
             {
                 Name = "STRAIGHTS",
-                Structure = new Reference<ClassDef> { Target = (ClassDef)Interlis.Content["StraightSegment"], Path = { "INTERLIS", "StraightSegment" } },
+                Structure = new Reference<ClassDef> { Target = (ClassDef)Interlis.Content["StraightSegment"], Path = { new("INTERLIS"), new("StraightSegment") } },
             },
             () => new LineFormTypeDef
             {
                 Name = "ARCS",
-                Structure = new Reference<ClassDef> { Target = (ClassDef)Interlis.Content["ArcSegment"], Path = { "INTERLIS", "ArcSegment" } },
+                Structure = new Reference<ClassDef> { Target = (ClassDef)Interlis.Content["ArcSegment"], Path = { new("INTERLIS"), new("ArcSegment") } },
             },
 
             () => new ClassDef
@@ -945,6 +945,16 @@ public static class InternalModel
     }
 
     /// <summary>
+    /// A one-step object path naming <paramref name="target"/>, for the hand-built constraints below. It carries the
+    /// name and the already known target, but no span: the predefined model has no source to point at, and the path
+    /// resolver skips it.
+    /// </summary>
+    private static PathExpression PathTo(IInterlisDefinition target) => new()
+    {
+        Reference = new Reference<IInterlisDefinition> { Path = { new PathSegment { Name = target.Name, Target = target } }, Target = target, Resolution = ReferenceResolution.ObjectPath },
+    };
+
+    /// <summary>
     /// <c>CLASS METAOBJECT (ABSTRACT) = Name: MANDATORY NAME; UNIQUE Name; END METAOBJECT;</c> (RefHB 3.10.2.1).
     /// </summary>
     private static ClassDef CreateMetaObject()
@@ -967,7 +977,7 @@ public static class InternalModel
         metaObject.Constraints.Add(new UniquenessConstraint
         {
             NameIndex = 1,
-            GlobalUnique = { new PathExpression { Path = { new IdentifierPathElement { Value = name.Name } }, Target = name } },
+            GlobalUnique = { PathTo(name) },
         });
         return metaObject;
     }
@@ -1007,12 +1017,12 @@ public static class InternalModel
         translation.Constraints.Add(new UniquenessConstraint
         {
             NameIndex = 1,
-            GlobalUnique = { new PathExpression { Path = { new IdentifierPathElement { Value = name.Name } }, Target = name } },
+            GlobalUnique = { PathTo(name) },
         });
         translation.Constraints.Add(new UniquenessConstraint
         {
             NameIndex = 2,
-            GlobalUnique = { new PathExpression { Path = { new IdentifierPathElement { Value = nameInBaseLanguage.Name } }, Target = nameInBaseLanguage } },
+            GlobalUnique = { PathTo(nameInBaseLanguage) },
         });
         return translation;
     }
@@ -1093,19 +1103,19 @@ public static class InternalModel
             NameIndex = 1,
             Condition = new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Target = (FunctionDef)Interlis.Content["isOfClass"], Path = { "isOfClass" } },
+                FunctionDef = new Reference<FunctionDef> { Target = (FunctionDef)Interlis.Content["isOfClass"], Path = { new("isOfClass") } },
                 Arguments =
                 {
                     new PathExpression
                     {
-                        Path = { new AttributePathElement { Name = segments.Name, Index = AttributePathElement.IndexKeyword.First } },
-                        Target = segments,
+                        Reference = new Reference<IInterlisDefinition>
+                        {
+                            Path = { new IndexedPathSegment { Name = segments.Name, Index = IndexKeyword.First, Target = segments } },
+                            Target = segments,
+                            Resolution = ReferenceResolution.ObjectPath,
+                        },
                     },
-                    new PathExpression
-                    {
-                        Path = { new IdentifierPathElement { Value = "StartSegment" } },
-                        Target = Interlis.Content["StartSegment"],
-                    },
+                    PathTo(Interlis.Content["StartSegment"]),
                 },
             },
         });

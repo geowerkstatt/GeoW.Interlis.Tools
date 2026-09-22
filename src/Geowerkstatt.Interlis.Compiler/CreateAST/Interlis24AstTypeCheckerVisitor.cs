@@ -288,7 +288,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
         {
             foreach (var dependency in topicDef.DependsOn.Where(d => d.Path.Count == 1))
             {
-                var name = dependency.Path[0];
+                var name = dependency.Path[0].Name;
                 if (!(model.Content.TryGetValue(name, out var dependedOn) && dependedOn is TopicDef))
                 {
                     ReportError(topicDef, $"there is no topic '{name}' to depend on");
@@ -298,7 +298,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
 
         // RefHB 3.5.2-20: a topic that uses a generic domain must list it under DEFERRED GENERICS.
         var deferredGenericNames = topicDef.DeferredGenerics
-            .Select(generic => generic.Path.LastOrDefault())
+            .Select(generic => generic.Path.LastOrDefault()?.Name)
             .WhereNotNull()
             .ToHashSet();
         foreach (var genericDomain in CollectGenericDomains(topicDef))
@@ -487,7 +487,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
 
             var targetTopic = FindTopic(target);
             if (targetTopic != null && targetTopic != sourceTopic
-                && !sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault() == targetTopic.Name))
+                && !sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
             {
                 ReportError(viewDef, $"the base viewable '{target.Name}' is in topic '{targetTopic.Name}' and requires a topic dependency");
             }
@@ -554,12 +554,10 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
         // A path that starts with a keyword (THIS, AGGREGATES, ...) or is empty does not address a base by name;
         // a role or indexed-attribute head carries a name that would have to denote a base — it never can, since
         // bases are plain names — so it is reported like any other non-base head.
-        var head = path.Path.FirstOrDefault() switch
+        var head = path.Reference.Path.FirstOrDefault() switch
         {
-            IdentifierPathElement identifier => identifier.Value,
-            RolePathElement role => role.Name,
-            AttributePathElement indexed => indexed.Name,
-            _ => null,
+            null or KeywordPathSegment => null,
+            var segment => segment.Name,
         };
 
         if (head != null && !baseNames.Contains(head))
@@ -1543,7 +1541,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
 
             var targetTopic = FindTopic(targetClass);
             if (targetTopic != null && targetTopic != sourceTopic
-                && !sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault() == targetTopic.Name))
+                && !sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
             {
                 ReportError(role, $"the cross-topic role requires a topic dependency on '{targetTopic.Name}'");
             }
@@ -1591,7 +1589,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
             {
                 ReportError(attribute, "a cross-topic reference requires property EXTERNAL");
             }
-            else if (!sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault() == targetTopic.Name))
+            else if (!sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
             {
                 ReportError(attribute, $"the EXTERNAL reference requires a topic dependency on '{targetTopic.Name}'");
             }

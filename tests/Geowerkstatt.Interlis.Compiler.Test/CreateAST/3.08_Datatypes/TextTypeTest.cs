@@ -74,7 +74,7 @@ public class TextTypeTest
                 TypeDef = new TypeRef
                 {
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "NAME" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("NAME") } },
                     SourceRange = new RangePosition(0, 7, 0, 11),
                 },
             }));
@@ -90,7 +90,7 @@ public class TextTypeTest
                 TypeDef = new TypeRef
                 {
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
-                    Extends = new Reference<DomainDef> { Path = { "INTERLIS", "URI" } },
+                    Extends = new Reference<DomainDef> { Path = { new("INTERLIS"), new("URI") } },
                     SourceRange = new RangePosition(0, 7, 0, 10),
                 },
             }));

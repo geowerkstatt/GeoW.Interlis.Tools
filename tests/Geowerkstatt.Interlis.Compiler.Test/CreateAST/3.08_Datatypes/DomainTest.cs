@@ -138,7 +138,7 @@ public class DomainTest
                     Max = 100,
                     Precision = -1,
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                    Extends = new Reference<DomainDef> { Path = { "Wert" }, SourceRange = new RangePosition(0, 16, 0, 20) },
+                    Extends = new Reference<DomainDef> { Path = { new("Wert") } },
                     SourceRange = new RangePosition(0, 23, 0, 36),
                 },
             }));
@@ -175,7 +175,7 @@ public class DomainTest
                     Max = 100,
                     Precision = 0,
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                    Extends = new Reference<DomainDef> { Path = { "OtherModel", "OtherDomain" }, SourceRange = new RangePosition(0, 10, 0, 32) },
+                    Extends = new Reference<DomainDef> { Path = { new("OtherModel"), new("OtherDomain") } },
                     SourceRange = new RangePosition(0, 35, 0, 43),
                 },
             }));
@@ -208,7 +208,7 @@ public class DomainTest
                 {
                     Value = new OidType.AnyOid(),
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                    Extends = new Reference<DomainDef> { Path = { "NOOID" }, SourceRange = new RangePosition(0, 26, 0, 31) },
+                    Extends = new Reference<DomainDef> { Path = { new("NOOID") } },
                     SourceRange = new RangePosition(0, 34, 0, 41),
                 },
                 Properties = { Property.Abstract },
@@ -235,7 +235,7 @@ public class DomainTest
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                    Extends = new Reference<DomainDef> { Path = { "ANYOID" }, SourceRange = new RangePosition(0, 15, 0, 21) },
+                    Extends = new Reference<DomainDef> { Path = { new("ANYOID") } },
                     SourceRange = new RangePosition(0, 24, 0, 43),
                 },
             }));
@@ -259,7 +259,7 @@ public class DomainTest
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                    Extends = new Reference<DomainDef> { Path = { "ANYOID" }, SourceRange = new RangePosition(0, 20, 0, 26) },
+                    Extends = new Reference<DomainDef> { Path = { new("ANYOID") } },
                     SourceRange = new RangePosition(0, 29, 0, 40),
                 },
             }));
@@ -283,7 +283,7 @@ public class DomainTest
                         },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                    Extends = new Reference<DomainDef> { Path = { "ANYOID" }, SourceRange = new RangePosition(0, 16, 0, 22) },
+                    Extends = new Reference<DomainDef> { Path = { new("ANYOID") } },
                     SourceRange = new RangePosition(0, 25, 0, 36),
                 },
             }));
