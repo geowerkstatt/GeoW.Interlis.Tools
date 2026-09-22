@@ -151,7 +151,6 @@ public class TestTools
                     && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
                     && (nameof(Reference<IInterlisDefinition>.Source).Equals(p.Name) // Ignore reference source to break circular references
                         || nameof(Reference<IInterlisDefinition>.MapTarget).Equals(p.Name) // Ignore Func property
-                        || nameof(Reference<IInterlisDefinition>.ResolvesInEnvironment).Equals(p.Name) // Ignore resolution plumbing
                         || nameof(Reference<IInterlisDefinition>.Resolution).Equals(p.Name) // Ignore resolution plumbing (asserted by ReferenceRegistrationTest)
                         || nameof(Reference<IInterlisDefinition>.SourceRange).Equals(p.Name))) // Derived from the segments' spans, which are ignored below
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property

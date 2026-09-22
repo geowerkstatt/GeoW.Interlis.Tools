@@ -68,7 +68,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
                 return false;
             }
 
-            var candidates = CollectPotentialTargets(reference.Source!, reference.Path, resolveModelInEnvironment: reference.ResolvesInEnvironment)
+            var candidates = (reference.Resolution == ReferenceResolution.Environment ? EnvironmentCandidates(reference.Path) : CollectPotentialTargets(reference.Source!, reference.Path))
                 .Where(candidate => reference.CanAccept(candidate.Target))
                 .ToList();
 
@@ -162,14 +162,28 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     }
 
     /// <summary>
+    /// The model <paramref name="path"/> names among the models of the environment (an import, a <c>TRANSLATION OF</c>;
+    /// <see cref="ReferenceResolution.Environment"/>): a model is a sibling of the referencing model, not a name in
+    /// its scopes. Empty without an environment (a rule-level parse) or for a model that is not there.
+    /// </summary>
+    private List<Candidate> EnvironmentCandidates(IReadOnlyList<PathSegment> path)
+    {
+        var candidates = new List<Candidate>();
+        if (path.Count == 1 && currentEnvironment.Value?.Content.GetValueOrDefault(path[0].Name) is { } model)
+        {
+            candidates.Add(new Candidate([model]));
+        }
+
+        return candidates;
+    }
+
+    /// <summary>
     /// Collects the definitions <paramref name="path"/> could resolve to, starting from <paramref name="source"/>:
     /// relative to the enclosing scope (a single name, or a longer path descending into the element found there) or
     /// fully qualified from the root model or an import. Relative multi-segment resolution is a convenience — the
     /// resulting reference is flagged by <see cref="ReportMissingModelQualification"/> as missing its model name.
-    /// When <paramref name="resolveModelInEnvironment"/> is set, a single-segment path is also looked up as a model in
-    /// the current environment (used to resolve <see cref="ModelDef"/> references such as imports).
     /// </summary>
-    private List<Candidate> CollectPotentialTargets(IInterlisDefinitionContainer source, IReadOnlyList<PathSegment> path, bool resolveModelInEnvironment)
+    private List<Candidate> CollectPotentialTargets(IInterlisDefinitionContainer source, IReadOnlyList<PathSegment> path)
     {
         var candidates = new List<Candidate>();
 
@@ -192,34 +206,26 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         // At the root is always a model if a complete interlis model was parsed.
         if (root is ModelDef model)
         {
-            // A path of type ModelDef is resolved in the current environment (import statements, translation of).
-            if (path.Count == 1 && currentEnvironment.Value != null && resolveModelInEnvironment)
+            // Fully qualified from the root model.
+            if (path[0].Name == model.Name)
             {
-                candidates.AddIfNotNull(Descend(currentEnvironment.Value.Content.GetValueOrDefault(path[0].Name), path));
+                candidates.AddIfNotNull(Descend(model, path));
             }
-            else
+
+            // Fully qualified in an imported model.
+            if (model.Imports.TryGetValue(path[0].Name, out var import))
             {
-                // Fully qualified from the root model.
-                if (path[0].Name == model.Name)
-                {
-                    candidates.AddIfNotNull(Descend(model, path));
-                }
+                candidates.AddIfNotNull(Descend(import.ModelDef.Target, path));
+            }
 
-                // Fully qualified in an imported model.
-                if (model.Imports.TryGetValue(path[0].Name, out var import))
+            // Unqualified in an import that allows it.
+            if (path.Count == 1)
+            {
+                foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
                 {
-                    candidates.AddIfNotNull(Descend(import.ModelDef.Target, path));
-                }
-
-                // Unqualified in an import that allows it.
-                if (path.Count == 1)
-                {
-                    foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
+                    if (unqualifiedImport.ModelDef?.Target?.Content.TryGetValue(path[0].Name, out var element) == true)
                     {
-                        if (unqualifiedImport.ModelDef?.Target?.Content.TryGetValue(path[0].Name, out var element) == true)
-                        {
-                            candidates.Add(new Candidate([element]));
-                        }
+                        candidates.Add(new Candidate([element]));
                     }
                 }
             }
@@ -683,15 +689,17 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     }
 
     /// <summary>
-    /// Resolves a <see cref="ReferenceResolution.Scoped"/> reference against the lexical scopes. A
+    /// Resolves a <see cref="ReferenceResolution.Scoped"/> reference against the lexical scopes and an
+    /// <see cref="ReferenceResolution.Environment"/> one among the environment's models. A
     /// <see cref="ReferenceResolution.Member"/> reference names a member of a container its context establishes
     /// and is written by the pass that owns that context (<see cref="LinkMetaObject"/>,
-    /// <see cref="VisitMetaDataBasketDef"/>, <see cref="Interlis24AstPathResolverVisitor"/>); resolving it here
-    /// would risk binding the name to an unrelated same-named definition that happens to be in scope.
+    /// <see cref="VisitMetaDataBasketDef"/>, <see cref="Interlis24AstPathResolverVisitor"/>), an
+    /// <see cref="ReferenceResolution.ObjectPath"/> is walked by the path resolver; resolving either here would
+    /// risk binding a name to an unrelated same-named definition that happens to be in scope.
     /// </summary>
     public override bool VisitReference<T>([NotNull] Reference<T> reference)
     {
-        return reference.Resolution != ReferenceResolution.Scoped || Resolve(reference);
+        return reference.Resolution is not (ReferenceResolution.Scoped or ReferenceResolution.Environment) || Resolve(reference);
     }
 
     /// <summary>

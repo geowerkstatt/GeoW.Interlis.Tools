@@ -3,8 +3,9 @@
 /// <summary>
 /// A reference to another element of the model: a path of <see cref="PathSegment"/>s — the names as written, each
 /// with its span and what it denotes — and the <see cref="Target"/> the path as a whole reaches. Which lookup
-/// resolves it is its <see cref="Resolution"/>: a qualification looked up in the lexical scopes, a member of a
-/// container the context establishes, or an object path navigated step by step (RefHB 3.13).
+/// resolves it is its <see cref="Resolution"/>: a qualification looked up in the lexical scopes, a model looked up
+/// among the environment's, a member of a container the context establishes, or an object path navigated step by
+/// step (RefHB 3.13).
 /// <para>
 /// Every reference that stands for names written in the source is registered in its container's
 /// <see cref="IInterlisDefinitionContainer.ContainerReferences"/> — whatever its resolution, and whether or not its
@@ -35,13 +36,6 @@ public class Reference<T> : IReference where T : class, IReferenceTarget
     /// A function that maps the target object to the desired type or returns <c>null</c> if the given <see cref="IInterlisDefinition"/> is not applicable.
     /// </summary>
     public Func<IInterlisDefinition, T?> MapTarget { get; init; } = element => element as T;
-
-    /// <summary>
-    /// Whether the <see cref="Path"/> denotes a model name (an import or a <c>TRANSLATION OF</c> clause,
-    /// RefHB 3.5.1). Such references are resolved against the models of the environment instead of the
-    /// lexical scopes, because the named model is a sibling of the referencing model, not part of it.
-    /// </summary>
-    public bool ResolvesInEnvironment { get; init; }
 
     /// <inheritdoc />
     public List<PathSegment> Path { get; } = new List<PathSegment>();

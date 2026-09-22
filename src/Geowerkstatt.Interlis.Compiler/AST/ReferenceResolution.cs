@@ -15,6 +15,14 @@ public enum ReferenceResolution
     Scoped,
 
     /// <summary>
+    /// A model named among the models of the environment — an import or a <c>TRANSLATION OF</c> clause
+    /// (RefHB 3.5.1). A model is a sibling of the referencing model, not a name in any of its scopes, so the
+    /// <see cref="CreateAST.Interlis24AstReferenceResolverVisitor"/> looks it up in the
+    /// <see cref="InterlisEnvironment"/> alone.
+    /// </summary>
+    Environment,
+
+    /// <summary>
     /// A name looked up as a member of a container its context establishes: an attribute of the preceding path
     /// step's structure, a class of a metadata basket's topic, a role of a class's association access. The scoped
     /// resolver skips these — a lexical lookup could bind such a name to an unrelated same-named definition in

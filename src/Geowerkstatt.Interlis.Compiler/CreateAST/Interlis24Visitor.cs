@@ -78,14 +78,13 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// its <paramref name="resolution"/>, so <see cref="IInterlisDefinitionContainer.ContainerReferences"/> holds
     /// all of them for navigation and rename.
     /// </summary>
-    private Reference<T> CreateReference<T>(IEnumerable<PathSegment> path, Func<IInterlisDefinition, T?>? mapTarget = null, bool resolvesInEnvironment = false, ReferenceResolution resolution = ReferenceResolution.Scoped) where T : class, IReferenceTarget
+    private Reference<T> CreateReference<T>(IEnumerable<PathSegment> path, Func<IInterlisDefinition, T?>? mapTarget = null, ReferenceResolution resolution = ReferenceResolution.Scoped) where T : class, IReferenceTarget
     {
         var reference = new Reference<T>
         {
             Path = { path },
             Source = CurrentScope.Value,
             MapTarget = mapTarget ?? (element => element as T),
-            ResolvesInEnvironment = resolvesInEnvironment,
             Resolution = resolution,
         };
 
@@ -279,7 +278,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             modelDef.TranslationOf = CreateReference<IInterlisDefinition>(
                 [Segment(context.translationOf)],
                 mapTarget: element => element as ModelDef,
-                resolvesInEnvironment: true);
+                resolution: ReferenceResolution.Environment);
         }
 
         foreach (var import in context.modelImport())
@@ -291,14 +290,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             }
 
             var importModelName = import.name.Text;
-            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([Segment(import.name)], resolvesInEnvironment: true))))
+            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([Segment(import.name)], resolution: ReferenceResolution.Environment))))
             {
                 ReportError(import.name, $"Duplicate import {importModelName}");
             }
         }
 
         // Add default INTERLIS import
-        modelDef.Imports.TryAdd(InternalModel.Interlis.Name, (false, CreateReference<ModelDef>(ImpliedPath(InternalModel.Interlis.Name), resolvesInEnvironment: true)));
+        modelDef.Imports.TryAdd(InternalModel.Interlis.Name, (false, CreateReference<ModelDef>(ImpliedPath(InternalModel.Interlis.Name), resolution: ReferenceResolution.Environment)));
 
         var elements = context
             .modelContents()
