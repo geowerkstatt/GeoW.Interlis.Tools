@@ -36,10 +36,10 @@ public interface IReference : IVisitable, ISourceRange
     /// <summary>
     /// Check if the given <paramref name="potentialTarget"/> is acceptable for this reference.
     /// </summary>
-    public bool CanAccept(IInterlisDefinition potentialTarget);
+    public bool CanAccept(IReferenceTarget potentialTarget);
 
     /// <summary>
     /// Set the resolved target object, and record it on the last path segment, the one that names it.
     /// </summary>
-    public void SetTarget(IInterlisDefinition target);
+    public void SetTarget(IReferenceTarget target);
 }

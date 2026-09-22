@@ -67,7 +67,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// Create a new <see cref="Reference{T}"/> from the given <paramref name="referenceContext"/>.
     /// </summary>
     [return: NotNullIfNotNull(nameof(referenceContext))]
-    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IReferenceTarget
+    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IReferenceTarget, T?>? mapTarget = null) where T : class, IReferenceTarget
     {
         return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), mapTarget);
     }
@@ -78,7 +78,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// its <paramref name="resolution"/>, so <see cref="IInterlisDefinitionContainer.ContainerReferences"/> holds
     /// all of them for navigation and rename.
     /// </summary>
-    private Reference<T> CreateReference<T>(IEnumerable<PathSegment> path, Func<IInterlisDefinition, T?>? mapTarget = null, ReferenceResolution resolution = ReferenceResolution.Scoped) where T : class, IReferenceTarget
+    private Reference<T> CreateReference<T>(IEnumerable<PathSegment> path, Func<IReferenceTarget, T?>? mapTarget = null, ReferenceResolution resolution = ReferenceResolution.Scoped) where T : class, IReferenceTarget
     {
         var reference = new Reference<T>
         {
@@ -613,7 +613,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// views. Restricting the reference to viewables also means a same-named attribute in scope (e.g. a view's
     /// own attribute) is never a resolution candidate.
     /// </summary>
-    private static IInterlisDefinition? AcceptViewable(IInterlisDefinition definition) => definition switch
+    private static IInterlisDefinition? AcceptViewable(IReferenceTarget definition) => definition switch
     {
         ClassDef c => c, // covers both classes and structures
         AssociationDef a => a,
@@ -870,7 +870,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     public override RestrictedRef VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
     {
         // RestrictedDefinitionRef only accepts InterlisDefinitions of certain types
-        Func<IInterlisDefinition, IInterlisDefinition?> acceptTypes = interlisDef => interlisDef switch
+        Func<IReferenceTarget, IInterlisDefinition?> acceptTypes = interlisDef => interlisDef switch
         {
             ClassDef c => c,
             AssociationDef a => a,

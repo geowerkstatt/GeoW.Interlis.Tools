@@ -515,9 +515,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             {
                 if (objects.MetaObjects.FirstOrDefault(declaration => declaration.Name == metaObjectName) is { } found)
                 {
-                    // Written directly rather than through SetTarget, which takes a definition: a meta object is not one.
-                    metaObject.Target = found;
-                    metaObject.Path[0].Target = found;
+                    metaObject.SetTarget(found);
                     return;
                 }
             }
