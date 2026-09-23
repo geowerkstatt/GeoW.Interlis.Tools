@@ -35,7 +35,7 @@ public class ExpressionTest
                 may still add below the named node (RefHB 3.8.3), so it is carried as a flag, not a path element.
                 """,
             RefHB: "3.13-1",
-            Expected: new EnumerationConstant { Path = { "red", "yellow", "lightYellow" }, IsOthers = true }));
+            Expected: new EnumerationConstant { Path = { new("red"), new("yellow"), new("lightYellow") }, IsOthers = true }));
 
         yield return Rule(new(
             "Enumeration constant bare OTHERS",
@@ -50,14 +50,14 @@ public class ExpressionTest
             RefHB: "3.13-1",
             Expected: new PathExpression
             {
-                Path =
+                Reference = new Reference<IInterlisDefinition> { Path =
                 {
-                    new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This },
-                    new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.Parent },
-                    new IdentifierPathElement { Value = "class" },
-                    new AttributePathElement { Name = "bag", Index = AttributePathElement.IndexKeyword.First },
-                    new AttributePathElement { Name = "list", Index = 5 },
-                }
+                    new KeywordPathSegment(PathKeyword.This),
+                    new KeywordPathSegment(PathKeyword.Parent),
+                    new("class"),
+                    new IndexedPathSegment { Name = "bag", Index = IndexKeyword.First },
+                    new IndexedPathSegment { Name = "list", Index = 5 },
+                } },
             },
             Ili2cDivergenceReason: "we accept this attribute path expression, ili2c rejects it"));
 
@@ -67,7 +67,7 @@ public class ExpressionTest
             RefHB: "3.13-1",
             Expected: new ClassConstant
             {
-                Viewable = new Reference<IInterlisDefinition> { Path = { "Model", "Topic", "Class" }, SourceRange = new RangePosition(0, 1, 0, 18) },
+                Viewable = new Reference<IInterlisDefinition> { Path = { new("Model"), new("Topic"), new("Class") } },
             }));
 
         yield return Rule(new(
@@ -76,7 +76,7 @@ public class ExpressionTest
             RefHB: "3.13-1",
             Expected: new AttributePathConstant
             {
-                Attribute = new Reference<AttributeDef> { Path = { "Model", "Topic", "Class", "Attribute" }, SourceRange = new RangePosition(0, 2, 0, 30) },
+                Attribute = new Reference<AttributeDef> { Path = { new("Model"), new("Topic"), new("Class"), new("Attribute") } },
             }));
 
         yield return Rule(new(
@@ -196,8 +196,8 @@ public class ExpressionTest
             RefHB: "3.13-1",
             Expected: new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "len" }, SourceRange = new RangePosition(0, 0, 0, 3) },
-                Arguments = { new PathExpression { Path = { new IdentifierPathElement { Value = "textAttr" } } } },
+                FunctionDef = new Reference<FunctionDef> { Path = { new("len") } },
+                Arguments = { new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("textAttr") } } } },
             }));
 
         yield return Rule(new(
@@ -287,18 +287,18 @@ public class ExpressionTest
                     Operator = ComparisonExpression.ComparisonOperator.Equal,
                     FirstOperand = new PathExpression
                     {
-                        Path = { new IdentifierPathElement { Value = "Status" } },
+                        Reference = new Reference<IInterlisDefinition> { Path = { new("Status") } },
                     },
                     SecondOperand = new EnumerationConstant
                     {
-                        Path = { "gueltig" },
+                        Path = { new("gueltig") },
                     },
                 },
                 SecondOperand = new DefinedExpression
                 {
                     Operand = new PathExpression
                     {
-                        Path = { new IdentifierPathElement { Value = "Geometrie" } },
+                        Reference = new Reference<IInterlisDefinition> { Path = { new("Geometrie") } },
                     },
                 },
             }));
@@ -310,7 +310,7 @@ public class ExpressionTest
             Expected: new ComparisonExpression
             {
                 Operator = ComparisonExpression.ComparisonOperator.Equal,
-                FirstOperand = new PathExpression { Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This } } },
+                FirstOperand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.This) } } },
                 SecondOperand = new UndefinedConstant(),
             }));
 
@@ -318,13 +318,13 @@ public class ExpressionTest
             "Path element THISAREA",
             "THISAREA",
             RefHB: "3.13-28",
-            Expected: new PathExpression { Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.ThisArea } } }));
+            Expected: new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.ThisArea) } } }));
 
         yield return Rule(new(
             "Path element THATAREA",
             "THATAREA",
             RefHB: "3.13-28",
-            Expected: new PathExpression { Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.ThatArea } } }));
+            Expected: new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.ThatArea) } } }));
 
         yield return Rule(new(
             "Role with association qualifier",
@@ -332,10 +332,10 @@ public class ExpressionTest
             RefHB: "3.13-28",
             Expected: new PathExpression
             {
-                Path =
+                Reference = new Reference<IInterlisDefinition> { Path =
                 {
-                    new RolePathElement { Name = "role", AssociationName = "Assoc" },
-                }
+                    new RolePathSegment { Name = "role", Association = new("Assoc") },
+                } },
             }));
 
         yield return Rule(new(
@@ -345,7 +345,7 @@ public class ExpressionTest
             RefHB: "3.13-29",
             Expected: new PathExpression
             {
-                Path = { new IdentifierPathElement { Value = "Assoc" } },
+                Reference = new Reference<IInterlisDefinition> { Path = { new("Assoc") } },
             }));
 
         yield return Rule(new(
@@ -354,17 +354,17 @@ public class ExpressionTest
             RefHB: "3.13-30",
             Expected: new PathExpression
             {
-                Path =
+                Reference = new Reference<IInterlisDefinition> { Path =
                 {
-                    new AttributePathElement { Name = "list", Index = AttributePathElement.IndexKeyword.Last },
-                }
+                    new IndexedPathSegment { Name = "list", Index = IndexKeyword.Last },
+                } },
             }));
 
         yield return Rule(new(
             "Path element AGGREGATES",
             "AGGREGATES",
             RefHB: "3.13-30",
-            Expected: new PathExpression { Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.Aggregates } } }));
+            Expected: new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.Aggregates) } } }));
 
         yield return Rule(new(
             "Qualified function call",
@@ -372,8 +372,8 @@ public class ExpressionTest
             RefHB: "3.13-31",
             Expected: new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "Model", "Topic", "func" }, SourceRange = new RangePosition(0, 0, 0, 16) },
-                Arguments = { new PathExpression { Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This } } } },
+                FunctionDef = new Reference<FunctionDef> { Path = { new("Model"), new("Topic"), new("func") } },
+                Arguments = { new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.This) } } } },
             }));
 
         yield return Rule(new(
@@ -382,7 +382,7 @@ public class ExpressionTest
             RefHB: "3.13-31",
             Expected: new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "now" }, SourceRange = new RangePosition(0, 0, 0, 3) },
+                FunctionDef = new Reference<FunctionDef> { Path = { new("now") } },
             }));
 
         yield return Rule(new(
@@ -391,11 +391,11 @@ public class ExpressionTest
             RefHB: "3.13-31",
             Expected: new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "inside" }, SourceRange = new RangePosition(0, 0, 0, 6) },
+                FunctionDef = new Reference<FunctionDef> { Path = { new("inside") } },
                 Arguments =
                 {
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "a" } } },
-                    new PathExpression { Path = { new IdentifierPathElement { Value = "b" } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("a") } } },
+                    new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("b") } } },
                 },
             }));
 
@@ -405,7 +405,7 @@ public class ExpressionTest
             RefHB: "3.13-32",
             Expected: new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "count" }, SourceRange = new RangePosition(0, 0, 0, 5) },
+                FunctionDef = new Reference<FunctionDef> { Path = { new("count") } },
                 Arguments = { new AllExpression() },
             }));
 
@@ -415,12 +415,12 @@ public class ExpressionTest
             RefHB: "3.13-32",
             Expected: new FunctionCall
             {
-                FunctionDef = new Reference<FunctionDef> { Path = { "count" }, SourceRange = new RangePosition(0, 0, 0, 5) },
+                FunctionDef = new Reference<FunctionDef> { Path = { new("count") } },
                 Arguments =
                 {
                     new AllExpression(new RestrictedRef
                     {
-                        Value = new Reference<IInterlisDefinition> { Path = { "Model", "Topic", "ClassA" }, SourceRange = new RangePosition(0, 11, 0, 29) },
+                        Value = new Reference<IInterlisDefinition> { Path = { new("Model"), new("Topic"), new("ClassA") } },
                     }),
                 },
             }));
@@ -431,10 +431,10 @@ public class ExpressionTest
             RefHB: "3.13-45",
             Expected: new PathExpression
             {
-                Path =
+                Reference = new Reference<IInterlisDefinition> { Path =
                 {
-                    new AttributePathElement { Name = "list", Index = AttributePathElement.IndexKeyword.First },
-                },
+                    new IndexedPathSegment { Name = "list", Index = IndexKeyword.First },
+                } },
             }));
 
         yield return Rule(new(
@@ -449,8 +449,8 @@ public class ExpressionTest
             {
                 Source = new InspectionView
                 {
-                    Source = new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 14, 0, 19) } },
-                    Path = { new Reference<AttributeDef> { Path = { "Attr" }, SourceRange = new RangePosition(0, 23, 0, 27) } },
+                    Source = new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 14, 0, 19) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Path = new Reference<AttributeDef> { Path = { new("Attr") } },
                 },
             }));
 
@@ -463,8 +463,8 @@ public class ExpressionTest
                 Source = new InspectionView
                 {
                     IsArea = true,
-                    Source = new BaseView { Name = "b", NameLocations = { new RangePosition(0, 19, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 21, 0, 26) } },
-                    Path = { new Reference<AttributeDef> { Path = { "Attr" }, SourceRange = new RangePosition(0, 30, 0, 34) } },
+                    Source = new BaseView { Name = "b", NameLocations = { new RangePosition(0, 19, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Path = new Reference<AttributeDef> { Path = { new("Attr") } },
                 },
             }));
 
@@ -476,10 +476,10 @@ public class ExpressionTest
             {
                 Source = new InspectionView
                 {
-                    Source = new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 14, 0, 19) } },
-                    Path = { new Reference<AttributeDef> { Path = { "Attr" }, SourceRange = new RangePosition(0, 23, 0, 27) } },
+                    Source = new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 14, 0, 19) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Path = new Reference<AttributeDef> { Path = { new("Attr") } },
                 },
-                Of = new PathExpression { Path = { new IdentifierPathElement { Value = "Container" } } },
+                Of = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Container") } } },
             }));
 
         yield return Rule(new(
@@ -488,7 +488,7 @@ public class ExpressionTest
             RefHB: "3.13-48",
             Expected: new InspectionExpression
             {
-                Source = new Reference<IInterlisDefinition> { Path = { "SubStructures" }, SourceRange = new RangePosition(0, 11, 0, 24) },
+                Source = new Reference<IInterlisDefinition> { Path = { new("SubStructures") } },
             }));
 
         yield return Rule(new(
@@ -497,8 +497,8 @@ public class ExpressionTest
             RefHB: "3.13-48",
             Expected: new InspectionExpression
             {
-                Source = new Reference<IInterlisDefinition> { Path = { "V" }, SourceRange = new RangePosition(0, 11, 0, 12) },
-                Of = new PathExpression { Path = { new IdentifierPathElement { Value = "Attr" } } },
+                Source = new Reference<IInterlisDefinition> { Path = { new("V") } },
+                Of = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Attr") } } },
             }));
 
         yield return Rule(new(
@@ -511,7 +511,7 @@ public class ExpressionTest
             RefHB: "3.13-25",
             Expected: new ParameterRefExpression
             {
-                Parameter = new Reference<ParameterDef> { Path = { "Scale" }, SourceRange = new RangePosition(0, 10, 0, 15) },
+                Parameter = new Reference<ParameterDef> { Path = { new("Scale") } },
             }));
 
         yield return Rule(new(
@@ -520,7 +520,7 @@ public class ExpressionTest
             RefHB: "3.13-25",
             Expected: new ParameterRefExpression
             {
-                Parameter = new Reference<ParameterDef> { Path = { "Model", "Scale" }, SourceRange = new RangePosition(0, 10, 0, 21) },
+                Parameter = new Reference<ParameterDef> { Path = { new("Model"), new("Scale") } },
             }));
 
         yield return Rule(new(
@@ -532,12 +532,12 @@ public class ExpressionTest
                 Operator = ComparisonExpression.ComparisonOperator.Equal,
                 FirstOperand = new FunctionCall
                 {
-                    FunctionDef = new Reference<FunctionDef> { Path = { "len" }, SourceRange = new RangePosition(0, 0, 0, 3) },
+                    FunctionDef = new Reference<FunctionDef> { Path = { new("len") } },
                     Arguments =
                     {
                         new PathExpression
                         {
-                            Path = { new IdentifierPathElement { Value = "name" } },
+                            Reference = new Reference<IInterlisDefinition> { Path = { new("name") } },
                         },
                     },
                 },
@@ -722,7 +722,7 @@ public class ExpressionTest
                             {
                                 Operand = new AttributePathConstant
                                 {
-                                    Attribute = new Reference<AttributeDef> { Path = { "C", "flag" }, Target = flag },
+                                    Attribute = new Reference<AttributeDef> { Path = { new("C"), new("flag") }, Target = flag },
                                 },
                             },
                         },
@@ -767,7 +767,7 @@ public class ExpressionTest
                             NameIndex = 1,
                             Condition = new DefinedExpression
                             {
-                                Operand = new PathExpression { Path = { new IdentifierPathElement { Value = "flag" } }, Target = flag },
+                                Operand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("flag") }, Target = flag }},
                             },
                         },
                         new MandatoryConstraint
@@ -777,8 +777,8 @@ public class ExpressionTest
                             {
                                 Operand = new PathExpression
                                 {
-                                    Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This }, new IdentifierPathElement { Value = "flag" } },
-                                    Target = flag,
+                                    Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.This), new("flag") },
+                                    Target = flag },
                                 },
                             },
                         },
@@ -816,7 +816,7 @@ public class ExpressionTest
                     Name = "link",
                     TypeDef = new ReferenceType
                     {
-                        Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "Target" }, Target = target } },                        Cardinality = new Cardinality { Min = 0, Max = 1 },
+                        Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("Target") }, Target = target } },                        Cardinality = new Cardinality { Min = 0, Max = 1 },
                     },
                 };
                 return Environment(
@@ -834,8 +834,8 @@ public class ExpressionTest
                                 {
                                     Operand = new PathExpression
                                     {
-                                        Path = { new IdentifierPathElement { Value = "link" }, new IdentifierPathElement { Value = "flag" } },
-                                        Target = targetFlag,
+                                        Reference = new Reference<IInterlisDefinition> { Path = { new("link"), new("flag") },
+                                        Target = targetFlag },
                                     },
                                 },
                             },
@@ -881,7 +881,7 @@ public class ExpressionTest
                             Condition = new DefinedExpression
                             {
                                 // Target is the whole coordinate attribute; ReturnType narrows to the indexed (first) axis.
-                                Operand = new PathExpression { Path = { new AttributePathElement { Name = "pos", Index = 1 } }, Target = pos },
+                                Operand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new IndexedPathSegment { Name = "pos", Index = 1 } }, Target = pos }},
                             },
                         },
                     },
@@ -926,7 +926,7 @@ public class ExpressionTest
                     TypeDef = new TypeRef
                     {
                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                        Extends = new Reference<DomainDef> { Target = pointDomain, Path = { "point" } },
+                        Extends = new Reference<DomainDef> { Target = pointDomain, Path = { new("point") } },
                     },
                 };
                 return Environment(
@@ -943,7 +943,7 @@ public class ExpressionTest
                                 Condition = new DefinedExpression
                                 {
                                     // ReturnType narrows to the indexed (first) axis through the alias.
-                                    Operand = new PathExpression { Path = { new AttributePathElement { Name = "pos", Index = 1 } }, Target = pos },
+                                    Operand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new IndexedPathSegment { Name = "pos", Index = 1 } }, Target = pos }},
                                 },
                             },
                         },
@@ -1325,7 +1325,7 @@ public class ExpressionTest
                         Name = "M",
                         URI = "http://example.com",
                         Version = "1.0.0",
-                        Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) } },
+                        Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) } },
                         Content = { { "T", topic } },
                     }
                 },

@@ -55,13 +55,10 @@ public class AttributePathTypeTest
                 {
                     Of = new PathExpression
                     {
-                        Path =
+                        Reference = new Reference<IInterlisDefinition> { Path =
                         {
-                            new IdentifierPathElement
-                            {
-                                Value = "SomeClass",
-                            },
-                        },
+                            new("SomeClass"),
+                        } },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 29),
@@ -80,17 +77,11 @@ public class AttributePathTypeTest
                 {
                     Of = new PathExpression
                     {
-                        Path =
+                        Reference = new Reference<IInterlisDefinition> { Path =
                         {
-                            new IdentifierPathElement
-                            {
-                                Value = "OtherClass",
-                            },
-                            new IdentifierPathElement
-                            {
-                                Value = "SomeAttr",
-                            },
-                        },
+                            new("OtherClass"),
+                            new("SomeAttr"),
+                        } },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 40),
@@ -109,13 +100,10 @@ public class AttributePathTypeTest
                 {
                     Of = new PathExpression
                     {
-                        Path =
+                        Reference = new Reference<IInterlisDefinition> { Path =
                         {
-                            new IdentifierPathElement
-                            {
-                                Value = "SomeClass",
-                            },
-                        },
+                            new("SomeClass"),
+                        } },
                     },
                     Restrictions =
                     {

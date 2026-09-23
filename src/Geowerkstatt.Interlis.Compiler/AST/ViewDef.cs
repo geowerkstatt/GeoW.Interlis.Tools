@@ -114,8 +114,8 @@ public sealed class InspectionView : ViewFormation
     /// <summary>
     /// The attribute path inspected (<c>-&gt; attr -&gt; attr ...</c>, RefHB 3.15-15/-33): every step but the last
     /// is a substructure attribute of the previous step's structure (the first step of the source viewable); the
-    /// last step may also be a line attribute. The references are not registered — each step is a member of the
-    /// previous structure, not a scoped name — so the path resolver sets their targets while checking the walk.
+    /// last step may also be a line attribute. An <see cref="ReferenceResolution.ObjectPath"/> the path resolver
+    /// walks while checking it; its target is the attribute the last step reaches.
     /// </summary>
-    public List<Reference<AttributeDef>> Path { get; } = new List<Reference<AttributeDef>>();
+    public required Reference<AttributeDef> Path { get; init; }
 }

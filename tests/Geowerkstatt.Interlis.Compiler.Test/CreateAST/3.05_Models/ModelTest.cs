@@ -27,7 +27,7 @@ public class ModelTest
                 Explanation = " Explanation */!!/* ",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -50,7 +50,7 @@ public class ModelTest
                 Version = "123",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -76,7 +76,7 @@ public class ModelTest
                 Version = "1.0.0",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
                 Content =
                 {
@@ -115,7 +115,7 @@ public class ModelTest
                 Version = "1.0.0",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -139,7 +139,7 @@ public class ModelTest
                 Version = "1.0.0",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -163,7 +163,7 @@ public class ModelTest
                 Version = "1.0.0",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -180,7 +180,7 @@ public class ModelTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(1, 4, 1, 9) },
                 Imports =
                 {
-                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://example.com",
                 Version = "1.0.0",
@@ -207,7 +207,7 @@ public class ModelTest
                 Version = "1.0.0",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -241,14 +241,14 @@ public class ModelTest
                 URI = "http://foo.test",
                 Version = "123",
                 Explanation = " Version Explanation ",
-                TranslationOf = new Reference<IInterlisDefinition> { Path = { "Test_B" }, SourceRange = new RangePosition(3, 15, 3, 21) },
+                TranslationOf = new Reference<IInterlisDefinition> { Path = { new("Test_B") } },
                 TranslationOfVersion = "12",
                 Charset = "UTF-32",
                 Xmlns = "http://www.interlis.test",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name }, SourceRange = null }) }, // Implicit import
-                    { "Test_C", (true, new Reference<ModelDef> { Path = { "Test_C" }, SourceRange = new RangePosition(6, 24, 6, 30) }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }, // Implicit import
+                    { "Test_C", (true, new Reference<ModelDef> { Path = { new("Test_C") } }) }
                 },
             }));
 
@@ -270,7 +270,7 @@ public class ModelTest
                 URI = "http://example.com",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -301,7 +301,7 @@ public class ModelTest
                 },
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -323,7 +323,7 @@ public class ModelTest
                     Version = "1.0.0",
                     Imports =
                     {
-                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                     },
                 };
 
@@ -342,11 +342,11 @@ public class ModelTest
                                 Language = "en",
                                 URI = "http://example.com",
                                 Version = "1.0.0",
-                                TranslationOf = new Reference<IInterlisDefinition> { Target = deutsch, Path = { "Deutsch" } },
+                                TranslationOf = new Reference<IInterlisDefinition> { Target = deutsch, Path = { new("Deutsch") } },
                                 TranslationOfVersion = "1.0.0",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                             }
                         },
@@ -393,7 +393,7 @@ public class ModelTest
                     Version = "1.0.0",
                     Imports =
                     {
-                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                     },
                     Content = { { "Thema", thema } },
                 };
@@ -413,11 +413,11 @@ public class ModelTest
                                 Language = "en",
                                 URI = "http://example.com",
                                 Version = "1.0.0",
-                                TranslationOf = new Reference<IInterlisDefinition> { Target = deutsch, Path = { "Deutsch" } },
+                                TranslationOf = new Reference<IInterlisDefinition> { Target = deutsch, Path = { new("Deutsch") } },
                                 TranslationOfVersion = "1.0.0",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {
@@ -812,7 +812,7 @@ public class ModelTest
                 NameLocations = { new RangePosition(0, 17, 0, 22), new RangePosition(1, 4, 1, 9) },
                 Imports =
                 {
-                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://example.com",
                 Version = "1.0.0",
@@ -838,7 +838,7 @@ public class ModelTest
                 Charset = "UTF-8",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -862,7 +862,7 @@ public class ModelTest
                 Xmlns = "https://www.example.com/awesomenamespace",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -887,7 +887,7 @@ public class ModelTest
                 Xmlns = "https://www.example.com/awesomenamespace",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -905,8 +905,8 @@ public class ModelTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(2, 4, 2, 9) },
                 Imports =
                 {
-                    { "Other", (false, new Reference<ModelDef> { Path = { "Other" }, SourceRange = new RangePosition(1, 10, 1, 15) }) },
-                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) },
+                    { "Other", (false, new Reference<ModelDef> { Path = { new("Other") } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://example.com",
                 Version = "1.0.0",
@@ -926,9 +926,9 @@ public class ModelTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(2, 4, 2, 9) },
                 Imports =
                 {
-                    { "OtherA", (false, new Reference<ModelDef> { Path = { "OtherA" }, SourceRange = new RangePosition(1, 10, 1, 16) }) },
-                    { "OtherB", (true, new Reference<ModelDef> { Path = { "OtherB" }, SourceRange = new RangePosition(1, 30, 1, 36) }) },
-                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) },
+                    { "OtherA", (false, new Reference<ModelDef> { Path = { new("OtherA") } }) },
+                    { "OtherB", (true, new Reference<ModelDef> { Path = { new("OtherB") } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://example.com",
                 Version = "1.0.0",
@@ -948,7 +948,7 @@ public class ModelTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(2, 4, 2, 9) },
                 Imports =
                 {
-                    { "INTERLIS", (true, new Reference<ModelDef> { Path = { "INTERLIS" }, SourceRange = new RangePosition(1, 22, 1, 30) }) },
+                    { "INTERLIS", (true, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://example.com",
                 Version = "1.0.0",

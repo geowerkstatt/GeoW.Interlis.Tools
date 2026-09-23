@@ -21,10 +21,10 @@ public class MetaDataBasketTest
                 Name = "B",
                 NameLocations = { new RangePosition(0, 12, 0, 13) },
                 Kind = MetaDataBasketDef.BasketKind.Sign,
-                Topic = new Reference<TopicDef> { Path = { "T" }, SourceRange = new RangePosition(0, 16, 0, 17) },
+                Topic = new Reference<TopicDef> { Path = { new("T") } },
                 Objects =
                 {
-                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { "C" }, SourceRange = new RangePosition(0, 29, 0, 30) }, MetaObjects = { new MetaObjectDeclaration { Name = "a", NameLocations = { new RangePosition(0, 33, 0, 34) } }, new MetaObjectDeclaration { Name = "b", NameLocations = { new RangePosition(0, 36, 0, 37) } } } },
+                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { new("C") } }, MetaObjects = { new MetaObjectDeclaration { Name = "a", NameLocations = { new RangePosition(0, 33, 0, 34) } }, new MetaObjectDeclaration { Name = "b", NameLocations = { new RangePosition(0, 36, 0, 37) } } } },
                 },
             }));
 
@@ -37,7 +37,7 @@ public class MetaDataBasketTest
                 Name = "Coordinates",
                 NameLocations = { new RangePosition(0, 17, 0, 28) },
                 Kind = MetaDataBasketDef.BasketKind.Refsystem,
-                Topic = new Reference<TopicDef> { Path = { "ReferenceSystems" }, SourceRange = new RangePosition(0, 31, 0, 47) },
+                Topic = new Reference<TopicDef> { Path = { new("ReferenceSystems") } },
             }));
 
         yield return Rule(new(
@@ -50,7 +50,7 @@ public class MetaDataBasketTest
                 NameLocations = { new RangePosition(0, 12, 0, 13) },
                 Properties = { Property.Final },
                 Kind = MetaDataBasketDef.BasketKind.Sign,
-                Topic = new Reference<TopicDef> { Path = { "T" }, SourceRange = new RangePosition(0, 24, 0, 25) },
+                Topic = new Reference<TopicDef> { Path = { new("T") } },
             }));
 
         yield return Rule(new(
@@ -62,10 +62,10 @@ public class MetaDataBasketTest
                 Name = "B",
                 NameLocations = { new RangePosition(0, 17, 0, 18) },
                 Kind = MetaDataBasketDef.BasketKind.Refsystem,
-                Topic = new Reference<TopicDef> { Path = { "T" }, SourceRange = new RangePosition(0, 21, 0, 22) },
+                Topic = new Reference<TopicDef> { Path = { new("T") } },
                 Objects =
                 {
-                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { "C" }, SourceRange = new RangePosition(0, 34, 0, 35) }, MetaObjects = { new MetaObjectDeclaration { Name = "single", NameLocations = { new RangePosition(0, 38, 0, 44) } } } },
+                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { new("C") } }, MetaObjects = { new MetaObjectDeclaration { Name = "single", NameLocations = { new RangePosition(0, 38, 0, 44) } } } },
                 },
             }));
 
@@ -78,11 +78,11 @@ public class MetaDataBasketTest
                 Name = "B",
                 NameLocations = { new RangePosition(0, 12, 0, 13) },
                 Kind = MetaDataBasketDef.BasketKind.Sign,
-                Topic = new Reference<TopicDef> { Path = { "T" }, SourceRange = new RangePosition(0, 16, 0, 17) },
+                Topic = new Reference<TopicDef> { Path = { new("T") } },
                 Objects =
                 {
-                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { "C1" }, SourceRange = new RangePosition(0, 29, 0, 31) }, MetaObjects = { new MetaObjectDeclaration { Name = "a", NameLocations = { new RangePosition(0, 34, 0, 35) } } } },
-                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { "C2" }, SourceRange = new RangePosition(0, 47, 0, 49) }, MetaObjects = { new MetaObjectDeclaration { Name = "b", NameLocations = { new RangePosition(0, 52, 0, 53) } }, new MetaObjectDeclaration { Name = "c", NameLocations = { new RangePosition(0, 55, 0, 56) } } } },
+                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { new("C1") } }, MetaObjects = { new MetaObjectDeclaration { Name = "a", NameLocations = { new RangePosition(0, 34, 0, 35) } } } },
+                    new MetaObjectsClause { Class = new Reference<ClassDef> { Path = { new("C2") } }, MetaObjects = { new MetaObjectDeclaration { Name = "b", NameLocations = { new RangePosition(0, 52, 0, 53) } }, new MetaObjectDeclaration { Name = "c", NameLocations = { new RangePosition(0, 55, 0, 56) } } } },
                 },
             }));
 
@@ -95,8 +95,8 @@ public class MetaDataBasketTest
                 Name = "B",
                 NameLocations = { new RangePosition(0, 12, 0, 13) },
                 Kind = MetaDataBasketDef.BasketKind.Sign,
-                Extends = new Reference<MetaDataBasketDef> { Path = { "Base" }, SourceRange = new RangePosition(0, 22, 0, 26) },
-                Topic = new Reference<TopicDef> { Path = { "T" }, SourceRange = new RangePosition(0, 29, 0, 30) },
+                Extends = new Reference<MetaDataBasketDef> { Path = { new("Base") } },
+                Topic = new Reference<TopicDef> { Path = { new("T") } },
             }));
 
         yield return Rule(new(
@@ -108,8 +108,8 @@ public class MetaDataBasketTest
                 Name = "B",
                 NameLocations = { new RangePosition(0, 12, 0, 13) },
                 Kind = MetaDataBasketDef.BasketKind.Sign,
-                Extends = new Reference<MetaDataBasketDef> { Path = { "BaseModel", "BaseTopic", "BaseBasket" }, SourceRange = new RangePosition(0, 22, 0, 52) },
-                Topic = new Reference<TopicDef> { Path = { "T" }, SourceRange = new RangePosition(0, 55, 0, 56) },
+                Extends = new Reference<MetaDataBasketDef> { Path = { new("BaseModel"), new("BaseTopic"), new("BaseBasket") } },
+                Topic = new Reference<TopicDef> { Path = { new("T") } },
             }));
     }
 

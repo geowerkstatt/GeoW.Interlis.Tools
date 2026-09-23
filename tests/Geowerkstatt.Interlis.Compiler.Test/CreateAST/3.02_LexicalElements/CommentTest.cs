@@ -26,7 +26,7 @@ public class CommentTest
                 NameLocations = { new RangePosition(0, 6, 0, 10), new RangePosition(1, 4, 1, 8) },
                 Imports =
                 {
-                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://foo.test",
                 Version = "123",
@@ -47,7 +47,7 @@ public class CommentTest
                 NameLocations = { new RangePosition(0, 6, 0, 10) },
                 Imports =
                 {
-                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { "INTERLIS" } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
                 },
                 URI = "http://foo.test",
                 Version = "123",
@@ -90,7 +90,7 @@ public class CommentTest
                 Version = "123",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -117,7 +117,7 @@ public class CommentTest
                 Version = "123",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             },
             Ili2cDivergenceReason: "we accept duplicate meta attributes (last wins), ili2c rejects them"));
@@ -145,7 +145,7 @@ public class CommentTest
                 Version = "123",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
 
@@ -228,7 +228,7 @@ public class CommentTest
                 Version = "123",
                 Imports =
                 {
-                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) }
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
             }));
     }

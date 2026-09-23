@@ -78,7 +78,7 @@ public class InterlisFileTest
                             Version = "123",
                             Imports =
                             {
-                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                             }
                         }
                     },
@@ -109,7 +109,7 @@ public class InterlisFileTest
                             Version = "123",
                             Imports =
                             {
-                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                             },
                             DocComments = { "/** I am a doc comment */" }
                         }
@@ -146,7 +146,7 @@ public class InterlisFileTest
                             Version = "123",
                             Imports =
                             {
-                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                             },
                             Content =
                             {
@@ -205,7 +205,7 @@ public class InterlisFileTest
                 var classB = new ClassDef
                 {
                     Name = "B",
-                    Extends = new Reference<ClassDef> { Target = classA, Path = { "A" } },
+                    Extends = new Reference<ClassDef> { Target = classA, Path = { new("A") } },
                 };
 
                 var associationC = new AssociationDef
@@ -222,7 +222,7 @@ public class InterlisFileTest
                                 TypeDef = new RoleType
                                 {
                                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classA, Path = { "A" } } } },
+                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classA, Path = { new("A") } } } },
                                 }
                             }
                         },
@@ -234,7 +234,7 @@ public class InterlisFileTest
                                 TypeDef = new RoleType
                                 {
                                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classB, Path = { "B" } } } },
+                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = classB, Path = { new("B") } } } },
                                 }
                             }
                         },
@@ -276,7 +276,7 @@ public class InterlisFileTest
                                 Version = "123",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {
@@ -286,7 +286,7 @@ public class InterlisFileTest
                                         new TopicDef
                                         {
                                             Name = "OtherTopic",
-                                            Extends = new Reference<TopicDef> { Target = baseTopic, Path = { "Model", "BaseTopic" } },
+                                            Extends = new Reference<TopicDef> { Target = baseTopic, Path = { new("Model"), new("BaseTopic") } },
                                         }
                                     },
                                     {
@@ -294,7 +294,7 @@ public class InterlisFileTest
                                         new TopicDef
                                         {
                                             Name = "Topic",
-                                            Extends = new Reference <TopicDef> { Target = baseTopic, Path = { "BaseTopic" } },
+                                            Extends = new Reference <TopicDef> { Target = baseTopic, Path = { new("BaseTopic") } },
                                             Content =
                                             {
                                                 { "A", classA },
@@ -385,7 +385,7 @@ public class InterlisFileTest
                     Name = "text2",
                     TypeDef = new TypeRef
                     {
-                        Extends = new Reference<DomainDef> { Target = textDomain, Path = { "text" } },
+                        Extends = new Reference<DomainDef> { Target = textDomain, Path = { new("text") } },
                         Cardinality = new Cardinality { Min = 1, Max = Cardinality.Unbound },
                     },
                 };
@@ -414,7 +414,7 @@ public class InterlisFileTest
                     Name = "basket_id",
                     TypeDef = new OidType
                     {
-                        Extends = new Reference<DomainDef> { Target = yoloOidDomain, Path = { "yoloOid" } },
+                        Extends = new Reference<DomainDef> { Target = yoloOidDomain, Path = { new("yoloOid") } },
                         Value = new OidType.ValueRange { Type = new TextType { Length = 6 } },
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
                     }
@@ -440,7 +440,7 @@ public class InterlisFileTest
                     Name = "enhancedColor",
                     TypeDef = new EnumerationType
                     {
-                        Extends = new Reference<DomainDef> { Target = colorDomain, Path = { "color" } },
+                        Extends = new Reference<DomainDef> { Target = colorDomain, Path = { new("color") } },
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                         Values =
                         {
@@ -473,7 +473,7 @@ public class InterlisFileTest
                     Name = "superEnhancedColor",
                     TypeDef = new EnumerationType
                     {
-                        Extends = new Reference<DomainDef> { Target = enhancedColorDomain, Path = { "enhancedColor" } },
+                        Extends = new Reference<DomainDef> { Target = enhancedColorDomain, Path = { new("enhancedColor") } },
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                         Values =
                         {
@@ -517,7 +517,7 @@ public class InterlisFileTest
                     TypeDef = new EnumerationValuesType
                     {
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                        TargetEnumeration = new Reference<DomainDef> { Target = superEnhancedColorDomain, Path = { "superEnhancedColor" } },
+                        TargetEnumeration = new Reference<DomainDef> { Target = superEnhancedColorDomain, Path = { new("superEnhancedColor") } },
                         LeafsOnly = false,
                     }
                 };
@@ -537,8 +537,8 @@ public class InterlisFileTest
                     Name = "surface",
                     TypeDef = new SurfaceType
                     {
-                        VertexType = new Reference<DomainDef> { Target = point3dDomain, Path = { "point3d" } },
-                        LineForms = { new Reference<LineFormTypeDef> { Target = (LineFormTypeDef)InternalModel.Interlis.Content["STRAIGHTS"], Path = { "INTERLIS", "STRAIGHTS" } } },
+                        VertexType = new Reference<DomainDef> { Target = point3dDomain, Path = { new("point3d") } },
+                        LineForms = { new Reference<LineFormTypeDef> { Target = (LineFormTypeDef)InternalModel.Interlis.Content["STRAIGHTS"], Path = { new("INTERLIS"), new("STRAIGHTS") } } },
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound }
                     }
                 };
@@ -562,7 +562,7 @@ public class InterlisFileTest
                                 Version = "123",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {
@@ -584,8 +584,8 @@ public class InterlisFileTest
                                         new TopicDef
                                         {
                                             Name = "TopicName",
-                                            BasketOidType = new Reference<DomainDef> { Target = basketIdDomain, Path = { "basket_id" } },
-                                            OidType = new Reference<DomainDef> { Target = itemIdDomain, Path = { "item_id" } },
+                                            BasketOidType = new Reference<DomainDef> { Target = basketIdDomain, Path = { new("basket_id") } },
+                                            OidType = new Reference<DomainDef> { Target = itemIdDomain, Path = { new("item_id") } },
                                             Content =
                                             {
                                                 { "point3d", point3dDomain },
@@ -596,7 +596,7 @@ public class InterlisFileTest
                                                     new ClassDef
                                                     {
                                                         Name = "ClassName",
-                                                        OidType = new Reference<DomainDef> { Target = itemIdDomain, Path = { "item_id" } },
+                                                        OidType = new Reference<DomainDef> { Target = itemIdDomain, Path = { new("item_id") } },
                                                         Content =
                                                         {
                                                             {
@@ -607,7 +607,7 @@ public class InterlisFileTest
                                                                     TypeDef = new TypeRef
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Extends = new Reference<DomainDef> { Target = text2Domain, Path = { "text2" } },
+                                                                        Extends = new Reference<DomainDef> { Target = text2Domain, Path = { new("text2") } },
                                                                     }
                                                                 }
                                                             },
@@ -619,7 +619,7 @@ public class InterlisFileTest
                                                                     TypeDef = new TypeRef
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Extends = new Reference<DomainDef> { Target = point3dDomain, Path = { "point3d" } },
+                                                                        Extends = new Reference<DomainDef> { Target = point3dDomain, Path = { new("point3d") } },
                                                                     }
                                                                 }
                                                             },
@@ -632,9 +632,9 @@ public class InterlisFileTest
                                                                     {
                                                                         IsMultiGeometry = true,
                                                                         IsDirected = true,
-                                                                        VertexType = new Reference<DomainDef> { Target = point3dDomain, Path = { "point3d" } },
+                                                                        VertexType = new Reference<DomainDef> { Target = point3dDomain, Path = { new("point3d") } },
                                                                         WithoutOverlaps = new WithoutOverlapsDef.Explicit { Tolerance = 0.01 },
-                                                                        LineForms = { new Reference<LineFormTypeDef> { Target = (LineFormTypeDef)InternalModel.Interlis.Content["STRAIGHTS"], Path = { "INTERLIS", "STRAIGHTS" } }, new Reference<LineFormTypeDef> { Target = (LineFormTypeDef)InternalModel.Interlis.Content["ARCS"], Path = { "INTERLIS", "ARCS" } } },
+                                                                        LineForms = { new Reference<LineFormTypeDef> { Target = (LineFormTypeDef)InternalModel.Interlis.Content["STRAIGHTS"], Path = { new("INTERLIS"), new("STRAIGHTS") } }, new Reference<LineFormTypeDef> { Target = (LineFormTypeDef)InternalModel.Interlis.Content["ARCS"], Path = { new("INTERLIS"), new("ARCS") } } },
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                                     }
                                                                 }
@@ -647,7 +647,7 @@ public class InterlisFileTest
                                                                     TypeDef = new TypeRef
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Extends = new Reference<DomainDef> { Target = surfaceDomain, Path = { "surface" } },
+                                                                        Extends = new Reference<DomainDef> { Target = surfaceDomain, Path = { new("surface") } },
                                                                     }
                                                                 }
                                                             },
@@ -659,7 +659,7 @@ public class InterlisFileTest
                                                                     TypeDef = new ObjectType
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Targets = [new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = structType, Path = { "structType" } } }],
+                                                                        Targets = [new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = structType, Path = { new("structType") } } }],
                                                                     }
                                                                 }
                                                             },
@@ -673,8 +673,8 @@ public class InterlisFileTest
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
                                                                         Targets = [new RestrictedRef
                                                                         {
-                                                                            Value = new Reference<IInterlisDefinition> { Target = structType, Path = { "structType" } },
-                                                                            Restrictions = { new Reference<IInterlisDefinition> { Target = structType, Path = { "ModelName", "structType" } } }
+                                                                            Value = new Reference<IInterlisDefinition> { Target = structType, Path = { new("structType") } },
+                                                                            Restrictions = { new Reference<IInterlisDefinition> { Target = structType, Path = { new("ModelName"), new("structType") } } }
                                                                         }],
                                                                     },
                                                                 }
@@ -687,7 +687,7 @@ public class InterlisFileTest
                                                                     TypeDef = new ReferenceType
                                                                     {
                                                                         Properties = { Property.External },                                                                        Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "ExternalClassName" } } },
+                                                                        Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("ExternalClassName") } } },
                                                                     },
                                                                 }
                                                             },
@@ -698,7 +698,7 @@ public class InterlisFileTest
                                                                     Name = "reference",
                                                                     TypeDef = new ReferenceType
                                                                     {                                                                        Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = person, Path = { "Person" } } },
+                                                                        Target = new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = person, Path = { new("Person") } } },
                                                                     },
                                                                 }
                                                             },
@@ -710,7 +710,7 @@ public class InterlisFileTest
                                                                     TypeDef = new TypeRef
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["HALIGNMENT"], Path = { "INTERLIS", "HALIGNMENT" } },
+                                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["HALIGNMENT"], Path = { new("INTERLIS"), new("HALIGNMENT") } },
                                                                     },
                                                                 }
                                                             },
@@ -722,7 +722,7 @@ public class InterlisFileTest
                                                                     TypeDef = new TypeRef
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["VALIGNMENT"], Path = { "INTERLIS", "VALIGNMENT" } },
+                                                                        Extends = new Reference<DomainDef> { Target = (DomainDef)InternalModel.Interlis.Content["VALIGNMENT"], Path = { new("INTERLIS"), new("VALIGNMENT") } },
                                                                     },
                                                                 }
                                                             },
@@ -737,7 +737,7 @@ public class InterlisFileTest
                                                                     TypeDef = new TypeRef
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Extends = new Reference<DomainDef> { Target = text2Domain, Path = { "text2" } },
+                                                                        Extends = new Reference<DomainDef> { Target = text2Domain, Path = { new("text2") } },
                                                                     },
                                                                 }
                                                             },
@@ -749,7 +749,7 @@ public class InterlisFileTest
                                                                     TypeDef = new ObjectType
                                                                     {
                                                                         Cardinality = new Cardinality { Min = 0, Max = 1 },
-                                                                        Targets = [new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = structType, Path = { "structType" } } }],
+                                                                        Targets = [new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = structType, Path = { new("structType") } } }],
                                                                     },
                                                                 }
                                                             },
@@ -793,7 +793,7 @@ public class InterlisFileTest
                     Version = "123",
                     Imports =
                     {
-                        { InternalModel.Interlis.Name, (true, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                        { InternalModel.Interlis.Name, (true, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                     },
                     Content = { }
                 };
@@ -805,7 +805,7 @@ public class InterlisFileTest
                     Version = "123",
                     Imports =
                     {
-                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                     },
                     Content = { }
                 };
@@ -827,10 +827,10 @@ public class InterlisFileTest
                                 Version = "123",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) },
-                                    { "Model_A", (false, new Reference<ModelDef> { Target = modelA, Path = { "Model_A" } }) },
-                                    { "Model_B", (true, new Reference<ModelDef> { Target = modelB, Path = { "Model_B" } }) },
-                                    { "Unknown_Model", (false, new Reference<ModelDef> { Target = null, Path = { "Unknown_Model" } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) },
+                                    { "Model_A", (false, new Reference<ModelDef> { Target = modelA, Path = { new("Model_A") } }) },
+                                    { "Model_B", (true, new Reference<ModelDef> { Target = modelB, Path = { new("Model_B") } }) },
+                                    { "Unknown_Model", (false, new Reference<ModelDef> { Target = null, Path = { new("Unknown_Model") } }) }
                                 },
                                 Content = {}
                             }
@@ -875,7 +875,7 @@ public class InterlisFileTest
                     Language = "en",
                     Imports =
                     {
-                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                        { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                     },
                     Content = { { "endsWith", functionDef } }
                 };
@@ -896,8 +896,8 @@ public class InterlisFileTest
                                 Version = "123",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) },
-                                    { "Text_V2", (true, new Reference<ModelDef> { Target = functionModel, Path = { "Text_V2" } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) },
+                                    { "Text_V2", (true, new Reference<ModelDef> { Target = functionModel, Path = { new("Text_V2") } }) }
                                 },
                                 Content =
                                 {
@@ -920,12 +920,12 @@ public class InterlisFileTest
                                                             SourceRange = new RangePosition(8, 45, 8, 80),
                                                             Condition = new FunctionCall
                                                             {
-                                                                FunctionDef = new Reference<FunctionDef> { Target = functionDef, Path = { "endsWith" } },
+                                                                FunctionDef = new Reference<FunctionDef> { Target = functionDef, Path = { new("endsWith") } },
                                                                 Arguments =
                                                                 {
                                                                     new PathExpression
                                                                     {
-                                                                        Path = { new KeyWordPathElement { Value = KeyWordPathElement.KeyWord.This } },
+                                                                        Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.This) } },
                                                                     },
                                                                     new TextConstant
                                                                     {

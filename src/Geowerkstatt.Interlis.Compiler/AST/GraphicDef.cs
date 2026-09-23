@@ -76,7 +76,11 @@ public sealed class SignParamAssignment
 {
     public required string ParameterName { get; init; }
 
-    /// <summary>The assigned meta-object reference (<c>{ MetaObjectRef }</c>). Documentary (not registered).</summary>
+    /// <summary>
+    /// The assigned meta-object reference (<c>{ MetaObjectRef }</c>). Documentary: it resolves as
+    /// <see cref="ReferenceResolution.Member"/> and no pass writes its target yet, so it carries the written name
+    /// and its span but no link.
+    /// </summary>
     public Reference<IInterlisDefinition>? MetaObject { get; set; }
 
     /// <summary>The assigned value expression (<c>Factor</c>).</summary>
@@ -95,7 +99,11 @@ public sealed class SignParamAssignment
 /// </summary>
 public sealed class EnumAssignment
 {
-    /// <summary>The assigned meta-object reference (<c>{ MetaObjectRef }</c>). Documentary (not registered).</summary>
+    /// <summary>
+    /// The assigned meta-object reference (<c>{ MetaObjectRef }</c>). Documentary: it resolves as
+    /// <see cref="ReferenceResolution.Member"/> and no pass writes its target yet, so it carries the written name
+    /// and its span but no link.
+    /// </summary>
     public Reference<IInterlisDefinition>? MetaObject { get; set; }
 
     /// <summary>The assigned constant value.</summary>

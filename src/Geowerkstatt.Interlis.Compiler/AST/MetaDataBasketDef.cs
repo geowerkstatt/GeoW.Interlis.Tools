@@ -48,9 +48,9 @@ public sealed class MetaDataBasketDef : InterlisDefinition, IExtending<MetaDataB
 public sealed class MetaObjectsClause
 {
     /// <summary>
-    /// The class the listed meta-objects are instances of. Not registered — the class lives in the basket's
-    /// topic, not the enclosing scope — so the reference resolver links it against the topic's (inherited)
-    /// content.
+    /// The class the listed meta-objects are instances of. Resolves as <see cref="ReferenceResolution.Member"/> —
+    /// the class lives in the basket's topic, not the enclosing scope — so the reference resolver links it against
+    /// the topic's (inherited) content.
     /// </summary>
     public required Reference<ClassDef> Class { get; init; }
 

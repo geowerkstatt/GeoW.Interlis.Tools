@@ -124,7 +124,7 @@ public class RuntimeParameterTest
                     NameLocations = { new RangePosition(0, 10, 0, 21) },
                     TypeDef = new FormattedType
                     {
-                        FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDate" }, SourceRange = new RangePosition(0, 31, 0, 47) },
+                        FormatBaseType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("XMLDate") } },
                         Min = "2000-01-01",
                         Max = "2099-12-31",
                         Cardinality = new Cardinality { Min = 0, Max = 1 },

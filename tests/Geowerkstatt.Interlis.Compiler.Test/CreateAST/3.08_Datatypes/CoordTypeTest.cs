@@ -107,12 +107,12 @@ public class CoordTypeTest
                             Min = 480000,
                             Max = 850000,
                             Precision = -2,
-                            Unit = new Reference<UnitDef> { Path = { "m" }, SourceRange = new RangePosition(0, 40, 0, 41) },
+                            Unit = new Reference<UnitDef> { Path = { new("m") } },
                             RefSystem = new RefSys
                             {
                                 Value = new RefSys.MetaObjectRef
                                 {
-                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { "CHLV03" }, SourceRange = new RangePosition(0, 44, 0, 50) },
+                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("CHLV03") } },
                                 },
                                 Axis = 1,
                             },
@@ -123,12 +123,12 @@ public class CoordTypeTest
                             Min = 60000,
                             Max = 320000,
                             Precision = -2,
-                            Unit = new Reference<UnitDef> { Path = { "m" }, SourceRange = new RangePosition(0, 79, 0, 80) },
+                            Unit = new Reference<UnitDef> { Path = { new("m") } },
                             RefSystem = new RefSys
                             {
                                 Value = new RefSys.MetaObjectRef
                                 {
-                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { "CHLV03" }, SourceRange = new RangePosition(0, 83, 0, 89) },
+                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("CHLV03") } },
                                 },
                                 Axis = 2,
                             },
@@ -159,12 +159,12 @@ public class CoordTypeTest
                             Min = -90,
                             Max = 90,
                             Precision = -5,
-                            Unit = new Reference<UnitDef> { Path = { "Units", "Angle_Degree" }, SourceRange = new RangePosition(0, 42, 0, 60) },
+                            Unit = new Reference<UnitDef> { Path = { new("Units"), new("Angle_Degree") } },
                             RefSystem = new RefSys
                             {
                                 Value = new RefSys.MetaObjectRef
                                 {
-                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { "WGS84" }, SourceRange = new RangePosition(0, 63, 0, 68) },
+                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("WGS84") } },
                                 },
                                 Axis = 1,
                             },
@@ -176,12 +176,12 @@ public class CoordTypeTest
                             Max = 359.99999,
                             Precision = -5,
                             Circular = true,
-                            Unit = new Reference<UnitDef> { Path = { "Units", "Angle_Degree" }, SourceRange = new RangePosition(0, 105, 0, 123) },
+                            Unit = new Reference<UnitDef> { Path = { new("Units"), new("Angle_Degree") } },
                             RefSystem = new RefSys
                             {
                                 Value = new RefSys.MetaObjectRef
                                 {
-                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { "WGS84" }, SourceRange = new RangePosition(0, 126, 0, 131) },
+                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("WGS84") } },
                                 },
                                 Axis = 2,
                             },
@@ -192,12 +192,12 @@ public class CoordTypeTest
                             Min = -1000,
                             Max = 9000,
                             Precision = -2,
-                            Unit = new Reference<UnitDef> { Path = { "m" }, SourceRange = new RangePosition(0, 158, 0, 159) },
+                            Unit = new Reference<UnitDef> { Path = { new("m") } },
                             RefSystem = new RefSys
                             {
                                 Value = new RefSys.MetaObjectRef
                                 {
-                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { "WGS84Alt" }, SourceRange = new RangePosition(0, 162, 0, 170) },
+                                    MetaObject = new Reference<MetaObjectDeclaration> { Path = { new("WGS84Alt") } },
                                 },
                                 Axis = 1,
                             },

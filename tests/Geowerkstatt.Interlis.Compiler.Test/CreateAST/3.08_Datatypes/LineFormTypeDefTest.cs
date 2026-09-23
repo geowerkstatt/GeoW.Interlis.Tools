@@ -22,7 +22,7 @@ public class LineFormTypeDefTest
                 {
                     Name = "CustomForm",
                     NameLocations = { new RangePosition(0, 10, 0, 20) },
-                    Structure = new Reference<ClassDef> { Path = { "LineStruct" }, SourceRange = new RangePosition(0, 23, 0, 33) },
+                    Structure = new Reference<ClassDef> { Path = { new("LineStruct") } },
                 },
             }));
 
@@ -60,13 +60,13 @@ public class LineFormTypeDefTest
                 {
                     Name = "FormA",
                     NameLocations = { new RangePosition(0, 10, 0, 15) },
-                    Structure = new Reference<ClassDef> { Path = { "StructA" }, SourceRange = new RangePosition(0, 18, 0, 25) },
+                    Structure = new Reference<ClassDef> { Path = { new("StructA") } },
                 },
                 new LineFormTypeDef
                 {
                     Name = "FormB",
                     NameLocations = { new RangePosition(0, 27, 0, 32) },
-                    Structure = new Reference<ClassDef> { Path = { "StructB" }, SourceRange = new RangePosition(0, 35, 0, 42) },
+                    Structure = new Reference<ClassDef> { Path = { new("StructB") } },
                 },
             }));
 

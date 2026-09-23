@@ -67,23 +67,25 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// Create a new <see cref="Reference{T}"/> from the given <paramref name="referenceContext"/>.
     /// </summary>
     [return: NotNullIfNotNull(nameof(referenceContext))]
-    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IInterlisDefinition, T?>? mapTarget = null) where T : class, IInterlisDefinition
+    private Reference<T>? CreateReference<T>(Interlis24Parser.DefinitionRefContext? referenceContext, Func<IReferenceTarget, T?>? mapTarget = null) where T : class, IReferenceTarget
     {
-        return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), referenceContext.ToRange(), mapTarget);
+        return referenceContext == null ? null : CreateReference<T>(VisitDefinitionRef(referenceContext), mapTarget);
     }
 
     /// <summary>
-    /// Create a new <see cref="Reference{T}"/> with the given <paramref name="path"/>.
+    /// Create a new <see cref="Reference{T}"/> with the given <paramref name="path"/> and register it with the
+    /// enclosing container. Every reference standing for a name written in the source goes through here, whatever
+    /// its <paramref name="resolution"/>, so <see cref="IInterlisDefinitionContainer.ContainerReferences"/> holds
+    /// all of them for navigation and rename.
     /// </summary>
-    private Reference<T> CreateReference<T>(IEnumerable<string> path, RangePosition? location = null, Func<IInterlisDefinition, T?>? mapTarget = null, bool resolvesInEnvironment = false) where T : class, IInterlisDefinition
+    private Reference<T> CreateReference<T>(IEnumerable<PathSegment> path, Func<IReferenceTarget, T?>? mapTarget = null, ReferenceResolution resolution = ReferenceResolution.Scoped) where T : class, IReferenceTarget
     {
         var reference = new Reference<T>
         {
             Path = { path },
             Source = CurrentScope.Value,
             MapTarget = mapTarget ?? (element => element as T),
-            SourceRange = location,
-            ResolvesInEnvironment = resolvesInEnvironment,
+            Resolution = resolution,
         };
 
         CurrentScope.Value?.ContainerReferences.Add(reference);
@@ -92,12 +94,34 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     }
 
     /// <summary>
-    /// Create an unregistered <see cref="Reference{T}"/> from a <c>metaObjectRef</c>
-    /// (<c>[ MetaDataBasketRef '.' ] Metaobject-Name</c>, RefHB 3.10.1).
+    /// Create a registered <see cref="ReferenceResolution.Member"/> reference for a single name
+    /// <paramref name="token"/>: a name the scoped resolver must not look up, because it denotes a member of the
+    /// container its context establishes (a <c>BASED ON</c> structure, a basket's topic, the structure a
+    /// <c>LOCAL UNIQUE</c> path reaches).
+    /// </summary>
+    private Reference<T> CreateMemberReference<T>(IToken token) where T : class, IReferenceTarget
+    {
+        return CreateReference<T>([Segment(token)], resolution: ReferenceResolution.Member);
+    }
+
+    /// <summary>The path segment a single name <paramref name="token"/> writes, with its span.</summary>
+    private static PathSegment Segment(IToken token) => new() { Name = token.Text, Range = token.ToRange() };
+
+    /// <summary>
+    /// The segments of a path the model implies rather than writes (<c>INTERLIS.NOOID</c> behind a <c>NO OID</c>, the
+    /// predefined domain behind a type keyword): names without spans, since there is nothing in the source a rename
+    /// could rewrite.
+    /// </summary>
+    private static IEnumerable<PathSegment> ImpliedPath(params string[] names) => names.Select(name => new PathSegment { Name = name });
+
+    /// <summary>
+    /// Create a <see cref="ReferenceResolution.Member"/> reference from a <c>metaObjectRef</c>
+    /// (<c>[ MetaDataBasketRef '.' ] Metaobject-Name</c>, RefHB 3.10.1). The trailing segment names a declared
+    /// meta-object, not a definition, so the scoped resolver leaves the whole path alone.
     /// </summary>
     private Reference<IInterlisDefinition> CreateMetaObjectReference(Interlis24Parser.MetaObjectRefContext context)
     {
-        var path = new List<string>();
+        var path = new List<PathSegment>();
         if (context.definitionRef() != null)
         {
             path.AddRange(VisitDefinitionRef(context.definitionRef()));
@@ -105,10 +129,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // The Metaobject-Name is mandatory in the grammar but can be absent while the reference is still being typed.
         if (IsValidToken(context.metaObjectName))
         {
-            path.Add(context.metaObjectName.Text);
+            path.Add(Segment(context.metaObjectName));
         }
 
-        return new Reference<IInterlisDefinition> { Path = { path }, SourceRange = context.ToRange() };
+        return CreateReference<IInterlisDefinition>(path, resolution: ReferenceResolution.Member);
     }
 
     /// <summary>
@@ -252,10 +276,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         if (context.translationOf != null)
         {
             modelDef.TranslationOf = CreateReference<IInterlisDefinition>(
-                [context.translationOf.Text],
-                context.translationOf.ToRange(),
-                element => element as ModelDef,
-                resolvesInEnvironment: true);
+                [Segment(context.translationOf)],
+                mapTarget: element => element as ModelDef,
+                resolution: ReferenceResolution.Environment);
         }
 
         foreach (var import in context.modelImport())
@@ -267,14 +290,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             }
 
             var importModelName = import.name.Text;
-            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([importModelName], import.name.ToRange(), resolvesInEnvironment: true))))
+            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([Segment(import.name)], resolution: ReferenceResolution.Environment))))
             {
                 ReportError(import.name, $"Duplicate import {importModelName}");
             }
         }
 
         // Add default INTERLIS import
-        modelDef.Imports.TryAdd(InternalModel.Interlis.Name, (false, CreateReference<ModelDef>([InternalModel.Interlis.Name], resolvesInEnvironment: true)));
+        modelDef.Imports.TryAdd(InternalModel.Interlis.Name, (false, CreateReference<ModelDef>(ImpliedPath(InternalModel.Interlis.Name), resolution: ReferenceResolution.Environment)));
 
         var elements = context
             .modelContents()
@@ -394,7 +417,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
         else if (context.noOid != null)
         {
-            classDef.OidType = CreateReference<DomainDef>(["INTERLIS", "NOOID"]);
+            classDef.OidType = CreateReference<DomainDef>(ImpliedPath("INTERLIS", "NOOID"));
         }
 
         using var scopeFrame = CurrentScope.NewFrame(classDef);
@@ -431,7 +454,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
         else if (context.noOid != null)
         {
-            associationDef.OidType = CreateReference<DomainDef>(["INTERLIS", "NOOID"]);
+            associationDef.OidType = CreateReference<DomainDef>(ImpliedPath("INTERLIS", "NOOID"));
         }
 
         using var scopeFrame = CurrentScope.NewFrame(associationDef);
@@ -577,14 +600,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             IsArea = context.AREA() != null,
             Source = VisitRenamedViewableRef(context.renamedViewableRef()),
+            // An object path: each step is a member of the previous step's structure, walked by the path resolver.
+            Path = CreateReference<AttributeDef>(context.IDENTIFIER().Select(identifier => identifier.Symbol).Where(IsValidToken).Select(Segment), resolution: ReferenceResolution.ObjectPath),
         };
 
-        // Unregistered references: each step is a member of the previous step's structure, resolved by the path
-        // resolver's member walk, not by the scoped reference resolution.
-        inspection.Path.AddRange(context.IDENTIFIER()
-            .Select(identifier => identifier.Symbol)
-            .Where(IsValidToken)
-            .Select(token => new Reference<AttributeDef> { Path = { token.Text }, SourceRange = token.ToRange() }));
         return inspection;
     }
 
@@ -594,7 +613,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     /// views. Restricting the reference to viewables also means a same-named attribute in scope (e.g. a view's
     /// own attribute) is never a resolution candidate.
     /// </summary>
-    private static IInterlisDefinition? AcceptViewable(IInterlisDefinition definition) => definition switch
+    private static IInterlisDefinition? AcceptViewable(IReferenceTarget definition) => definition switch
     {
         ClassDef c => c, // covers both classes and structures
         AssociationDef a => a,
@@ -621,15 +640,21 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
         var baseView = new BaseView
         {
-            Name = context.@base?.Text ?? viewable?.Path.LastOrDefault() ?? string.Empty,
+            Name = context.@base?.Text ?? viewable?.Path.LastOrDefault()?.Name ?? string.Empty,
             SourceRange = context.ToRange(),
             Viewable = viewable,
             IsRenamed = context.@base != null,
         };
 
+        // An implicit base name is declared by the viewable reference itself: that token is where a rename of the
+        // base has to write, and where go-to-definition on a use of the base name lands.
         if (context.@base is { } baseToken)
         {
             baseView.NameLocations.Add(baseToken.ToRange());
+        }
+        else if (viewable?.Path.LastOrDefault()?.Range is { } viewableRange)
+        {
+            baseView.NameLocations.Add(viewableRange);
         }
 
         return baseView;
@@ -646,7 +671,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         // The base name is mandatory but may still be missing while typing; VisitViewDef only keeps reference
         // results, so returning null here is silently dropped.
-        return IsValidToken(context.@base) ? CreateReference<BaseView>([context.@base.Text], context.@base.ToRange()) : null;
+        return IsValidToken(context.@base) ? CreateReference<BaseView>([Segment(context.@base)]) : null;
     }
 
     public override object? VisitDefinedViewAttribute([NotNull] Interlis24Parser.DefinedViewAttributeContext context)
@@ -851,7 +876,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     public override RestrictedRef VisitRestrictedDefinitionRef([NotNull] Interlis24Parser.RestrictedDefinitionRefContext context)
     {
         // RestrictedDefinitionRef only accepts InterlisDefinitions of certain types
-        Func<IInterlisDefinition, IInterlisDefinition?> acceptTypes = interlisDef => interlisDef switch
+        Func<IReferenceTarget, IInterlisDefinition?> acceptTypes = interlisDef => interlisDef switch
         {
             ClassDef c => c,
             AssociationDef a => a,
@@ -873,9 +898,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         };
     }
 
-    public override IEnumerable<string> VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
+    public override IEnumerable<PathSegment> VisitDefinitionRef([NotNull] Interlis24Parser.DefinitionRefContext context)
     {
-        return new[] { context.model?.Text, context.topic?.Text, context.name?.Text }.WhereNotNull();
+        return new[] { context.model, context.topic, context.name }.WhereNotNull().Select(Segment);
     }
 
     public override AttributeDef? VisitAttributeDef([NotNull] Interlis24Parser.AttributeDefContext context)
@@ -1034,7 +1059,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
         else
         {
-            return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", context.GetText()]), SourceRange = context.ToRange(), };
+            return new TypeRef { Extends = CreateReference<DomainDef>(ImpliedPath("INTERLIS", context.GetText())), SourceRange = context.ToRange(), };
         }
     }
 
@@ -1117,10 +1142,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return new RefSys { Value = new RefSys.CoordDomainRef { Domain = CreateReference<DomainDef>(context.coord) }, Axis = axis };
         }
 
-        // { metaObjectRef [axis] } — the basket prefix is a registered reference (resolved like any definition
-        // reference); the meta-object name is a declared name, not a definition (RefHB 3.10.1-2), so its
-        // reference stays unregistered. While either form is still being typed (a lone '<' or '{'), neither
-        // form's content exists yet and the referenced system stays null.
+        // { metaObjectRef [axis] } — the basket prefix is a scoped reference (resolved like any definition
+        // reference); the meta-object name is a declared name, not a definition (RefHB 3.10.1-2), so it is a
+        // member reference the basket link writes. While either form is still being typed (a lone '<' or '{'),
+        // neither form's content exists yet and the referenced system stays null.
         var metaObjectRef = context.metaObjectRef();
         return new RefSys
         {
@@ -1128,7 +1153,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             {
                 Basket = metaObjectRef.definitionRef() == null ? null : CreateReference<MetaDataBasketDef>(metaObjectRef.definitionRef()),
                 MetaObject = IsValidToken(metaObjectRef.metaObjectName)
-                    ? new Reference<MetaObjectDeclaration> { Path = { metaObjectRef.metaObjectName.Text }, SourceRange = metaObjectRef.metaObjectName.ToRange() }
+                    ? CreateMemberReference<MetaObjectDeclaration>(metaObjectRef.metaObjectName)
                     : null,
             },
             Axis = axis,
@@ -1172,14 +1197,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override FormatBaseAttribute VisitBaseAttrRef([NotNull] Interlis24Parser.BaseAttrRefContext context)
     {
-        // The attribute references are not registered: they are members of the BASED ON structure, resolved by
-        // the path resolver's member lookup.
+        // The attribute references are member references: they name members of the BASED ON structure, resolved
+        // by the path resolver's member lookup rather than the scoped one.
         if (context.formatted != null)
         {
             // structureAttribute '/' formatted=definitionRef
             return new FormatBaseAttribute
             {
-                Attribute = new Reference<AttributeDef> { Path = { context.structureAttribute.Text }, SourceRange = context.structureAttribute.ToRange() },
+                Attribute = CreateMemberReference<AttributeDef>(context.structureAttribute),
                 FormattedDomain = CreateReference<DomainDef>(context.formatted),
             };
         }
@@ -1187,7 +1212,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // numericAttribute ('/' intPos=POS_NUMBER)?
         return new FormatBaseAttribute
         {
-            Attribute = new Reference<AttributeDef> { Path = { context.numericAttribute.Text }, SourceRange = context.numericAttribute.ToRange() },
+            Attribute = CreateMemberReference<AttributeDef>(context.numericAttribute),
             Position = context.intPos == null ? (int?)null : int.Parse(context.intPos.Text),
         };
     }
@@ -1207,7 +1232,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             _ => throw new UnexpectedNodeException(context.kind),
         };
 
-        return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", domainName]) };
+        return new TypeRef { Extends = CreateReference<DomainDef>(ImpliedPath("INTERLIS", domainName)) };
     }
 
     public override Tuple<double, int> VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
@@ -1396,10 +1421,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         return new MetaObjectsClause
         {
-            // The class name is mandatory but may be missing right after 'OBJECTS OF' while typing. The reference
-            // is not registered: the class lives in the basket's topic, linked by the reference resolver.
+            // The class name is mandatory but may be missing right after 'OBJECTS OF' while typing. It is a member
+            // reference: the class lives in the basket's topic, linked by the reference resolver.
             Class = IsValidToken(context.className)
-                ? new Reference<ClassDef> { Path = { context.className.Text }, SourceRange = context.className.ToRange() }
+                ? CreateMemberReference<ClassDef>(context.className)
                 : new Reference<ClassDef>(),
             MetaObjects = { context._metaObjectName.Select(t => new MetaObjectDeclaration { Name = t.Text, NameLocations = { t.ToRange() } }) },
         };
@@ -1555,7 +1580,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             Name = context.name?.Text ?? "",
             // The checked path is mandatory but can be missing right after 'EXISTENCE CONSTRAINT' while typing.
-            AttributePath = paths.Length > 0 ? VisitObjectOrAttributePath(paths[0]) : new PathExpression(),
+            AttributePath = paths.Length > 0 ? VisitObjectOrAttributePath(paths[0]) : new PathExpression { Reference = new Reference<IInterlisDefinition> { Resolution = ReferenceResolution.ObjectPath } },
             SourceRange = context.ToRange(),
         };
 
@@ -1598,13 +1623,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override LocalUniqueness VisitLocalUniqueness([NotNull] Interlis24Parser.LocalUniquenessContext context)
     {
-        // Unregistered references: each step is a member of the previous substructure, resolved by the path
-        // resolver's member walk, not by the scoped reference resolution.
-        var local = new LocalUniqueness();
-        local.StructurePath.AddRange(context._structureAttribute.Where(IsValidToken)
-            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = t.ToRange() }));
+        // The structure path is an object path walked by the path resolver; the attribute names are members of the
+        // substructure it reaches.
+        var local = new LocalUniqueness
+        {
+            StructurePath = CreateReference<AttributeDef>(context._structureAttribute.Where(IsValidToken).Select(Segment), resolution: ReferenceResolution.ObjectPath),
+        };
         local.AttributeNames.AddRange(context._attributeName.Where(IsValidToken)
-            .Select(t => new Reference<AttributeDef> { Path = { t.Text }, SourceRange = t.ToRange() }));
+            .Select(CreateMemberReference<AttributeDef>));
         return local;
     }
 
@@ -1718,7 +1744,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override TypeDef VisitAlignmentType([NotNull] Interlis24Parser.AlignmentTypeContext context)
     {
-        return new TypeRef { Extends = CreateReference<DomainDef>(["INTERLIS", context.GetText()]) };
+        return new TypeRef { Extends = CreateReference<DomainDef>(ImpliedPath("INTERLIS", context.GetText())) };
     }
 
     public override TypeDef VisitLineType([NotNull] Interlis24Parser.LineTypeContext context)
@@ -1771,7 +1797,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // every line form resolves uniformly to its LineFormTypeDef.
         if (context.STRAIGHTS() != null || context.ARCS() != null)
         {
-            return CreateReference<LineFormTypeDef>([InternalModel.Interlis.Name, context.Start.Text], context.ToRange());
+            // The keyword is the predefined form's own name, so the written token is the segment.
+            return CreateReference<LineFormTypeDef>([new PathSegment { Name = InternalModel.Interlis.Name }, Segment(context.Start)]);
         }
 
         // A custom form is a (possibly model-qualified) reference to a LINE FORM type (RefHB 3.8.12.3). Its name
@@ -1794,7 +1821,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 Name = identifiers[i].GetText(),
                 NameLocations = { identifiers[i].Symbol.ToRange() },
                 SourceRange = identifiers[i].Symbol.ToRange(identifiers[i + 1].Symbol),
-                Structure = CreateReference<ClassDef>([identifiers[i + 1].GetText()], identifiers[i + 1].Symbol.ToRange()),
+                Structure = CreateReference<ClassDef>([Segment(identifiers[i + 1].Symbol)]),
             });
         }
 
@@ -2241,13 +2268,10 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // plus the attribute name. When the viewable is omitted the attribute belongs to the current object's class.
         // The attribute name can still be unwritten while typing (e.g. just '>>'); build the reference from whatever
         // is present.
-        var attributeName = IsValidToken(context.attribute) ? context.attribute.Text : null;
-        IEnumerable<string> definitionPath = context.definitionRef() == null ? [] : VisitDefinitionRef(context.definitionRef());
-        IEnumerable<string> path = attributeName == null ? definitionPath : definitionPath.Append(attributeName);
-        var startToken = context.definitionRef()?.Start ?? context.attribute ?? context.Start;
-        var stopToken = context.attribute ?? context.Stop ?? context.Start;
+        IEnumerable<PathSegment> definitionPath = context.definitionRef() == null ? [] : VisitDefinitionRef(context.definitionRef());
+        IEnumerable<PathSegment> path = IsValidToken(context.attribute) ? definitionPath.Append(Segment(context.attribute)) : definitionPath;
 
-        return new AttributePathConstant { Attribute = CreateReference<AttributeDef>(path, startToken.ToRange(stopToken)), SourceRange = context.ToRange() };
+        return new AttributePathConstant { Attribute = CreateReference<AttributeDef>(path), SourceRange = context.ToRange() };
     }
 
     public override ClassConstant VisitClassConst([NotNull] Interlis24Parser.ClassConstContext context)
@@ -2259,46 +2283,40 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         return new PathExpression
         {
-            Path = { context.pathEl().Select(VisitPathEl).ToList() },
+            Reference = CreateReference<IInterlisDefinition>(context.pathEl().Select(VisitPathEl).WhereNotNull(), resolution: ReferenceResolution.ObjectPath),
             SourceRange = context.ToRange(),
         };
     }
 
     /// <summary>
-    /// Builds the most specific <see cref="IPathElement"/> a single <c>PathEl</c> allows (RefHB 3.13). Each
-    /// <c>PathEl</c> maps to exactly one element: a keyword step (<see cref="KeyWordPathElement"/>), an association-
-    /// qualified role (<see cref="RolePathElement"/>), an indexed attribute (<see cref="AttributePathElement"/>) or a
-    /// bare name (<see cref="IdentifierPathElement"/>, whose kind — attribute/role/base/reference-attribute — is
-    /// resolved later). The optional <c>'\'</c> on the association-access form carries no meaning documented in the
-    /// RefHB and is ignored.
+    /// Builds the most specific segment a single <c>PathEl</c> allows (RefHB 3.13). Each <c>PathEl</c> maps to
+    /// exactly one segment: a keyword step (<see cref="KeywordPathSegment"/>), an association-qualified role
+    /// (<see cref="RolePathSegment"/>), an indexed attribute (<see cref="IndexedPathSegment"/>) or a bare name (a
+    /// plain <see cref="PathSegment"/>, whose kind — attribute/role/base/reference-attribute — is resolved later).
+    /// <see langword="null"/> for a step with nothing written yet (a trailing <c>-&gt;</c> while typing): there is
+    /// no name to register, and the parse error is already reported. The optional <c>'\'</c> on the
+    /// association-access form carries no meaning documented in the RefHB and is ignored.
     /// </summary>
-    public override IPathElement VisitPathEl([NotNull] Interlis24Parser.PathElContext context)
+    public override PathSegment? VisitPathEl([NotNull] Interlis24Parser.PathElContext context)
     {
         if (context.name == null)
         {
-            // Neither a name nor a keyword is present when only a partial step has been typed (e.g. a trailing '->').
-            if (context.keyword == null)
-            {
-                return new IdentifierPathElement { Value = string.Empty };
-            }
-
-            return new KeyWordPathElement { Value = (KeyWordPathElement.KeyWord)context.keyword.Type };
+            return context.keyword == null ? null : new KeywordPathSegment((PathKeyword)context.keyword.Type) { Range = context.keyword.ToRange() };
         }
 
-        var name = context.name.Text;
         if (context.detail == null)
         {
-            return new IdentifierPathElement { Value = name };
+            return Segment(context.name);
         }
 
         // '[' IDENTIFIER ']' qualifies a role by its association; '[' FIRST | LAST | PosNumber ']' indexes an attribute.
         return context.detail.Type switch
         {
-            Interlis24Parser.IDENTIFIER => new RolePathElement { Name = name, AssociationName = context.detail.Text },
-            Interlis24Parser.FIRST => new AttributePathElement { Name = name, Index = new AttributePathElement.KeywordIndex { Kind = AttributePathElement.IndexKeyword.First } },
-            Interlis24Parser.LAST => new AttributePathElement { Name = name, Index = new AttributePathElement.KeywordIndex { Kind = AttributePathElement.IndexKeyword.Last } },
+            Interlis24Parser.IDENTIFIER => new RolePathSegment { Name = context.name.Text, Range = context.name.ToRange(), Association = Segment(context.detail) },
+            Interlis24Parser.FIRST => new IndexedPathSegment { Name = context.name.Text, Range = context.name.ToRange(), Index = IndexKeyword.First },
+            Interlis24Parser.LAST => new IndexedPathSegment { Name = context.name.Text, Range = context.name.ToRange(), Index = IndexKeyword.Last },
             // The numeric index can be a missing/synthetic token while typing (e.g. just '['), which would fail int.Parse.
-            _ => new AttributePathElement { Name = name, Index = new AttributePathElement.NumberIndex { Value = int.TryParse(context.detail.Text, out var index) ? index : 0 } },
+            _ => new IndexedPathSegment { Name = context.name.Text, Range = context.name.ToRange(), Index = int.TryParse(context.detail.Text, out var index) ? index : 0 },
         };
     }
 

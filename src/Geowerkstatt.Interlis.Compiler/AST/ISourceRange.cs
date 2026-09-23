@@ -8,5 +8,5 @@ public interface ISourceRange
     /// <summary>
     /// The source range of the object in the source file.
     /// </summary>
-    public RangePosition? SourceRange { get; init; }
+    public RangePosition? SourceRange { get; }
 }

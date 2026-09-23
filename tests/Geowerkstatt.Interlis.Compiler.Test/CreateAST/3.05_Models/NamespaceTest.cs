@@ -48,7 +48,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(5, 4, 5, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -82,7 +82,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(7, 4, 7, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -127,7 +127,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(7, 4, 7, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -182,7 +182,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(5, 4, 5, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -243,7 +243,7 @@ public class NamespaceTest
                             Condition = new ComparisonExpression
                             {
                                 Operator = ComparisonExpression.ComparisonOperator.NotEqual,
-                                FirstOperand = new PathExpression { Path = { new IdentifierPathElement { Value = "Attr" } }, Target = attr },
+                                FirstOperand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Attr") }, Target = attr }},
                                 SecondOperand = new NumericConstant { Value = 5 },
                             },
                         },
@@ -253,7 +253,7 @@ public class NamespaceTest
                             Condition = new ComparisonExpression
                             {
                                 Operator = ComparisonExpression.ComparisonOperator.NotEqual,
-                                FirstOperand = new PathExpression { Path = { new IdentifierPathElement { Value = "Attr" } }, Target = attr },
+                                FirstOperand = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Attr") }, Target = attr }},
                                 SecondOperand = new NumericConstant { Value = 7 },
                             },
                         },
@@ -275,7 +275,7 @@ public class NamespaceTest
                                 Version = "1.0.0",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {
@@ -315,7 +315,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(5, 4, 5, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -347,7 +347,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(4, 4, 4, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -381,7 +381,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(6, 4, 6, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -435,7 +435,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(15, 4, 15, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -478,7 +478,7 @@ public class NamespaceTest
                                                     NameLocations = { new RangePosition(7, 12, 7, 17) },
                                                     TypeDef = new RoleType
                                                     {
-                                                        Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(7, 21, 7, 22) } } },
+                                                        Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("A") } } } },
                                                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                     },
                                                 }
@@ -491,7 +491,7 @@ public class NamespaceTest
                                                     NameLocations = { new RangePosition(8, 12, 8, 17) },
                                                     TypeDef = new RoleType
                                                     {
-                                                        Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "B" }, SourceRange = new RangePosition(8, 21, 8, 22) } } },
+                                                        Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("B") } } } },
                                                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                     },
                                                 }
@@ -530,7 +530,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(11, 4, 11, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -573,7 +573,7 @@ public class NamespaceTest
                                                     NameLocations = { new RangePosition(7, 12, 7, 16) },
                                                     TypeDef = new RoleType
                                                     {
-                                                        Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(7, 20, 7, 21) } } },
+                                                        Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Path = { new("A") } } } },
                                                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
                                                     },
                                                 }
@@ -606,7 +606,7 @@ public class NamespaceTest
                 NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(5, 4, 5, 9) },
                 URI = "http://example.com",
                 Version = "1.0.0",
-                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { InternalModel.Interlis.Name } }) } },
+                Imports = { { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) } },
                 Content =
                 {
                     {
@@ -826,7 +826,7 @@ public class NamespaceTest
                                 TypeDef = new RoleType
                                 {
                                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = nameClass, Path = { "Name" } } } },
+                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = nameClass, Path = { new("Name") } } } },
                                 }
                             }
                         },
@@ -838,7 +838,7 @@ public class NamespaceTest
                                 TypeDef = new RoleType
                                 {
                                     Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = nameClass, Path = { "Name" } } } },
+                                    Targets = { new RestrictedRef { Value = new Reference<IInterlisDefinition> { Target = nameClass, Path = { new("Name") } } } },
                                 }
                             }
                         },
@@ -877,7 +877,7 @@ public class NamespaceTest
                                 },
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                             }
                         },

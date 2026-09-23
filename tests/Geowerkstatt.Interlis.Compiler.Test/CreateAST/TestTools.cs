@@ -18,6 +18,45 @@ public class TestTools
     /// </summary>
     internal static T Build<T>(Func<T> build) => build();
 
+    /// <summary>
+    /// Parses <paramref name="source"/> through the full pipeline and asserts that no diagnostics were reported,
+    /// so a test can rely on the returned AST being complete and every reference in it resolved. For tests that
+    /// read the AST directly instead of comparing it against an expectation (see <see cref="AssertReadFile"/>).
+    /// </summary>
+    internal static async Task<InterlisEnvironment> ReadWithoutErrors(string source, string? sourceUri = null)
+    {
+        var logProvider = new TestLoggerProvider();
+        using var loggerFactory = LoggerFactory.Create(b => b.AddProvider(logProvider));
+        var environment = new InterlisReader(loggerFactory).ReadFile(new StringReader(source), sourceUri);
+
+        await Assert.That(logProvider.GetMessages()).IsEquivalentTo(Array.Empty<string>());
+        return environment;
+    }
+
+    /// <summary>
+    /// Renders a reference as <c>name@range.name@range -&gt; target</c> (<c>-&gt;</c> between the steps of an object
+    /// path) — what navigation and rename need from it: each written segment with the span a rename of that name
+    /// replaces (as <see cref="RangePosition.ToString"/> renders it, or <c>&lt;none&gt;</c> for an implied name), and
+    /// what the whole reference points at. A target that is a definition is shown fully qualified, any other (a
+    /// meta-object declaration) by its name, an unresolved one as <c>&lt;unresolved&gt;</c>.
+    /// </summary>
+    internal static string Describe(IReference reference)
+    {
+        var separator = reference.Resolution == ReferenceResolution.ObjectPath ? "->" : ".";
+        return $"{string.Join(separator, reference.Path.Select(segment => $"{segment}@{segment.Range?.ToString() ?? "<none>"}"))} -> {Describe(reference.Target)}";
+    }
+
+    /// <summary>
+    /// Renders one written name as <c>segment@range -&gt; target</c>: the segment as written (index or qualifier
+    /// included), the span a rename of it replaces, and what it denotes.
+    /// </summary>
+    internal static string Describe(PathSegment segment)
+        => $"{segment}@{segment.Range?.ToString() ?? "<none>"} -> {Describe(segment.Target)}";
+
+    /// <summary>A target as a definition's fully qualified name, another target's (a meta-object declaration's) name, or <c>&lt;unresolved&gt;</c>.</summary>
+    private static string Describe(IReferenceTarget? target)
+        => target is IInterlisDefinition definition ? definition.FullyQualifiedName : target?.Name ?? "<unresolved>";
+
     internal static async Task AssertReadFile(CompilationTestCase data)
     {
         WriteTestCaseInfo(data);
@@ -106,18 +145,25 @@ public class TestTools
 
         var deepEqualAssert = expected.WithDeepEqual(actual)
             .WithCustomComparison(new AstNodeTypeComparison()) // Nested AST nodes must also match by runtime type, not just structurally
+            .WithCustomComparison(new BareReferenceComparison()) // A reference an expectation writes without a target compares by its path alone
             .IgnoreProperty<IInterlisDefinition>(d => d.Parent) // Ignore parent property to break circular references
             .IgnoreProperty(p => p.DeclaringType.IsGenericType
                     && typeof(Reference<IInterlisDefinition>).GetGenericTypeDefinition() == p.DeclaringType.GetGenericTypeDefinition()
                     && (nameof(Reference<IInterlisDefinition>.Source).Equals(p.Name) // Ignore reference source to break circular references
                         || nameof(Reference<IInterlisDefinition>.MapTarget).Equals(p.Name) // Ignore Func property
-                        || nameof(Reference<IInterlisDefinition>.ResolvesInEnvironment).Equals(p.Name))) // Ignore resolution plumbing
+                        || nameof(Reference<IInterlisDefinition>.Resolution).Equals(p.Name) // Ignore resolution plumbing (asserted by ReferenceRegistrationTest)
+                        || nameof(Reference<IInterlisDefinition>.SourceRange).Equals(p.Name))) // Derived from the segments' spans, which are ignored below
             .IgnoreProperty<IInterlisDefinition>(d => d.FullyQualifiedName) // Ignore calculated property
             .IgnoreProperty<ModelDef>(m => m.Dependencies) // Ignore calculated property (derived from Imports and TranslationOf)
             // Ignore definitions' own declaration spans (uniform clutter, like NameLocations); TypeDef spans stay compared
             .IgnoreProperty(p => nameof(ISourceRange.SourceRange).Equals(p.Name)
                     && (typeof(IInterlisDefinition).IsAssignableFrom(p.DeclaringType) || typeof(IExpression).IsAssignableFrom(p.DeclaringType)))
             .IgnoreProperty<IInterlisDefinitionContainer>(d => d.ContainerReferences) // Easy access collection for references
+            // A path segment's span and target, like a definition's declaration range: uniform plumbing that would
+            // clutter every expected path. The segment names stay compared, and ReferencePathSegmentTest asserts
+            // the spans and targets.
+            .IgnoreProperty(p => typeof(PathSegment).IsAssignableFrom(p.DeclaringType)
+                    && (nameof(PathSegment.Range).Equals(p.Name) || nameof(PathSegment.Target).Equals(p.Name)))
             .IgnoreCircularReferences();
 
         if (configureDeepEqual != null)
@@ -133,6 +179,35 @@ public class TestTools
         {
             // Route the failure through Assert.Fail so it is collected by an enclosing Assert.Multiple scope instead of throwing immediately.
             Assert.Fail(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Compares a reference an expectation writes without a target — a <c>Path</c> and nothing else — by its path
+    /// alone: the segment names and, for an object path, their shapes (<c>[FIRST]</c>, <c>[Assoc]</c>, a keyword).
+    /// What the resolver fills in — the target, and the spans and targets of the segments — is uniform plumbing on
+    /// every reference that would clutter every expected path; the direct-read tests (<c>ReferencePathSegmentTest</c>,
+    /// <c>ObjectPathReferenceTest</c>) assert it. An expectation that does state a target is left to the normal
+    /// structural comparison, which compares it.
+    /// </summary>
+    private sealed class BareReferenceComparison : IComparison
+    {
+        public bool CanCompare(Type leftType, Type rightType) =>
+            leftType.IsGenericType && leftType.GetGenericTypeDefinition() == typeof(Reference<>)
+            && rightType.IsGenericType && rightType.GetGenericTypeDefinition() == typeof(Reference<>);
+
+        public (ComparisonResult result, IComparisonContext context) Compare(IComparisonContext context, object leftValue, object rightValue)
+        {
+            if (leftValue is not IReference { Target: null } expected || rightValue is not IReference actual)
+            {
+                return (ComparisonResult.Inconclusive, context);
+            }
+
+            var expectedPath = string.Join("->", expected.Path);
+            var actualPath = string.Join("->", actual.Path);
+            return expectedPath == actualPath
+                ? (ComparisonResult.Pass, context)
+                : (ComparisonResult.Fail, context.AddDifference(expectedPath, actualPath, nameof(IReference.Path)));
         }
     }
 

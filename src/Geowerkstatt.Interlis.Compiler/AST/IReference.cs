@@ -15,9 +15,18 @@ public interface IReference : IVisitable, ISourceRange
     public IReferenceTarget? Target { get; }
 
     /// <summary>
-    /// The path to the target object.
+    /// The path to the target object, one <see cref="PathSegment"/> per name — the dot-separated names of a
+    /// qualification, or the steps of an object path — each with its own span and target, so a rename can rewrite a
+    /// single segment.
     /// </summary>
-    public List<string> Path { get; }
+    public IReadOnlyList<PathSegment> Path { get; }
+
+
+    /// <summary>
+    /// Which lookup resolves this reference. Every reference written in the source is registered regardless of its
+    /// resolution; see <see cref="ReferenceResolution"/>.
+    /// </summary>
+    public ReferenceResolution Resolution { get; }
 
     /// <summary>
     /// The source of the reference.
@@ -27,10 +36,10 @@ public interface IReference : IVisitable, ISourceRange
     /// <summary>
     /// Check if the given <paramref name="potentialTarget"/> is acceptable for this reference.
     /// </summary>
-    public bool CanAccept(IInterlisDefinition potentialTarget);
+    public bool CanAccept(IReferenceTarget potentialTarget);
 
     /// <summary>
-    /// Set the resolved target object.
+    /// Set the resolved target object, and record it on the last path segment, the one that names it.
     /// </summary>
-    public void SetTarget(IInterlisDefinition target);
+    public void SetTarget(IReferenceTarget target);
 }

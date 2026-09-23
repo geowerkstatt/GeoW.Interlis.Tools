@@ -64,16 +64,16 @@ public class FormattedTypeTest
             RefHB: "3.8.6-3",
             Expected: new FormattedType
             {
-                BasedOn = new Reference<ClassDef> { Path = { "GregorianDate" }, SourceRange = new RangePosition(0, 16, 0, 29) },
+                BasedOn = new Reference<ClassDef> { Path = { new("GregorianDate") } },
                 Format = new FormatDef
                 {
                     Components =
                     {
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Year" }, SourceRange = new RangePosition(0, 32, 0, 36) }, Position = 4 },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Year") } }, Position = 4 },
                         new FormatSeparator { Value = "-" },
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Month" }, SourceRange = new RangePosition(0, 43, 0, 48) }, Position = 2 },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Month") } }, Position = 2 },
                         new FormatSeparator { Value = "-" },
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Day" }, SourceRange = new RangePosition(0, 55, 0, 58) }, Position = 2 },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Day") } }, Position = 2 },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 62),
@@ -85,16 +85,16 @@ public class FormattedTypeTest
             RefHB: "3.8.6-3",
             Expected: new FormattedType
             {
-                BasedOn = new Reference<ClassDef> { Path = { "Struct" }, SourceRange = new RangePosition(0, 16, 0, 22) },
+                BasedOn = new Reference<ClassDef> { Path = { new("Struct") } },
                 Min = "0000-00",
                 Max = "9999-12",
                 Format = new FormatDef
                 {
                     Components =
                     {
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Year" }, SourceRange = new RangePosition(0, 25, 0, 29) }, Position = 4 },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Year") } }, Position = 4 },
                         new FormatSeparator { Value = "-" },
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Month" }, SourceRange = new RangePosition(0, 36, 0, 41) }, Position = 2 },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Month") } }, Position = 2 },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 68),
@@ -108,7 +108,7 @@ public class FormattedTypeTest
             {
                 Min = "2000-01-01T00:00:00.000",
                 Max = "2000-12-31T23:59:59.999",
-                FormatBaseType = new Reference<DomainDef> { Path = { "INTERLIS", "XMLDateTime" }, SourceRange = new RangePosition(0, 7, 0, 27) },
+                FormatBaseType = new Reference<DomainDef> { Path = { new("INTERLIS"), new("XMLDateTime") } },
                 SourceRange = new RangePosition(0, 0, 0, 82),
             }));
 
@@ -118,14 +118,14 @@ public class FormattedTypeTest
             RefHB: "3.8.6-4",
             Expected: new FormattedType
             {
-                BasedOn = new Reference<ClassDef> { Path = { "Struct" }, SourceRange = new RangePosition(0, 16, 0, 22) },
+                BasedOn = new Reference<ClassDef> { Path = { new("Struct") } },
                 Format = new FormatDef
                 {
                     Inheritance = true,
                     Components =
                     {
                         new FormatSeparator { Value = "[" },
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Value" }, SourceRange = new RangePosition(0, 41, 0, 46) }, Position = 3 },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Value") } }, Position = 3 },
                         new FormatSeparator { Value = "]" },
                     },
                 },
@@ -138,12 +138,12 @@ public class FormattedTypeTest
             RefHB: "3.8.6-5",
             Expected: new FormattedType
             {
-                BasedOn = new Reference<ClassDef> { Path = { "Struct" }, SourceRange = new RangePosition(0, 16, 0, 22) },
+                BasedOn = new Reference<ClassDef> { Path = { new("Struct") } },
                 Format = new FormatDef
                 {
                     Components =
                     {
-                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { "Year" }, SourceRange = new RangePosition(0, 25, 0, 29) } },
+                        new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Path = { new("Year") } } },
                     },
                 },
                 SourceRange = new RangePosition(0, 0, 0, 31),
@@ -155,15 +155,15 @@ public class FormattedTypeTest
             RefHB: "3.8.6-5",
             Expected: new FormattedType
             {
-                BasedOn = new Reference<ClassDef> { Path = { "Struct" }, SourceRange = new RangePosition(0, 16, 0, 22) },
+                BasedOn = new Reference<ClassDef> { Path = { new("Struct") } },
                 Format = new FormatDef
                 {
                     Components =
                     {
                         new FormatBaseAttribute
                         {
-                            Attribute = new Reference<AttributeDef> { Path = { "SubAttr" }, SourceRange = new RangePosition(0, 25, 0, 32) },
-                            FormattedDomain = new Reference<DomainDef> { Path = { "SomeDomain" }, SourceRange = new RangePosition(0, 35, 0, 45) },
+                            Attribute = new Reference<AttributeDef> { Path = { new("SubAttr") } },
+                            FormattedDomain = new Reference<DomainDef> { Path = { new("SomeDomain") } },
                         },
                     },
                 },
@@ -211,13 +211,13 @@ public class FormattedTypeTest
                         Min = "[000]",
                         Max = "[090]",
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                        BasedOn = new Reference<ClassDef> { Target = structure, Path = { "Struct" } },
+                        BasedOn = new Reference<ClassDef> { Target = structure, Path = { new("Struct") } },
                         Format = new FormatDef
                         {
                             Components =
                             {
                                 new FormatSeparator { Value = "[" },
-                                new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Target = (AttributeDef)structure.Content["Value"], Path = { "Value" }, SourceRange = new RangePosition(7, 46, 7, 51) }, Position = 3 },
+                                new FormatBaseAttribute { Attribute = new Reference<AttributeDef> { Target = (AttributeDef)structure.Content["Value"], Path = { new("Value") } }, Position = 3 },
                                 new FormatSeparator { Value = "]" },
                             },
                         },
@@ -232,7 +232,7 @@ public class FormattedTypeTest
                         Min = "[012]",
                         Max = "[034]",
                         Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
-                        FormatBaseType = new Reference<DomainDef> { Target = formattedDomain, Path = { "Format" } },
+                        FormatBaseType = new Reference<DomainDef> { Target = formattedDomain, Path = { new("Format") } },
                     }
                 };
 
@@ -257,7 +257,7 @@ public class FormattedTypeTest
                                 },
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                             }
                         }

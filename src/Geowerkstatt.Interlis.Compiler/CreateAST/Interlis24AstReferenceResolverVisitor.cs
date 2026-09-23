@@ -68,11 +68,11 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
                 return false;
             }
 
-            var mappedTargets = CollectPotentialTargets(reference.Source!, reference.Path, resolveModelInEnvironment: reference.ResolvesInEnvironment)
-                .Where(reference.CanAccept)
+            var candidates = (reference.Resolution == ReferenceResolution.Environment ? EnvironmentCandidates(reference.Path) : CollectPotentialTargets(reference.Source!, reference.Path))
+                .Where(candidate => reference.CanAccept(candidate.Target))
                 .ToList();
 
-            switch (mappedTargets.Count)
+            switch (candidates.Count)
             {
                 case 0:
                     logger.LogError("Could not resolve '{Reference}' at {Range}", reference, reference.GetRange());
@@ -80,12 +80,18 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
                     return false;
 
                 case 1:
-                    reference.SetTarget(mappedTargets.Single());
+                    var candidate = candidates.Single();
+                    reference.SetTarget(candidate.Target);
+                    for (var i = 0; i < candidate.Segments.Count; i++)
+                    {
+                        reference.Path[i].Target = candidate.Segments[i];
+                    }
+
                     ReportMissingModelQualification(reference);
                     return true;
 
                 default:
-                    logger.LogError("Ambiguous '{Reference}' at {Range} could be resolved to multiple targets: {Targets}", reference, reference.GetRange(), string.Join(", ", mappedTargets.Select(d => d.FullyQualifiedName)));
+                    logger.LogError("Ambiguous '{Reference}' at {Range} could be resolved to multiple targets: {Targets}", reference, reference.GetRange(), string.Join(", ", candidates.Select(candidate => candidate.Target.FullyQualifiedName)));
                     failed.Add(reference);
                     return false;
             }
@@ -115,7 +121,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         }
 
         var model = FindRoot<ModelDef>(reference.Source);
-        var head = reference.Path[0];
+        var head = reference.Path[0].Name;
         if (model == null || head == model.Name || model.Imports.ContainsKey(head))
         {
             // Fully qualified from the model itself or an imported model — valid.
@@ -145,16 +151,41 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     }
 
     /// <summary>
+    /// A definition a path could resolve to, together with what each segment of the path denoted on the way there:
+    /// <c>Segments[i]</c> is the definition <c>path[i]</c> named, the last one being the <see cref="Target"/>. Kept
+    /// per candidate so that, once a single one is left, the segments' targets can be written without walking the
+    /// path a second time.
+    /// </summary>
+    private sealed record Candidate(IReadOnlyList<IInterlisDefinition> Segments)
+    {
+        public IInterlisDefinition Target => Segments[^1];
+    }
+
+    /// <summary>
+    /// The model <paramref name="path"/> names among the models of the environment (an import, a <c>TRANSLATION OF</c>;
+    /// <see cref="ReferenceResolution.Environment"/>): a model is a sibling of the referencing model, not a name in
+    /// its scopes. Empty without an environment (a rule-level parse) or for a model that is not there.
+    /// </summary>
+    private List<Candidate> EnvironmentCandidates(IReadOnlyList<PathSegment> path)
+    {
+        var candidates = new List<Candidate>();
+        if (path.Count == 1 && currentEnvironment.Value?.Content.GetValueOrDefault(path[0].Name) is { } model)
+        {
+            candidates.Add(new Candidate([model]));
+        }
+
+        return candidates;
+    }
+
+    /// <summary>
     /// Collects the definitions <paramref name="path"/> could resolve to, starting from <paramref name="source"/>:
     /// relative to the enclosing scope (a single name, or a longer path descending into the element found there) or
     /// fully qualified from the root model or an import. Relative multi-segment resolution is a convenience — the
     /// resulting reference is flagged by <see cref="ReportMissingModelQualification"/> as missing its model name.
-    /// When <paramref name="resolveModelInEnvironment"/> is set, a single-segment path is also looked up as a model in
-    /// the current environment (used to resolve <see cref="ModelDef"/> references such as imports).
     /// </summary>
-    private List<IInterlisDefinition> CollectPotentialTargets(IInterlisDefinitionContainer source, IReadOnlyList<string> path, bool resolveModelInEnvironment)
+    private List<Candidate> CollectPotentialTargets(IInterlisDefinitionContainer source, IReadOnlyList<PathSegment> path)
     {
-        var potentialTargets = new List<IInterlisDefinition>();
+        var candidates = new List<Candidate>();
 
         // Resolve relative to the enclosing scope chain: a single name is the element found there; a longer path
         // descends into it (an attribute-path constant '>>Class->attr', or a topic-relative 'Topic.X'). Each scope
@@ -164,9 +195,9 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         while (current != null)
         {
             root = current;
-            if (LookupIncludingBases(current, path[0]) is { } element)
+            if (LookupIncludingBases(current, path[0].Name) is { } element)
             {
-                potentialTargets.AddIfNotNull(path.Count == 1 ? element : ResolveDescending(element, path));
+                candidates.AddIfNotNull(Descend(element, path));
             }
 
             current = current.Parent;
@@ -175,60 +206,61 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         // At the root is always a model if a complete interlis model was parsed.
         if (root is ModelDef model)
         {
-            // A path of type ModelDef is resolved in the current environment (import statements, translation of).
-            if (path.Count == 1 && currentEnvironment.Value != null && resolveModelInEnvironment)
+            // Fully qualified from the root model.
+            if (path[0].Name == model.Name)
             {
-                potentialTargets.AddIfNotNull(currentEnvironment.Value.Content.GetValueOrDefault(path[0]));
+                candidates.AddIfNotNull(Descend(model, path));
             }
-            else
+
+            // Fully qualified in an imported model.
+            if (model.Imports.TryGetValue(path[0].Name, out var import))
             {
-                // Fully qualified from the root model.
-                if (path[0] == model.Name)
-                {
-                    potentialTargets.AddIfNotNull(ResolveDescending(model, path));
-                }
+                candidates.AddIfNotNull(Descend(import.ModelDef.Target, path));
+            }
 
-                // Fully qualified in an imported model.
-                if (model.Imports.TryGetValue(path[0], out var import))
+            // Unqualified in an import that allows it.
+            if (path.Count == 1)
+            {
+                foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
                 {
-                    potentialTargets.AddIfNotNull(ResolveDescending(import.ModelDef.Target, path));
-                }
-
-                // Unqualified in an import that allows it.
-                if (path.Count == 1)
-                {
-                    foreach (var unqualifiedImport in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
+                    if (unqualifiedImport.ModelDef?.Target?.Content.TryGetValue(path[0].Name, out var element) == true)
                     {
-                        if (unqualifiedImport.ModelDef?.Target?.Content.TryGetValue(path[0], out var element) == true)
-                        {
-                            potentialTargets.Add(element);
-                        }
+                        candidates.Add(new Candidate([element]));
                     }
                 }
             }
         }
 
-        return potentialTargets;
+        return candidates;
     }
 
     /// <summary>
     /// Resolves the remaining path segments (<c>path[1..]</c>) by descending through the container content —
     /// including the names each container inherits from its <c>EXTENDS</c> chain (RefHB 3.5.4-11) — starting at
-    /// <paramref name="start"/>.
+    /// <paramref name="start"/>, the definition <c>path[0]</c> denotes. Records what every segment denoted: the
+    /// container a name was looked up in is the one the source WRITES, so an inherited member reached through an
+    /// extending topic or class is attributed to that extension, not to the base declaring it.
+    /// <see langword="null"/> when a segment names nothing (or there is no start).
     /// </summary>
-    private IInterlisDefinition? ResolveDescending(IInterlisDefinition? start, IReadOnlyList<string> path)
+    private Candidate? Descend(IInterlisDefinition? start, IReadOnlyList<PathSegment> path)
     {
-        IInterlisDefinition? target = start;
+        if (start == null)
+        {
+            return null;
+        }
+
+        var segments = new List<IInterlisDefinition> { start };
         for (var i = 1; i < path.Count; i++)
         {
-            target = target is IInterlisDefinitionContainer container ? LookupIncludingBases(container, path[i]) : null;
-            if (target == null)
+            if (segments[^1] is not IInterlisDefinitionContainer container || LookupIncludingBases(container, path[i].Name) is not { } next)
             {
                 return null;
             }
+
+            segments.Add(next);
         }
 
-        return target;
+        return new Candidate(segments);
     }
 
     /// <summary>
@@ -411,8 +443,8 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// <summary>
     /// Links the attribute references of a <c>FORMAT BASED ON</c> definition to the members of its base structure
     /// (including inherited ones): the format's attributes are members of the <c>BASED ON</c> target, not scoped
-    /// names, so their unregistered references are linked here like the other anchored lookups (meta objects,
-    /// basket classes). Unknown names stay unresolved without a report — format validation is a separate concern,
+    /// names, so their member references are linked here like the other anchored lookups (meta objects, basket
+    /// classes). Unknown names stay unresolved without a report — format validation is a separate concern,
     /// the linked attribute serves navigation.
     /// </summary>
     private void LinkFormatAttributes(TypeDef type)
@@ -430,7 +462,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
         foreach (var component in format.Components.OfType<FormatBaseAttribute>())
         {
-            if (component.Attribute is { Target: null, Path: [{ } attributeName] }
+            if (component.Attribute is { Target: null, Path: [{ Name: var attributeName }] }
                 && LookupIncludingBases(basedOn, attributeName) is AttributeDef found)
             {
                 component.Attribute.SetTarget(found);
@@ -440,11 +472,15 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     /// <summary>
     /// Resolves the meta-object link of the reference systems of a numeric type or the axes of a coordinate type:
-    /// the declared name the <c>{basket.metaObject}</c> form references is not an <see cref="IInterlisDefinition"/>
-    /// (a meta object is data, its declared name in the basket is its model-world anchor), so it is not registered
-    /// for scoped resolution — the target of <see cref="RefSys.MetaObjectRef.MetaObject"/> is written here instead, searching the
+    /// the declared name the <c>{[basket.]metaObject}</c> form references is not an <see cref="IInterlisDefinition"/>
+    /// (a meta object is data, its declared name in the basket is its model-world anchor), so it resolves as
+    /// <see cref="ReferenceResolution.Member"/> — the target of <see cref="RefSys.MetaObjectRef.MetaObject"/> is written here instead, searching the
     /// basket and its inherited definitions in the runtime order (RefHB 3.10.1-3). The basket itself is resolved on
-    /// demand (it may live in a model visited later).
+    /// demand (it may live in a model visited later). An unqualified name is searched in the baskets visible from
+    /// the writing container — those declared in its enclosing containers (and their bases), innermost first, then
+    /// the model-level ones of the imports that allow unqualified names — the same visibility a scoped name has
+    /// (<see cref="CollectPotentialTargets"/>). Which basket supplies the object at runtime may still differ
+    /// (RefHB 3.10.1-3); the link records the declaration the model text can see.
     /// </summary>
     private void LinkRefSystems(TypeDef type)
     {
@@ -469,22 +505,69 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     private void LinkMetaObject(RefSys refSystem)
     {
-        if (refSystem.Value is not RefSys.MetaObjectRef { Basket: { } basketReference, MetaObject: { Target: null, Path: [{ } metaObjectName] } metaObject })
+        if (refSystem.Value is not RefSys.MetaObjectRef { MetaObject: { Target: null, Path: [{ Name: var metaObjectName }] } metaObject } metaObjectRef)
         {
             return;
         }
 
-        Resolve(basketReference);
+        IEnumerable<MetaDataBasketDef> baskets;
+        if (metaObjectRef.Basket is { } basketReference)
+        {
+            Resolve(basketReference);
+            baskets = basketReference.Target is { } basket ? [basket] : [];
+        }
+        else
+        {
+            baskets = metaObject.Source == null ? [] : VisibleBaskets(metaObject.Source);
+        }
 
         var visited = new HashSet<MetaDataBasketDef>();
-        for (var basket = basketReference.Target; basket != null && visited.Add(basket); basket = basket.Extends?.Target)
+        foreach (var candidate in baskets)
         {
-            foreach (var objects in basket.Objects)
+            for (var basket = candidate; basket != null && visited.Add(basket); basket = basket.Extends?.Target)
             {
-                if (objects.MetaObjects.FirstOrDefault(declaration => declaration.Name == metaObjectName) is { } found)
+                foreach (var objects in basket.Objects)
                 {
-                    metaObject.Target = found;
-                    return;
+                    if (objects.MetaObjects.FirstOrDefault(declaration => declaration.Name == metaObjectName) is { } found)
+                    {
+                        metaObject.SetTarget(found);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// The baskets an unqualified meta-object name written in <paramref name="source"/> can mean, in lookup order:
+    /// those of each enclosing container and its bases, innermost first, then the model-level baskets of the
+    /// imports that allow unqualified names.
+    /// </summary>
+    private IEnumerable<MetaDataBasketDef> VisibleBaskets(IInterlisDefinitionContainer source)
+    {
+        IInterlisDefinitionContainer? current = source;
+        IInterlisDefinitionContainer root = source;
+        while (current != null)
+        {
+            root = current;
+            foreach (var container in new[] { current }.Concat(BasesOf(current)))
+            {
+                foreach (var basket in container.Content.Values.OfType<MetaDataBasketDef>())
+                {
+                    yield return basket;
+                }
+            }
+
+            current = current.Parent;
+        }
+
+        if (root is ModelDef model)
+        {
+            foreach (var import in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
+            {
+                foreach (var basket in import.ModelDef?.Target?.Content.Values.OfType<MetaDataBasketDef>() ?? [])
+                {
+                    yield return basket;
                 }
             }
         }
@@ -493,7 +576,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     public override bool VisitMetaDataBasketDef([NotNull] MetaDataBasketDef metaDataBasketDef)
     {
         // The OBJECTS OF classes live in the basket's topic (RefHB 3.10.1-6), not the enclosing scope, so their
-        // unregistered references are linked here against the topic's (inherited) content. Unknown names stay
+        // member references are linked here against the topic's (inherited) content. Unknown names stay
         // unresolved without a report — the reference tool is lenient about basket contents, and the linked class
         // serves navigation.
         Resolve(metaDataBasketDef.Topic);
@@ -502,7 +585,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
             foreach (var objects in metaDataBasketDef.Objects)
             {
                 if (objects.Class is { Target: null, Path.Count: > 0 }
-                    && LookupIncludingBases(topic, objects.Class.Path[0]) is ClassDef found)
+                    && LookupIncludingBases(topic, objects.Class.Path[0].Name) is ClassDef found)
                 {
                     objects.Class.SetTarget(found);
                 }
@@ -641,23 +724,31 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     /// <summary>
     /// Builds the resolved <see cref="DomainDef"/> reference for a domain alias from the original merged reference,
-    /// preserving its path and location so go-to-definition and diagnostics keep working.
+    /// sharing its segments so go-to-definition and diagnostics keep their spans and targets.
     /// </summary>
     private static Reference<DomainDef> AsDomainReference(DomainDef domain, Reference<IInterlisDefinition> original)
     {
         var reference = new Reference<DomainDef>
         {
             Source = original.Source,
-            SourceRange = original.SourceRange,
             Target = domain,
         };
         reference.Path.AddRange(original.Path);
         return reference;
     }
 
+    /// <summary>
+    /// Resolves a <see cref="ReferenceResolution.Scoped"/> reference against the lexical scopes and an
+    /// <see cref="ReferenceResolution.Environment"/> one among the environment's models. A
+    /// <see cref="ReferenceResolution.Member"/> reference names a member of a container its context establishes
+    /// and is written by the pass that owns that context (<see cref="LinkMetaObject"/>,
+    /// <see cref="VisitMetaDataBasketDef"/>, <see cref="Interlis24AstPathResolverVisitor"/>), an
+    /// <see cref="ReferenceResolution.ObjectPath"/> is walked by the path resolver; resolving either here would
+    /// risk binding a name to an unrelated same-named definition that happens to be in scope.
+    /// </summary>
     public override bool VisitReference<T>([NotNull] Reference<T> reference)
     {
-        return Resolve(reference);
+        return reference.Resolution is not (ReferenceResolution.Scoped or ReferenceResolution.Environment) || Resolve(reference);
     }
 
     /// <summary>

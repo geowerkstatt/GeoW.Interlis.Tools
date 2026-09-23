@@ -34,7 +34,7 @@ public class ClassTypeTest
                 TypeDef = new ClassType
                 {
                     Restrictions = {
-                        new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(0, 25, 0, 26) },
+                        new Reference<IInterlisDefinition> { Path = { new("A") } },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 27),
@@ -69,8 +69,8 @@ public class ClassTypeTest
                 {
                     IsStructure = true,
                     Restrictions = {
-                        new Reference<IInterlisDefinition> { Path = { "A" }, SourceRange = new RangePosition(0, 29, 0, 30) },
-                        new Reference<IInterlisDefinition> { Path = { "B" }, SourceRange = new RangePosition(0, 32, 0, 33) },
+                        new Reference<IInterlisDefinition> { Path = { new("A") } },
+                        new Reference<IInterlisDefinition> { Path = { new("B") } },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 6, 0, 34),

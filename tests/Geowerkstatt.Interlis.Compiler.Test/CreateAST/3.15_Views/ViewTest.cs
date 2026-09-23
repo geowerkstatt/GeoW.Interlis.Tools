@@ -23,7 +23,7 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 80, 0, 81) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                     { "NewAttr", new AttributeDef
                     {
                         Name = "NewAttr",
@@ -33,23 +33,17 @@ public class ViewTest
                         Values = {
                             new PathExpression
                             {
-                                Path = {
-                                    new IdentifierPathElement
-                                    {
-                                        Value = "base",
-                                    },
-                                    new IdentifierPathElement
-                                    {
-                                        Value = "Attr",
-                                    },
-                                },
+                                Reference = new Reference<IInterlisDefinition> { Path = {
+                                    new("base"),
+                                    new("Attr"),
+                                } },
                             },
                         },
                     } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
@@ -63,12 +57,12 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 60, 0, 61) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 32, 0, 36) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 37, 0, 42) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 32, 0, 36) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Properties = { Property.Abstract },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 32, 0, 36) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 37, 0, 42) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 32, 0, 36) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
@@ -82,12 +76,12 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 61, 0, 62) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 33, 0, 37) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 38, 0, 43) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 33, 0, 37) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Properties = { Property.Transient },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 33, 0, 37) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 38, 0, 43) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 33, 0, 37) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
@@ -100,7 +94,7 @@ public class ViewTest
             {
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 40, 0, 41) },
-                Extends = new Reference<ViewDef> { Path = { "BaseView" }, SourceRange = new RangePosition(0, 15, 0, 23) },
+                Extends = new Reference<ViewDef> { Path = { new("BaseView") } },
             }));
 
         yield return Rule(new(
@@ -113,7 +107,7 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 51, 0, 52) },
                 Properties = { Property.Abstract },
-                Extends = new Reference<ViewDef> { Path = { "BaseView" }, SourceRange = new RangePosition(0, 26, 0, 34) },
+                Extends = new Reference<ViewDef> { Path = { new("BaseView") } },
             }));
 
         yield return Rule(new(
@@ -125,7 +119,7 @@ public class ViewTest
             {
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 54, 0, 55) },
-                Extends = new Reference<ViewDef> { Path = { "ModelX", "TopicX", "BaseView" }, SourceRange = new RangePosition(0, 15, 0, 37) },
+                Extends = new Reference<ViewDef> { Path = { new("ModelX"), new("TopicX"), new("BaseView") } },
             }));
 
         yield return Rule(new(
@@ -138,7 +132,7 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 77, 0, 78) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 27, 0, 32) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                     { "NewAttr", new AttributeDef
                     {
                         Name = "NewAttr",
@@ -147,19 +141,14 @@ public class ViewTest
                         Values = {
                             new PathExpression
                             {
-                                Path = {
-                                    new KeyWordPathElement
-                                    {
-                                        Value = KeyWordPathElement.KeyWord.Aggregates,
-                                    },
-                                },
+                                Reference = new Reference<IInterlisDefinition> { Path = { new KeywordPathSegment(PathKeyword.Aggregates) } },
                             },
                         },
                     } },
                 },
                 Formation = new AggregationView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 27, 0, 32) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                     All = true,
                 },
             }));
@@ -179,11 +168,11 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 49, 0, 50) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
@@ -229,7 +218,7 @@ public class ViewTest
                 {
                     Name = "base",
                     IsRenamed = true,
-                    Viewable = new Reference<IInterlisDefinition> { Target = classDef, Path = { "Class" } },
+                    Viewable = new Reference<IInterlisDefinition> { Target = classDef, Path = { new("Class") } },
                 };
 
                 return new InterlisEnvironment
@@ -247,7 +236,7 @@ public class ViewTest
                                 Version = "1.0.0",
                                 Imports =
                                 {
-                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { InternalModel.Interlis.Name } }) }
+                                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Target = InternalModel.Interlis, Path = { new(InternalModel.Interlis.Name) } }) }
                                 },
                                 Content =
                                 {
@@ -274,7 +263,7 @@ public class ViewTest
                                                         {
                                                             Source = baseView,
                                                         },
-                                                        AllOfBases = { new Reference<BaseView> { Target = baseView, Path = { "base" }, SourceRange = new RangePosition(11, 19, 11, 23) } },
+                                                        AllOfBases = { new Reference<BaseView> { Target = baseView, Path = { new("base") } } },
                                                     }
                                                 },
                                             },
@@ -297,11 +286,11 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 44, 0, 45) },
                 Content = {
-                    { "Class", new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 21, 0, 26) } } },
+                    { "Class", new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 21, 0, 26) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 21, 0, 26) } },
+                    Source = new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 21, 0, 26) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
@@ -315,19 +304,19 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 59, 0, 60) },
                 Content = {
-                    { "base1", new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassA" }, SourceRange = new RangePosition(0, 21, 0, 27) } } },
-                    { "base2", new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 35, 0, 41) } } },
+                    { "base1", new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassA") } } } },
+                    { "base2", new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } } },
                 },
                 Formation = new JoinView
                 {
                     Sources = {
                         new JoinViewSource
                         {
-                            Viewable = new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassA" }, SourceRange = new RangePosition(0, 21, 0, 27) } },
+                            Viewable = new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassA") } } },
                         },
                         new JoinViewSource
                         {
-                            Viewable = new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 35, 0, 41) } },
+                            Viewable = new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } },
                         },
                     },
                 },
@@ -343,19 +332,19 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 69, 0, 70) },
                 Content = {
-                    { "base1", new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassA" }, SourceRange = new RangePosition(0, 21, 0, 27) } } },
-                    { "base2", new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 35, 0, 41) } } },
+                    { "base1", new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassA") } } } },
+                    { "base2", new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } } },
                 },
                 Formation = new JoinView
                 {
                     Sources = {
                         new JoinViewSource
                         {
-                            Viewable = new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassA" }, SourceRange = new RangePosition(0, 21, 0, 27) } },
+                            Viewable = new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 15, 0, 20) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassA") } } },
                         },
                         new JoinViewSource
                         {
-                            Viewable = new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 35, 0, 41) } },
+                            Viewable = new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 29, 0, 34) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } },
                             OrNull = true,
                         },
                     },
@@ -383,14 +372,14 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 60, 0, 61) },
                 Content = {
-                    { "base1", new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 16, 0, 21) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassA" }, SourceRange = new RangePosition(0, 22, 0, 28) } } },
-                    { "base2", new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 30, 0, 35) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 36, 0, 42) } } },
+                    { "base1", new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 16, 0, 21) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassA") } } } },
+                    { "base2", new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 30, 0, 35) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } } },
                 },
                 Formation = new UnionView
                 {
                     Sources = {
-                        new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 16, 0, 21) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassA" }, SourceRange = new RangePosition(0, 22, 0, 28) } },
-                        new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 30, 0, 35) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 36, 0, 42) } },
+                        new BaseView { Name = "base1", NameLocations = { new RangePosition(0, 16, 0, 21) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassA") } } },
+                        new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 30, 0, 35) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } },
                     },
                 },
             }));
@@ -405,11 +394,11 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 54, 0, 55) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 27, 0, 32) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new AggregationView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 27, 0, 32) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                     All = true,
                 },
             }));
@@ -424,20 +413,15 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 63, 0, 64) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 27, 0, 32) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new AggregationView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 27, 0, 32) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 22, 0, 26) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                     UniqueBy = {
                         new PathExpression
                         {
-                            Path = {
-                                new IdentifierPathElement
-                                {
-                                    Value = "Attr",
-                                },
-                            },
+                            Reference = new Reference<IInterlisDefinition> { Path = { new("Attr") } },
                         },
                     },
                 },
@@ -453,12 +437,12 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 57, 0, 58) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new InspectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
-                    Path = { new Reference<AttributeDef> { Path = { "Attr" }, SourceRange = new RangePosition(0, 35, 0, 39) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Path = new Reference<AttributeDef> { Path = { new("Attr") } },
                 },
             }));
 
@@ -472,13 +456,13 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 66, 0, 67) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 26, 0, 30) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 31, 0, 36) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 26, 0, 30) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new InspectionView
                 {
                     IsArea = true,
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 26, 0, 30) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 31, 0, 36) } },
-                    Path = { new Reference<AttributeDef> { Path = { "Geometry" }, SourceRange = new RangePosition(0, 40, 0, 48) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 26, 0, 30) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Path = new Reference<AttributeDef> { Path = { new("Geometry") } },
                 },
             }));
 
@@ -492,15 +476,12 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 67, 0, 68) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new InspectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
-                    Path = {
-                        new Reference<AttributeDef> { Path = { "Attr1" }, SourceRange = new RangePosition(0, 35, 0, 40) },
-                        new Reference<AttributeDef> { Path = { "Attr2" }, SourceRange = new RangePosition(0, 44, 0, 49) },
-                    },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Path = new Reference<AttributeDef> { Path = { new("Attr1"), new("Attr2") } },
                 },
             }));
 
@@ -514,11 +495,11 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 63, 0, 64) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ModelX", "TopicX", "Class" }, SourceRange = new RangePosition(0, 26, 0, 45) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ModelX"), new("TopicX"), new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ModelX", "TopicX", "Class" }, SourceRange = new RangePosition(0, 26, 0, 45) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ModelX"), new("TopicX"), new("Class") } } },
                 },
             }));
 
@@ -532,18 +513,18 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 84, 0, 85) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
                 BaseExtensions = {
                     new BaseExtension
                     {
                         Base = "base",
                         ExtendedBy = {
-                            new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 55, 0, 60) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "ClassB" }, SourceRange = new RangePosition(0, 61, 0, 67) } },
+                            new BaseView { Name = "base2", NameLocations = { new RangePosition(0, 55, 0, 60) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("ClassB") } } },
                         },
                     },
                 },
@@ -559,27 +540,21 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 77, 0, 78) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
                 Selections = {
                     new DefinedExpression
                     {
                         Operand = new PathExpression
                         {
-                            Path = {
-                                new IdentifierPathElement
-                                {
-                                    Value = "base",
-                                },
-                                new IdentifierPathElement
-                                {
-                                    Value = "Attr",
-                                },
-                            },
+                            Reference = new Reference<IInterlisDefinition> { Path = {
+                                new("base"),
+                                new("Attr"),
+                            } },
                         },
                     },
                 },
@@ -595,11 +570,11 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 92, 0, 93) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
                 Constraints = {
                     new MandatoryConstraint
@@ -609,16 +584,10 @@ public class ViewTest
                         {
                             Operand = new PathExpression
                             {
-                                Path = {
-                                    new IdentifierPathElement
-                                    {
-                                        Value = "base",
-                                    },
-                                    new IdentifierPathElement
-                                    {
-                                        Value = "Attr",
-                                    },
-                                },
+                                Reference = new Reference<IInterlisDefinition> { Path = {
+                                    new("base"),
+                                    new("Attr"),
+                                } },
                             },
                         },
                         SourceRange = new RangePosition(0, 45, 0, 87),
@@ -636,13 +605,13 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 62, 0, 63) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
-                AllOfBases = { new Reference<BaseView> { Path = { "base" }, SourceRange = new RangePosition(0, 52, 0, 56) } },
+                AllOfBases = { new Reference<BaseView> { Path = { new("base") } } },
             }));
 
         yield return Rule(new(
@@ -655,7 +624,7 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 65, 0, 66) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                     { "NewAttr", new AttributeDef
                     {
                         Name = "NewAttr",
@@ -669,7 +638,7 @@ public class ViewTest
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
@@ -683,7 +652,7 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 72, 0, 73) },
                 Content = {
-                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } } },
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                     { "NewAttr", new AttributeDef
                     {
                         Name = "NewAttr",
@@ -692,23 +661,17 @@ public class ViewTest
                         Values = {
                             new PathExpression
                             {
-                                Path = {
-                                    new IdentifierPathElement
-                                    {
-                                        Value = "base",
-                                    },
-                                    new IdentifierPathElement
-                                    {
-                                        Value = "Attr",
-                                    },
-                                },
+                                Reference = new Reference<IInterlisDefinition> { Path = {
+                                    new("base"),
+                                    new("Attr"),
+                                } },
                             },
                         },
                     } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { "Class" }, SourceRange = new RangePosition(0, 26, 0, 31) } },
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 
