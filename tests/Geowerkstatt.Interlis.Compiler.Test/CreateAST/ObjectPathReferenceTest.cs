@@ -233,4 +233,57 @@ public class ObjectPathReferenceTest
             await Assert.That(parent.Reference.Path[0].Target).IsNull();
         }
     }
+
+    [Test]
+    public async Task AnInspectionBaseDenotesTheInspectedElementsNotTheViewable()
+    {
+        // The shape of LWB_Nutzungsflaechen_V2_0.Nutzung.InspectionOfProgramm: the base of an INSPECTION stands for
+        // the inspected structure elements, so 'Nutzung_Programm->Reference' is a member of the element structure,
+        // not of the viewable the elements are taken from (ili2c compiles the original model without complaint).
+        var environment = await ReadWithoutErrors("""
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Katalog =
+                        Gueltig_Von : 1900 .. 2100;
+                    END Katalog;
+
+                    STRUCTURE KatalogRef =
+                        Reference : MANDATORY REFERENCE TO Katalog;
+                    END KatalogRef;
+
+                    CLASS Nutzung =
+                        Bezugsjahr : 1900 .. 2100;
+                        Programm : BAG {1..*} OF KatalogRef;
+                    END Nutzung;
+
+                    VIEW Programme
+                        INSPECTION OF Nutzung_Programm ~ Nutzung -> Programm;
+                        =
+                        ALL OF Nutzung_Programm;
+                        Bezugsjahr := PARENT->Bezugsjahr;
+                        MANDATORY CONSTRAINT NOT (DEFINED (Nutzung_Programm->Reference->Gueltig_Von)) OR Nutzung_Programm->Reference->Gueltig_Von <= Bezugsjahr;
+                    END Programme;
+                END Topic;
+            END Model.
+            """);
+
+        var topic = (TopicDef)((ModelDef)environment.Content["Model"]).Content["Topic"];
+        var paths = ((ViewDef)topic.Content["Programme"]).ContainerReferences
+            .Where(reference => reference.Resolution == ReferenceResolution.ObjectPath && reference.Path.Count == 3)
+            .ToList();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(paths.Count).IsEqualTo(2);
+            foreach (var path in paths)
+            {
+                await Assert.That(string.Join("\n", path.Path.Select(Describe).Select(line => line[(line.IndexOf(" -> ") + 4)..]))).IsEqualTo("""
+                    Model.Topic.Programme.Nutzung_Programm
+                    Model.Topic.KatalogRef -> Reference
+                    Model.Topic.Katalog -> Gueltig_Von
+                    """.ReplaceLineEndings("\n"));
+            }
+        }
+    }
 }

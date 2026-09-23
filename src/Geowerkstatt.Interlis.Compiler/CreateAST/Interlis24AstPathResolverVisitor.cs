@@ -746,15 +746,28 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
 
     /// <summary>
     /// The viewable(s) a bare-name member navigates into: an object-valued attribute descends into its type's
-    /// target(s), a base view into its referenced viewable, a class / structure / association / view into itself.
+    /// target(s), a base view into its referenced viewable — or, for the base of an <c>INSPECTION</c>, into the
+    /// inspected structure elements (see <see cref="InspectedBy"/>) — a class / structure / association / view into
+    /// itself.
     /// </summary>
     private static IReadOnlyList<IInterlisDefinitionContainer> DescendMember(IInterlisDefinition member) => member switch
     {
         AttributeDef attribute => DescendTargets(attribute.TypeDef),
+        BaseView baseView when InspectedBy(baseView) is { } inspection => InspectedElements(inspection),
         BaseView baseView => baseView.Viewable?.Target is IInterlisDefinitionContainer viewable ? [viewable] : [],
         IInterlisDefinitionContainer viewable => [viewable],
         _ => [],
     };
+
+    /// <summary>
+    /// The inspection whose elements <paramref name="baseView"/> stands for, or <see langword="null"/> for the base
+    /// of any other formation. An <c>INSPECTION OF base ~ Viewable -&gt; Attr</c> yields one object per structure
+    /// element, and the base name denotes that element (RefHB 3.15-33): <c>base-&gt;Member</c> is a member of the
+    /// element structure, while the containing object of the viewable is reached through <c>PARENT</c> (see
+    /// <see cref="KeywordContext"/>). ili2c agrees: it accepts a member of the element structure after the base name.
+    /// </summary>
+    private static InspectionView? InspectedBy(BaseView baseView) =>
+        baseView.Parent is ViewDef { Formation: InspectionView inspection } && inspection.Source == baseView ? inspection : null;
 
     /// <summary>
     /// The viewable(s) an object-valued type navigates into: every target of a role, the target of a reference or
