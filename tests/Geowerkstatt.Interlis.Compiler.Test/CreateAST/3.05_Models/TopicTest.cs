@@ -825,11 +825,11 @@ public class TopicTest
                             },
                             Content =
                             {
-                                { "A", new BaseView { Name = "A", Viewable = new Reference<IInterlisDefinition> { Path = { new("A") } } } },
+                                { "A", new BaseView { Name = "A", NameLocations = { new RangePosition(4, 22, 4, 23) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("A") } } } },
                             },
                             Formation = new ProjectionView
                             {
-                                Source = new BaseView { Name = "A", Viewable = new Reference<IInterlisDefinition> { Path = { new("A") } } },
+                                Source = new BaseView { Name = "A", NameLocations = { new RangePosition(4, 22, 4, 23) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("A") } } },
                             },
                         }
                     }

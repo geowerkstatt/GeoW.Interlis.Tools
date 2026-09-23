@@ -286,11 +286,11 @@ public class ViewTest
                 Name = "V",
                 NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 44, 0, 45) },
                 Content = {
-                    { "Class", new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
+                    { "Class", new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 21, 0, 26) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
                 },
                 Formation = new ProjectionView
                 {
-                    Source = new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Source = new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 21, 0, 26) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                 },
             }));
 

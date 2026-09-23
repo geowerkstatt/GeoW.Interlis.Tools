@@ -449,7 +449,7 @@ public class ExpressionTest
             {
                 Source = new InspectionView
                 {
-                    Source = new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Source = new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 14, 0, 19) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                     Path = new Reference<AttributeDef> { Path = { new("Attr") } },
                 },
             }));
@@ -476,7 +476,7 @@ public class ExpressionTest
             {
                 Source = new InspectionView
                 {
-                    Source = new BaseView { Name = "Class", Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                    Source = new BaseView { Name = "Class", NameLocations = { new RangePosition(0, 14, 0, 19) }, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
                     Path = new Reference<AttributeDef> { Path = { new("Attr") } },
                 },
                 Of = new PathExpression { Reference = new Reference<IInterlisDefinition> { Path = { new("Container") } } },

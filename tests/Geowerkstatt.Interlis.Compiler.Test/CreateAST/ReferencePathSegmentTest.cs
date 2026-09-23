@@ -183,4 +183,53 @@ public class ReferencePathSegmentTest
             await Assert.That(DescribeTargets(classA.OidType!)).IsEqualTo("INTERLIS -> INTERLIS\nNOOID -> INTERLIS.NOOID");
         }
     }
+
+    [Test]
+    public async Task AnImplicitBaseNameIsDeclaredByTheViewableReference()
+    {
+        var environment = await ReadWithoutErrors("""
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS ClassA =
+                        Flag : BOOLEAN;
+                    END ClassA;
+
+                    VIEW Implicit
+                        PROJECTION OF ClassA;
+                        WHERE DEFINED(ClassA->Flag);
+                        =
+                        ALL OF ClassA;
+                    END Implicit;
+
+                    VIEW Renamed
+                        PROJECTION OF a~ClassA;
+                        =
+                        ALL OF a;
+                    END Renamed;
+                END Topic;
+            END Model.
+            """);
+
+        var topic = (TopicDef)((ModelDef)environment.Content["Model"]).Content["Topic"];
+        var implicitView = (ViewDef)topic.Content["Implicit"];
+        var implicitBase = (BaseView)implicitView.Content["ClassA"];
+        var renamedBase = (BaseView)((ViewDef)topic.Content["Renamed"]).Content["a"];
+
+        using (Assert.Multiple())
+        {
+            // 'PROJECTION OF ClassA' declares the base name ClassA with the very token that references the class: the
+            // base name has no other place in the source a rename could write to or navigation could land on.
+            await Assert.That(string.Join(",", implicitBase.NameLocations)).IsEqualTo("9:26-9:32");
+            await Assert.That(implicitBase.NameLocations.Single().ToString()).IsEqualTo(implicitBase.Viewable!.Path.Single().Range!.ToString());
+
+            // The uses of the base name denote the base view, not the class it stands for.
+            await Assert.That(Describe(implicitView.AllOfBases.Single())).IsEqualTo("ClassA@12:19-12:25 -> Model.Topic.Implicit.ClassA");
+            var selection = (PathExpression)((DefinedExpression)implicitView.Selections.Single()).Operand;
+            await Assert.That(Describe(selection.Reference.Path[0])).IsEqualTo("ClassA@10:26-10:32 -> Model.Topic.Implicit.ClassA");
+
+            // An explicit alias is declared by the alias token, as before.
+            await Assert.That(string.Join(",", renamedBase.NameLocations)).IsEqualTo("16:26-16:27");
+        }
+    }
 }

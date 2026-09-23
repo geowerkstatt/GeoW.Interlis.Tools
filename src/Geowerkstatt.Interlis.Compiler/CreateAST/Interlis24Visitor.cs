@@ -646,9 +646,15 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             IsRenamed = context.@base != null,
         };
 
+        // An implicit base name is declared by the viewable reference itself: that token is where a rename of the
+        // base has to write, and where go-to-definition on a use of the base name lands.
         if (context.@base is { } baseToken)
         {
             baseView.NameLocations.Add(baseToken.ToRange());
+        }
+        else if (viewable?.Path.LastOrDefault()?.Range is { } viewableRange)
+        {
+            baseView.NameLocations.Add(viewableRange);
         }
 
         return baseView;
