@@ -56,9 +56,11 @@ public class RefSys
         /// (RefHB 3.10.1-2) — so the reference resolves as <see cref="ReferenceResolution.Member"/>: the scoped
         /// resolver leaves it alone and the reference resolver writes its target, the
         /// matching <see cref="MetaObjectDeclaration"/> of the basket or one it extends, searched in the runtime
-        /// order (RefHB 3.10.1-3). The target stays <see langword="null"/> for an unqualified name, an unresolved
-        /// basket, or a name the basket chain does not declare (which the type checker reports). The reference
-        /// itself is <see langword="null"/> only while the name is still being typed.
+        /// order (RefHB 3.10.1-3); an unqualified name is searched in the baskets visible from the writing
+        /// container. The target stays <see langword="null"/> for an unresolved basket or a name no basket in
+        /// reach declares (the type checker reports the qualified case only: which basket supplies an unqualified
+        /// name is settled at runtime). The reference itself is <see langword="null"/> only while the name is still
+        /// being typed.
         /// </summary>
         public Reference<MetaObjectDeclaration>? MetaObject { get; init; }
     }

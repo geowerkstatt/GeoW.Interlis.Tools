@@ -472,11 +472,15 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     /// <summary>
     /// Resolves the meta-object link of the reference systems of a numeric type or the axes of a coordinate type:
-    /// the declared name the <c>{basket.metaObject}</c> form references is not an <see cref="IInterlisDefinition"/>
+    /// the declared name the <c>{[basket.]metaObject}</c> form references is not an <see cref="IInterlisDefinition"/>
     /// (a meta object is data, its declared name in the basket is its model-world anchor), so it resolves as
     /// <see cref="ReferenceResolution.Member"/> — the target of <see cref="RefSys.MetaObjectRef.MetaObject"/> is written here instead, searching the
     /// basket and its inherited definitions in the runtime order (RefHB 3.10.1-3). The basket itself is resolved on
-    /// demand (it may live in a model visited later).
+    /// demand (it may live in a model visited later). An unqualified name is searched in the baskets visible from
+    /// the writing container — those declared in its enclosing containers (and their bases), innermost first, then
+    /// the model-level ones of the imports that allow unqualified names — the same visibility a scoped name has
+    /// (<see cref="CollectPotentialTargets"/>). Which basket supplies the object at runtime may still differ
+    /// (RefHB 3.10.1-3); the link records the declaration the model text can see.
     /// </summary>
     private void LinkRefSystems(TypeDef type)
     {
@@ -501,22 +505,69 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     private void LinkMetaObject(RefSys refSystem)
     {
-        if (refSystem.Value is not RefSys.MetaObjectRef { Basket: { } basketReference, MetaObject: { Target: null, Path: [{ Name: var metaObjectName }] } metaObject })
+        if (refSystem.Value is not RefSys.MetaObjectRef { MetaObject: { Target: null, Path: [{ Name: var metaObjectName }] } metaObject } metaObjectRef)
         {
             return;
         }
 
-        Resolve(basketReference);
+        IEnumerable<MetaDataBasketDef> baskets;
+        if (metaObjectRef.Basket is { } basketReference)
+        {
+            Resolve(basketReference);
+            baskets = basketReference.Target is { } basket ? [basket] : [];
+        }
+        else
+        {
+            baskets = metaObject.Source == null ? [] : VisibleBaskets(metaObject.Source);
+        }
 
         var visited = new HashSet<MetaDataBasketDef>();
-        for (var basket = basketReference.Target; basket != null && visited.Add(basket); basket = basket.Extends?.Target)
+        foreach (var candidate in baskets)
         {
-            foreach (var objects in basket.Objects)
+            for (var basket = candidate; basket != null && visited.Add(basket); basket = basket.Extends?.Target)
             {
-                if (objects.MetaObjects.FirstOrDefault(declaration => declaration.Name == metaObjectName) is { } found)
+                foreach (var objects in basket.Objects)
                 {
-                    metaObject.SetTarget(found);
-                    return;
+                    if (objects.MetaObjects.FirstOrDefault(declaration => declaration.Name == metaObjectName) is { } found)
+                    {
+                        metaObject.SetTarget(found);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// The baskets an unqualified meta-object name written in <paramref name="source"/> can mean, in lookup order:
+    /// those of each enclosing container and its bases, innermost first, then the model-level baskets of the
+    /// imports that allow unqualified names.
+    /// </summary>
+    private IEnumerable<MetaDataBasketDef> VisibleBaskets(IInterlisDefinitionContainer source)
+    {
+        IInterlisDefinitionContainer? current = source;
+        IInterlisDefinitionContainer root = source;
+        while (current != null)
+        {
+            root = current;
+            foreach (var container in new[] { current }.Concat(BasesOf(current)))
+            {
+                foreach (var basket in container.Content.Values.OfType<MetaDataBasketDef>())
+                {
+                    yield return basket;
+                }
+            }
+
+            current = current.Parent;
+        }
+
+        if (root is ModelDef model)
+        {
+            foreach (var import in model.Imports.Values.Where(m => m.IsUnqualifiedAllowed))
+            {
+                foreach (var basket in import.ModelDef?.Target?.Content.Values.OfType<MetaDataBasketDef>() ?? [])
+                {
+                    yield return basket;
                 }
             }
         }

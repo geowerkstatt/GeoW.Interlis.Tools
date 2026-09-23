@@ -722,7 +722,8 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
     /// one it extends (RefHB 3.10.1-2/-3). The <c>&lt;...&gt;</c> form needs no check here — its reference is
     /// typed to <see cref="DomainDef"/>, so a non-domain target stays unresolved and is reported by the resolver.
     /// An unresolved basket is already reported by the resolver; an unqualified meta-object name is not validated
-    /// (which basket provides it is a runtime concern, RefHB 3.10.1-3), and whether the meta object's class kind
+    /// (the resolver links it to a visible declaration for navigation, but which basket provides it is a runtime
+    /// concern, RefHB 3.10.1-3), and whether the meta object's class kind
     /// fits the usage (scalar vs coordinate system) is not checked yet.
     /// </summary>
     private void CheckRefSystems(IInterlisDefinition element, TypeDef type)
