@@ -42,7 +42,7 @@ public class RepositorySearchTest
     public async Task TestCleanup()
     {
         mockHttp.Dispose();
-        await repositorySearch.DeleteCacheDatabase();
+        await repositorySearch.DeleteCacheDatabaseAsync();
     }
 
     [TestMethod]
@@ -390,6 +390,70 @@ public class RepositorySearchTest
         Assert.AreEqual(0, models.Count, "the search answers from the tree that is there, which is empty");
         using var cache = OpenCacheContext(cacheDbFolder);
         Assert.AreEqual(0, cache.Repositories.Count(), "nothing of the failed tree was stored, neither by the refresh nor by the search's save");
+    }
+
+    [TestMethod]
+    public async Task ASearchWaitingForARunningCrawlCanBeCancelled()
+    {
+        var crawlStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var crawlMayFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var crawler = new Mock<IRepositoryCrawler>();
+        crawler
+            .Setup(c => c.CrawlModelRepositories(It.IsAny<RepositoryCrawlerOptions>()))
+            .Returns(async () =>
+            {
+                crawlStarted.TrySetResult();
+                await crawlMayFinish.Task;
+                return SingleModelTree();
+            });
+        crawler
+            .Setup(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()))
+            .ReturnsAsync((InterlisFile?)null);
+
+        var searcher = new RepositorySearcher(crawler.Object, configuration, loggerFactory);
+        var crawling = searcher.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        await crawlStarted.Task;
+
+        // The editor gives up on the second search (the document changed) while the crawl still runs.
+        using var cancellation = new CancellationTokenSource();
+        var waiting = searcher.SearchModels(m => m.SchemaLanguage == "ili2_4", cancellation.Token);
+        cancellation.Cancel();
+        await Assert.ThrowsExceptionAsync<OperationCanceledException>(() => waiting);
+
+        // The crawl completes for the search that started it.
+        crawlMayFinish.SetResult();
+        Assert.AreEqual(1, (await crawling).Count);
+    }
+
+    [TestMethod]
+    public async Task ACancelledSearchStillCachesTheFilesItFetched()
+    {
+        var cacheDbFolder = configuration["RepositoryCrawler:CacheDbFolder"]!;
+        using var cancellation = new CancellationTokenSource();
+
+        // Two models in the tree: the search is cancelled after the first file was fetched.
+        var tree = SingleModelTree("First");
+        var repository = tree.Values.Single();
+        var second = new Model { Name = "Second", SchemaLanguage = "ili2_4", File = "Second.ili", Version = "1", MD5 = "HASH2", ModelRepository = repository };
+        repository.Models.Add(second);
+
+        var crawler = new Mock<IRepositoryCrawler>();
+        crawler.Setup(c => c.CrawlModelRepositories(It.IsAny<RepositoryCrawlerOptions>())).ReturnsAsync(() => tree);
+        crawler
+            .Setup(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()))
+            .ReturnsAsync((Model model, Func<string, InterlisFile?> _) =>
+            {
+                cancellation.Cancel();
+                return model.FileContent = new InterlisFile { MD5 = model.MD5!, Content = model.Name };
+            });
+
+        var searcher = new RepositorySearcher(crawler.Object, configuration, loggerFactory);
+        await Assert.ThrowsExceptionAsync<OperationCanceledException>(() => searcher.SearchModels(m => m.SchemaLanguage == "ili2_4", cancellation.Token));
+
+        crawler.Verify(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()), Times.Once, "the search stops before the second fetch");
+        using var cache = OpenCacheContext(cacheDbFolder);
+        Assert.AreEqual(1, cache.InterlisFiles.Count(), "the fetched file is cached although the search was cancelled");
     }
 
     /// <summary>A repository tree with one INTERLIS 2.4 model of the given name, as a crawl would return it.</summary>

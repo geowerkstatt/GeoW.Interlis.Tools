@@ -18,7 +18,7 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler;
 /// tree and one creation of the cache database (see <see cref="databaseLock"/>). Several processes may share the
 /// cache database too (every VS Code window runs its own language server): the database is created by whichever
 /// process comes first, a tree another process refreshed meanwhile is kept instead of being replaced, and a file
-/// another search cached meanwhile is not stored twice (see <see cref="SaveFileCache"/>).
+/// another search cached meanwhile is not stored twice (see <see cref="SaveFileCacheAsync"/>).
 /// </summary>
 public class RepositorySearcher
 {
@@ -91,10 +91,11 @@ public class RepositorySearcher
     /// cache or fetched from the repository.
     /// </summary>
     /// <param name="modelName">The model name to search the definition file(s) for.</param>
+    /// <param name="cancellationToken">Cancels the search; see <see cref="SearchModels"/>.</param>
     /// <returns>A <see cref="Model"/> that has the specified <paramref name="modelName"/>.</returns>
-    public async Task<Model?> SearchModel(string modelName)
+    public async Task<Model?> SearchModel(string modelName, CancellationToken cancellationToken = default)
     {
-        var models = await SearchModels(m => EF.Functions.Collate(m.Name, "BINARY") == modelName);
+        var models = await SearchModels(m => EF.Functions.Collate(m.Name, "BINARY") == modelName, cancellationToken).ConfigureAwait(false);
 
         switch (models.Count)
         {
@@ -118,20 +119,32 @@ public class RepositorySearcher
     /// cache or fetched from the repository.
     /// </summary>
     /// <param name="predicate">The predicate the <see cref="Model"/>s need to satisfy.</param>
+    /// <param name="cancellationToken">
+    /// Cancels the search: waiting for a refresh another search is running, and the search between two files.
+    /// A crawl or a fetch under way runs on, since the crawler cannot be cancelled; a crawl completes for the
+    /// searches waiting for it, and the files fetched so far are still cached for the next search.
+    /// </param>
     /// <returns>A collection of <see cref="Model"/>.</returns>
-    public async Task<IList<Model>> SearchModels(Expression<Func<Model, bool>> predicate)
+    public async Task<IList<Model>> SearchModels(Expression<Func<Model, bool>> predicate, CancellationToken cancellationToken = default)
     {
         using var context = new RepositoryCrawlerContext(contextOptions);
-        await RefreshRepositoryTreeIfStale(context).ConfigureAwait(false);
+        await RefreshRepositoryTreeIfStaleAsync(context, cancellationToken).ConfigureAwait(false);
 
-        var models = context.Models
+        var models = await context.Models
             .Include(m => m.ModelRepository)
             .Where(predicate)
             .OrderByDescending(m => m.Version)
-            .ToList();
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         foreach (var model in models)
         {
+            // Stop fetching, but save what was fetched before giving up.
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
             // A model without a resolvable URL cannot have a file fetched for it.
             var url = model.Uri?.AbsoluteUri;
             if (url == null)
@@ -169,7 +182,8 @@ public class RepositorySearcher
             }
         }
 
-        SaveFileCache(context);
+        await SaveFileCacheAsync(context).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
         return models;
     }
@@ -181,15 +195,16 @@ public class RepositorySearcher
     /// another hash) before saving again. A reference that another process pruned meanwhile fails its update
     /// instead and is inserted again, while a model row a refresh replaced meanwhile is left to the refreshed tree.
     /// A cache that still cannot be saved is logged and left as it is: the search has its files, and the next
-    /// search fetches them again.
+    /// search fetches them again. The save is not cancelled with the search: the files are downloaded by then, and
+    /// caching them is what spares the next search the download.
     /// </summary>
-    private void SaveFileCache(RepositoryCrawlerContext context)
+    private async Task SaveFileCacheAsync(RepositoryCrawlerContext context)
     {
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                context.SaveChanges();
+                await context.SaveChangesAsync().ConfigureAwait(false);
                 return;
             }
             catch (DbUpdateConcurrencyException ex) when (attempt < 3)
@@ -245,23 +260,24 @@ public class RepositorySearcher
     /// Makes sure the cache database exists and holds a repository tree that is not older than the configured stale
     /// time, crawling the tree when it is missing or stale. Serialized through <see cref="databaseLock"/>: a search
     /// that finds the tree stale while another one is already refreshing it waits for that refresh and then finds
-    /// the tree fresh instead of crawling it again.
+    /// the tree fresh instead of crawling it again. The token only cancels waiting for the lock: what happens under
+    /// the lock serves every waiter, so it is not cancelled on behalf of one of them.
     /// </summary>
-    private async Task RefreshRepositoryTreeIfStale(RepositoryCrawlerContext context)
+    private async Task RefreshRepositoryTreeIfStaleAsync(RepositoryCrawlerContext context, CancellationToken cancellationToken)
     {
-        await databaseLock.WaitAsync().ConfigureAwait(false);
+        await databaseLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             if (!databaseCreated)
             {
-                EnsureDatabaseCreated(context);
+                await EnsureDatabaseCreatedAsync(context).ConfigureAwait(false);
                 databaseCreated = true;
             }
 
-            var lastCrawl = LastCrawlTime(context);
-            if (IsRepositoryTreeStale(context, lastCrawl))
+            var lastCrawl = await LastCrawlTimeAsync(context).ConfigureAwait(false);
+            if (await IsRepositoryTreeStaleAsync(context, lastCrawl).ConfigureAwait(false))
             {
-                await UpdateRepositoryTree(context, lastCrawl).ConfigureAwait(false);
+                await UpdateRepositoryTreeAsync(context, lastCrawl).ConfigureAwait(false);
             }
         }
         finally
@@ -275,11 +291,11 @@ public class RepositorySearcher
     /// the creation, in which case the creation fails on a table that already exists; the database is then complete
     /// (a creation is one transaction), so that failure means the same as finding it created.
     /// </summary>
-    private void EnsureDatabaseCreated(RepositoryCrawlerContext context)
+    private async Task EnsureDatabaseCreatedAsync(RepositoryCrawlerContext context)
     {
         try
         {
-            context.Database.EnsureCreated();
+            await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
         }
         catch (SqliteException ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
         {
@@ -288,12 +304,12 @@ public class RepositorySearcher
     }
 
     /// <summary>When the cached repository tree was crawled, or <see langword="null"/> when it never was.</summary>
-    private static DateTime? LastCrawlTime(RepositoryCrawlerContext context)
-        => context.CrawlInformations.Max(ci => (DateTime?)ci.CrawlTime);
+    private static Task<DateTime?> LastCrawlTimeAsync(RepositoryCrawlerContext context)
+        => context.CrawlInformations.MaxAsync(ci => (DateTime?)ci.CrawlTime);
 
     /// <summary>Whether the cached repository tree is missing or was crawled (at <paramref name="lastCrawlTime"/>) longer ago than the configured stale time.</summary>
-    private bool IsRepositoryTreeStale(RepositoryCrawlerContext context, DateTime? lastCrawlTime)
-        => !context.Repositories.Any() || lastCrawlTime == null || DateTime.Now > lastCrawlTime + options.StaleTime;
+    private async Task<bool> IsRepositoryTreeStaleAsync(RepositoryCrawlerContext context, DateTime? lastCrawlTime)
+        => lastCrawlTime == null || DateTime.Now > lastCrawlTime + options.StaleTime || !await context.Repositories.AnyAsync().ConfigureAwait(false);
 
     /// <summary>
     /// Trims the file cache to the freshly crawled <paramref name="repositories"/> tree, in two steps:
@@ -302,7 +318,7 @@ public class RepositorySearcher
     /// (its reference was repointed to the new hash) as well as files of models that disappeared from the tree,
     /// while never removing content that is still reachable from some URL.
     /// </summary>
-    private static void PruneFileCache(RepositoryCrawlerContext context, IDictionary<string, Repository> repositories)
+    private static async Task PruneFileCacheAsync(RepositoryCrawlerContext context, IDictionary<string, Repository> repositories)
     {
         var activeUrls = repositories.Values
             .SelectMany(repository => repository.Models)
@@ -312,16 +328,16 @@ public class RepositorySearcher
 
         // Load the references and filter in memory: the active-URL set can be large, so an "IN (...)" translation
         // could exceed the SQLite parameter limit. The reference table is bounded by the number of cached files.
-        var staleReferences = context.InterlisFileReferences
-            .AsEnumerable()
+        var staleReferences = (await context.InterlisFileReferences.ToListAsync().ConfigureAwait(false))
             .Where(reference => !activeUrls.Contains(reference.SourceUrl))
             .ToList();
         context.InterlisFileReferences.RemoveRange(staleReferences);
-        context.SaveChanges();
+        await context.SaveChangesAsync().ConfigureAwait(false);
 
-        context.InterlisFiles
+        await context.InterlisFiles
             .Where(file => !context.InterlisFileReferences.Any(reference => reference.MD5 == file.MD5))
-            .ExecuteDelete();
+            .ExecuteDeleteAsync()
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -332,39 +348,39 @@ public class RepositorySearcher
     /// (<paramref name="lastCrawlSeen"/>) is kept. The times are compared for equality rather than against the
     /// clock: the other process assigns its crawl time before its commit, so it may lie before this search's check.
     /// </summary>
-    private async Task UpdateRepositoryTree(RepositoryCrawlerContext context, DateTime? lastCrawlSeen)
+    private async Task UpdateRepositoryTreeAsync(RepositoryCrawlerContext context, DateTime? lastCrawlSeen)
     {
-        var repositories = await repositoryCrawler.CrawlModelRepositories(options);
+        var repositories = await repositoryCrawler.CrawlModelRepositories(options).ConfigureAwait(false);
 
         try
         {
             // BEGIN IMMEDIATE: waits for the write transaction of another process and fails once the busy timeout
             // has passed, which is a failed refresh like any other, not a failed search.
-            using var transaction = context.Database.BeginTransaction();
+            using var transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-            if (LastCrawlTime(context) != lastCrawlSeen)
+            if (await LastCrawlTimeAsync(context).ConfigureAwait(false) != lastCrawlSeen)
             {
                 logger.LogInformation("The repository tree was refreshed by another process meanwhile; keeping it.");
                 return;
             }
 
-            context.Catalogs.ExecuteDelete();
-            context.Models.ExecuteDelete();
-            context.Repositories.ExecuteDelete();
-            context.CrawlInformations.ExecuteDelete();
-            context.SaveChanges();
+            await context.Catalogs.ExecuteDeleteAsync().ConfigureAwait(false);
+            await context.Models.ExecuteDeleteAsync().ConfigureAwait(false);
+            await context.Repositories.ExecuteDeleteAsync().ConfigureAwait(false);
+            await context.CrawlInformations.ExecuteDeleteAsync().ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             context.Repositories.AddRange(repositories.Values);
             context.CrawlInformations.Add(new CrawlInformation
             {
                 CrawlTime = DateTime.Now,
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             // Now that the current tree is persisted, trim the file cache to the URLs it still serves.
-            PruneFileCache(context, repositories);
+            await PruneFileCacheAsync(context, repositories).ConfigureAwait(false);
 
-            transaction.Commit();
+            await transaction.CommitAsync().ConfigureAwait(false);
             logger.LogInformation("Updating ModelRepoDatabase complete. Inserted {RepositoryCount} repositories.", repositories.Count);
         }
         catch (Exception ex) when (ex is DbException or DbUpdateException)
@@ -376,7 +392,7 @@ public class RepositorySearcher
         }
     }
 
-    internal async Task DeleteCacheDatabase()
+    internal async Task DeleteCacheDatabaseAsync()
     {
         using var context = new RepositoryCrawlerContext(contextOptions);
         await context.Database.EnsureDeletedAsync();
