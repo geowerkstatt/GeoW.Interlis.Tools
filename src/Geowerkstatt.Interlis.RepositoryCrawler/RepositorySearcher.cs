@@ -1,4 +1,5 @@
 ﻿using Geowerkstatt.Interlis.RepositoryCrawler.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,10 +15,17 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler;
 /// The crawling of the repository tree is delegated to <see cref="IRepositoryCrawler"/> while the
 /// <see cref="RepositorySearcher"/> manages a cache of the crawled repository data and provides the search methods.
 /// The searcher is safe for concurrent use: searches running at the same time share one crawl of the repository
-/// tree and one creation of the cache database (see <see cref="databaseLock"/>).
+/// tree and one creation of the cache database (see <see cref="databaseLock"/>). Several processes may share the
+/// cache database too (every VS Code window runs its own language server): the database is created by whichever
+/// process comes first, a tree another process refreshed meanwhile is kept instead of being replaced, and a file
+/// another search cached meanwhile is not stored twice (see <see cref="SaveFileCache"/>).
 /// </summary>
 public class RepositorySearcher
 {
+    /// <summary>SQLite's extended result codes for a violated primary key and a violated unique index.</summary>
+    private const int SqliteConstraintPrimaryKey = 1555;
+    private const int SqliteConstraintUnique = 2067;
+
     /// <summary>
     /// One lock per cache database, shared by every searcher of the process that uses that database, since a
     /// process may create several searchers for the same cache. Held while the database is created and while the
@@ -161,9 +169,76 @@ public class RepositorySearcher
             }
         }
 
-        context.SaveChanges();
+        SaveFileCache(context);
 
         return models;
+    }
+
+    /// <summary>
+    /// Saves the files fetched by a search and the references pointing at them. Another search, of this process or
+    /// another, may have cached the same file meanwhile, since the fetches run without a lock: the save then fails
+    /// on the unique key, and the entries that exist by now are dropped (or turned into updates when they point at
+    /// another hash) before saving again. A reference that another process pruned meanwhile fails its update
+    /// instead and is inserted again, while a model row a refresh replaced meanwhile is left to the refreshed tree.
+    /// A cache that still cannot be saved is logged and left as it is: the search has its files, and the next
+    /// search fetches them again.
+    /// </summary>
+    private void SaveFileCache(RepositoryCrawlerContext context)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                context.SaveChanges();
+                return;
+            }
+            catch (DbUpdateConcurrencyException ex) when (attempt < 3)
+            {
+                // A row that is gone meanwhile: a reference pruned by another process is inserted again. Any other
+                // row (a model whose hash the crawler adopted, see RepositoryCrawler.FetchInterlisFile) went with a
+                // refresh of the tree and is dropped, so that the refreshed tree is not populated with stale rows.
+                foreach (var entry in ex.Entries)
+                {
+                    entry.State = entry.Entity is InterlisFileReference ? EntityState.Added : EntityState.Detached;
+                }
+            }
+            catch (DbUpdateException ex) when (attempt < 3 && ex.InnerException is SqliteException { SqliteExtendedErrorCode: SqliteConstraintPrimaryKey or SqliteConstraintUnique })
+            {
+                // A row with the same key was inserted meanwhile. Only these two constraints mean that; a violated
+                // NOT NULL or foreign key is a bug, which the catch below logs.
+                DropEntriesCachedMeanwhile(context);
+            }
+            catch (DbUpdateException ex)
+            {
+                logger.LogWarning(ex, "Unable to update the file cache; the fetched files are not cached.");
+                context.ChangeTracker.Clear();
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Turns the file and reference inserts of this search that another search has done meanwhile into no-ops, or
+    /// into updates where the reference stored meanwhile points at another hash than the one fetched here.
+    /// </summary>
+    private static void DropEntriesCachedMeanwhile(RepositoryCrawlerContext context)
+    {
+        foreach (var entry in context.ChangeTracker.Entries<InterlisFile>().Where(entry => entry.State == EntityState.Added).ToList())
+        {
+            if (context.InterlisFiles.AsNoTracking().Any(file => file.MD5 == entry.Entity.MD5))
+            {
+                entry.State = EntityState.Detached;
+            }
+        }
+
+        foreach (var entry in context.ChangeTracker.Entries<InterlisFileReference>().Where(entry => entry.State == EntityState.Added).ToList())
+        {
+            var url = entry.Entity.SourceUrl;
+            if (context.InterlisFileReferences.AsNoTracking().FirstOrDefault(reference => reference.SourceUrl == url) is { } existing)
+            {
+                entry.State = existing.MD5.Equals(entry.Entity.MD5, StringComparison.OrdinalIgnoreCase) ? EntityState.Detached : EntityState.Modified;
+            }
+        }
     }
 
     /// <summary>
@@ -179,13 +254,14 @@ public class RepositorySearcher
         {
             if (!databaseCreated)
             {
-                context.Database.EnsureCreated();
+                EnsureDatabaseCreated(context);
                 databaseCreated = true;
             }
 
-            if (IsRepositoryTreeStale(context))
+            var lastCrawl = LastCrawlTime(context);
+            if (IsRepositoryTreeStale(context, lastCrawl))
             {
-                await UpdateRepositoryTree(context).ConfigureAwait(false);
+                await UpdateRepositoryTree(context, lastCrawl).ConfigureAwait(false);
             }
         }
         finally
@@ -194,16 +270,30 @@ public class RepositorySearcher
         }
     }
 
-    /// <summary>Whether the cached repository tree is missing or older than the configured stale time.</summary>
-    private bool IsRepositoryTreeStale(RepositoryCrawlerContext context)
+    /// <summary>
+    /// Creates the database with its tables unless it exists. Another process may create it between the check and
+    /// the creation, in which case the creation fails on a table that already exists; the database is then complete
+    /// (a creation is one transaction), so that failure means the same as finding it created.
+    /// </summary>
+    private void EnsureDatabaseCreated(RepositoryCrawlerContext context)
     {
-        var lastCrawl = context.CrawlInformations
-            .OrderByDescending(ci => ci.CrawlTime)
-            .FirstOrDefault();
-        var lastCrawlTime = lastCrawl?.CrawlTime ?? DateTime.MinValue;
-
-        return !context.Repositories.Any() || DateTime.Now > lastCrawlTime + options.StaleTime;
+        try
+        {
+            context.Database.EnsureCreated();
+        }
+        catch (SqliteException ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogDebug(ex, "The cache database was created by another process meanwhile.");
+        }
     }
+
+    /// <summary>When the cached repository tree was crawled, or <see langword="null"/> when it never was.</summary>
+    private static DateTime? LastCrawlTime(RepositoryCrawlerContext context)
+        => context.CrawlInformations.Max(ci => (DateTime?)ci.CrawlTime);
+
+    /// <summary>Whether the cached repository tree is missing or was crawled (at <paramref name="lastCrawlTime"/>) longer ago than the configured stale time.</summary>
+    private bool IsRepositoryTreeStale(RepositoryCrawlerContext context, DateTime? lastCrawlTime)
+        => !context.Repositories.Any() || lastCrawlTime == null || DateTime.Now > lastCrawlTime + options.StaleTime;
 
     /// <summary>
     /// Trims the file cache to the freshly crawled <paramref name="repositories"/> tree, in two steps:
@@ -234,13 +324,30 @@ public class RepositorySearcher
             .ExecuteDelete();
     }
 
-    private async Task UpdateRepositoryTree(RepositoryCrawlerContext context)
+    /// <summary>
+    /// Crawls the repository tree and replaces the cached one with it, unless another process has refreshed the
+    /// cache since it was found stale: the crawl runs outside the database transaction (it takes a while, and the
+    /// transaction takes SQLite's write lock as soon as it begins), so the crawl time in the database is looked at
+    /// again once the lock is held, and a tree crawled at another time than the one seen
+    /// (<paramref name="lastCrawlSeen"/>) is kept. The times are compared for equality rather than against the
+    /// clock: the other process assigns its crawl time before its commit, so it may lie before this search's check.
+    /// </summary>
+    private async Task UpdateRepositoryTree(RepositoryCrawlerContext context, DateTime? lastCrawlSeen)
     {
         var repositories = await repositoryCrawler.CrawlModelRepositories(options);
 
-        using var transaction = context.Database.BeginTransaction();
         try
         {
+            // BEGIN IMMEDIATE: waits for the write transaction of another process and fails once the busy timeout
+            // has passed, which is a failed refresh like any other, not a failed search.
+            using var transaction = context.Database.BeginTransaction();
+
+            if (LastCrawlTime(context) != lastCrawlSeen)
+            {
+                logger.LogInformation("The repository tree was refreshed by another process meanwhile; keeping it.");
+                return;
+            }
+
             context.Catalogs.ExecuteDelete();
             context.Models.ExecuteDelete();
             context.Repositories.ExecuteDelete();
@@ -260,9 +367,12 @@ public class RepositorySearcher
             transaction.Commit();
             logger.LogInformation("Updating ModelRepoDatabase complete. Inserted {RepositoryCount} repositories.", repositories.Count);
         }
-        catch (DbException ex)
+        catch (Exception ex) when (ex is DbException or DbUpdateException)
         {
+            // A DbUpdateException (EF Core's, not a DbException) is what a failed SaveChanges throws. The rolled
+            // back tree is dropped from the context, so that the search does not try to insert it with its files.
             logger.LogError(ex, "Unable to update ModelRepoDatabase");
+            context.ChangeTracker.Clear();
         }
     }
 
