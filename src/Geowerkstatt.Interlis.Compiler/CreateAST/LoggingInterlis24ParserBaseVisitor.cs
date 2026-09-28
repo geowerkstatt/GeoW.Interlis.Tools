@@ -21,14 +21,20 @@ public class LoggingInterlis24ParserBaseVisitor<TResult>(ILoggerFactory loggerFa
 
     public override TResult VisitChildren(IRuleNode node)
     {
-        if (node.RuleContext is ParserRuleContext context)
-        {
-            return LogNotImplementedWarning(context);
-        }
-        else
+        if (node.RuleContext is not ParserRuleContext context)
         {
             return base.VisitChildren(node);
         }
+
+        // A node that failed to parse (e.g. no viable alternative of a rule with labeled alternatives) is the
+        // generic rule context, not one of the alternatives a visitor implements. The syntax error has been
+        // reported already, so there is nothing missing in the visitor to warn about.
+        if (context.exception != null)
+        {
+            return default!;
+        }
+
+        return LogNotImplementedWarning(context);
     }
 
     /// <summary>

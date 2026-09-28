@@ -136,11 +136,7 @@ public class ResilienceTest
                 Constraints whose mandatory condition expression is not yet written: the constraint is dropped so it
                 never reaches the type checker with a null condition.
                 """,
-            ExpectedLog:
-            [
-                "Compile error at 5:23-5:24 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}.",
-                "Rule 'expression' at 5:23-5:24 not implemented.",
-            ],
+            ExpectedLog: ["Compile error at 5:23-5:24 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -156,11 +152,7 @@ public class ResilienceTest
                 Constraints whose mandatory condition expression is not yet written: the constraint is dropped so it
                 never reaches the type checker with a null condition.
                 """,
-            ExpectedLog:
-            [
-                "Compile error at 5:24-5:25 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}.",
-                "Rule 'expression' at 5:24-5:25 not implemented.",
-            ],
+            ExpectedLog: ["Compile error at 5:24-5:25 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -350,6 +342,40 @@ public class ResilienceTest
             """,
             Description: "A 'PARAMETER' runtime-parameter reference used as an expression factor, left incomplete.",
             ExpectedLog: ["Compile error at 5:33-5:34 mismatched input '<EOF>' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Derived view attribute with ':' instead of ':='",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            TOPIC T =
+            STRUCTURE Address =
+              municipality : TEXT*64;
+            END Address;
+            CLASS Hut =
+              address : Address;
+            END Hut;
+            VIEW HutView
+            PROJECTION OF Hut;
+            =
+              ALL OF Hut;
+              city: Hut->address->municipality;
+            END HutView;
+            END T;
+            END M.
+            """,
+            Description: """
+                A derived view attribute written with ':' instead of ':='. The parser reads an attribute definition
+                typed 'Hut', fails at '->' and recovers by matching the remaining path elements as view attributes
+                without a viable alternative. Those nodes are not one of the implemented alternatives, but only the
+                syntax error is reported, not a misleading "rule not implemented" warning.
+                """,
+            ExpectedLog:
+            [
+                "Compile error at 14:11-14:13 mismatched input '->' expecting {';', ':='}.",
+                "Type check error in 'M.T.HutView -> city' at 14:2-14:13: a class can only be referenced with REFERENCE TO.",
+            ],
             AssertOutput: false));
     }
 
