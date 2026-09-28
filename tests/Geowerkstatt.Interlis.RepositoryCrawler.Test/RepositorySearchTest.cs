@@ -155,6 +155,58 @@ public class RepositorySearchTest
         Assert.AreEqual(0, afterSecond.InterlisFiles.Count(), "The orphaned file should be pruned.");
     }
 
+    [TestMethod]
+    public async Task ConcurrentSearchesOnAStaleCacheCrawlOnce()
+    {
+        var crawlStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var crawlMayFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var crawls = 0;
+
+        var crawler = new Mock<IRepositoryCrawler>();
+        crawler
+            .Setup(c => c.CrawlModelRepositories(It.IsAny<RepositoryCrawlerOptions>()))
+            .Returns(async () =>
+            {
+                Interlocked.Increment(ref crawls);
+                crawlStarted.TrySetResult();
+                await crawlMayFinish.Task;
+                return SingleModelTree();
+            });
+        // No file is served, so the searches have nothing to write besides the tree.
+        crawler
+            .Setup(c => c.FetchInterlisFile(It.IsAny<Model>(), It.IsAny<Func<string, InterlisFile?>>()))
+            .ReturnsAsync((InterlisFile?)null);
+
+        var searcher = new RepositorySearcher(crawler.Object, configuration, loggerFactory);
+        var first = searcher.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        await crawlStarted.Task;
+
+        // Started while the first search is still crawling: from the same searcher and from another one on the
+        // same cache, as a process may create several. Both find the tree stale and must wait for the running crawl
+        // instead of starting their own.
+        var second = searcher.SearchModels(m => m.SchemaLanguage == "ili2_4");
+        var third = new RepositorySearcher(crawler.Object, configuration, loggerFactory).SearchModels(m => m.SchemaLanguage == "ili2_4");
+        crawlMayFinish.SetResult();
+
+        var results = await Task.WhenAll(first, second, third);
+
+        Assert.AreEqual(1, crawls, "the repository tree is crawled once");
+        foreach (var models in results)
+        {
+            Assert.AreEqual(1, models.Count, "every search sees the crawled tree");
+            Assert.AreEqual("ConcurrentModel", models[0].Name);
+        }
+    }
+
+    /// <summary>A repository tree with one INTERLIS 2.4 model, as a crawl would return it.</summary>
+    private static IDictionary<string, Repository> SingleModelTree()
+    {
+        var model = new Model { Name = "ConcurrentModel", SchemaLanguage = "ili2_4", File = "ConcurrentModel.ili", Version = "1", MD5 = "HASH" };
+        var repository = new Repository { HostNameId = "https://concurrent.testdata/", Uri = new Uri("https://concurrent.testdata/"), Name = "concurrent", Models = new HashSet<Model> { model } };
+        model.ModelRepository = repository;
+        return new Dictionary<string, Repository> { { repository.HostNameId, repository } };
+    }
+
     private static RepositoryCrawlerContext OpenCacheContext(string cacheDbFolder)
     {
         var dbFile = Directory.GetFiles(cacheDbFolder, "*.db").Single();

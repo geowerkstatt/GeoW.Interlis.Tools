@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,13 +13,29 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler;
 /// Provides methods to search INTERLIS repositories.
 /// The crawling of the repository tree is delegated to <see cref="IRepositoryCrawler"/> while the
 /// <see cref="RepositorySearcher"/> manages a cache of the crawled repository data and provides the search methods.
+/// The searcher is safe for concurrent use: searches running at the same time share one crawl of the repository
+/// tree and one creation of the cache database (see <see cref="databaseLock"/>).
 /// </summary>
 public class RepositorySearcher
 {
+    /// <summary>
+    /// One lock per cache database, shared by every searcher of the process that uses that database, since a
+    /// process may create several searchers for the same cache. Held while the database is created and while the
+    /// repository tree is checked for staleness and refreshed, so that concurrent searches, which would all find the
+    /// tree stale at once, crawl it once: the waiters check again after the first one refreshed it. Keyed by the
+    /// database's full path, compared as the file system compares paths, so that two configurations naming the
+    /// same file in different case on Windows share the lock as they share the file.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> DatabaseLocks = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
     private readonly ILogger logger;
     private readonly IRepositoryCrawler repositoryCrawler;
     private readonly RepositoryCrawlerOptions options;
     private readonly DbContextOptions<RepositoryCrawlerContext> contextOptions;
+    private readonly SemaphoreSlim databaseLock;
+
+    /// <summary>Whether this searcher has made sure the database exists; read and written under <see cref="databaseLock"/>.</summary>
+    private bool databaseCreated;
 
     /// <summary>
     /// Create a new <see cref="RepositorySearcher"/>.
@@ -42,10 +59,12 @@ public class RepositorySearcher
         this.options = options;
         Directory.CreateDirectory(options.CacheDbFolder);
         var dbFileName = $"ModelRepositoryCache{Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? ""}.db";
+        var dbPath = Path.GetFullPath(Path.Combine(options.CacheDbFolder, dbFileName));
 
         contextOptions = new DbContextOptionsBuilder<RepositoryCrawlerContext>()
-            .UseSqlite($"Data Source={Path.Combine(options.CacheDbFolder, dbFileName)}")
+            .UseSqlite($"Data Source={dbPath}")
             .Options;
+        databaseLock = DatabaseLocks.GetOrAdd(dbPath, _ => new SemaphoreSlim(1, 1));
     }
 
     /// <summary>
@@ -95,16 +114,7 @@ public class RepositorySearcher
     public async Task<IList<Model>> SearchModels(Expression<Func<Model, bool>> predicate)
     {
         using var context = new RepositoryCrawlerContext(contextOptions);
-        context.Database.EnsureCreated();
-
-        var lastCrawl = context.CrawlInformations
-            .OrderByDescending(ci => ci.CrawlTime)
-            .FirstOrDefault();
-        var lastCrawlTime = lastCrawl?.CrawlTime ?? DateTime.MinValue;
-
-        if (!context.Repositories.Any() || DateTime.Now > lastCrawlTime + options.StaleTime) {
-            await UpdateRepositoryTree(context).ConfigureAwait(false);
-        }
+        await RefreshRepositoryTreeIfStale(context).ConfigureAwait(false);
 
         var models = context.Models
             .Include(m => m.ModelRepository)
@@ -154,6 +164,45 @@ public class RepositorySearcher
         context.SaveChanges();
 
         return models;
+    }
+
+    /// <summary>
+    /// Makes sure the cache database exists and holds a repository tree that is not older than the configured stale
+    /// time, crawling the tree when it is missing or stale. Serialized through <see cref="databaseLock"/>: a search
+    /// that finds the tree stale while another one is already refreshing it waits for that refresh and then finds
+    /// the tree fresh instead of crawling it again.
+    /// </summary>
+    private async Task RefreshRepositoryTreeIfStale(RepositoryCrawlerContext context)
+    {
+        await databaseLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (!databaseCreated)
+            {
+                context.Database.EnsureCreated();
+                databaseCreated = true;
+            }
+
+            if (IsRepositoryTreeStale(context))
+            {
+                await UpdateRepositoryTree(context).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            databaseLock.Release();
+        }
+    }
+
+    /// <summary>Whether the cached repository tree is missing or older than the configured stale time.</summary>
+    private bool IsRepositoryTreeStale(RepositoryCrawlerContext context)
+    {
+        var lastCrawl = context.CrawlInformations
+            .OrderByDescending(ci => ci.CrawlTime)
+            .FirstOrDefault();
+        var lastCrawlTime = lastCrawl?.CrawlTime ?? DateTime.MinValue;
+
+        return !context.Repositories.Any() || DateTime.Now > lastCrawlTime + options.StaleTime;
     }
 
     /// <summary>
