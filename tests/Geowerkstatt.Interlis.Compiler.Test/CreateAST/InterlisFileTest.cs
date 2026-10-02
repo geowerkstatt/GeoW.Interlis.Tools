@@ -28,7 +28,7 @@ public class InterlisFileTest
             MODEL ModelName AT "foo:test" VERSION "1" =
             END ModelName.
             """,
-            ExpectedLog: ["Compile error at 1:0-1:5 mismatched input 'MODEL' expecting 'INTERLIS'."],
+            ExpectedErrors: ["Compile error at 1:0-1:5 mismatched input 'MODEL' expecting 'INTERLIS'."],
             ExpectedWarnings: ["Unsupported INTERLIS version (null) at 1:0-1:5. Only version 2.4 is supported."],
             RefHB: "3.3-4",
             AssertOutput: false));
@@ -36,7 +36,7 @@ public class InterlisFileTest
         yield return FullFile(new(
             "Missing semicolon after version is rejected",
             "INTERLIS 2.4",
-            ExpectedLog: ["Compile error at 1:12-1:13 missing ';' at '<EOF>'."],
+            ExpectedErrors: ["Compile error at 1:12-1:13 missing ';' at '<EOF>'."],
             RefHB: "3.3-4",
             AssertOutput: false));
 
@@ -127,7 +127,7 @@ public class InterlisFileTest
                 END TopicName;
             END ModelName.
             """,
-            ExpectedLog: ["Type check error in 'ModelName.ClassName' at 3:4-4:18: must be declared ABSTRACT because it is not part of a topic."],
+            ExpectedErrors: ["Type check error in 'ModelName.ClassName' at 3:4-4:18: must be declared ABSTRACT because it is not part of a topic."],
             Expected: new InterlisEnvironment
             {
                 Version = 2.4,
@@ -364,7 +364,7 @@ public class InterlisFileTest
                 END TopicName;
             END ModelName.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'ExternalClassName' from ModelName.TopicName.ClassName' at 43:56-43:73"],
+            ExpectedErrors: ["Could not resolve 'reference 'ExternalClassName' from ModelName.TopicName.ClassName' at 43:56-43:73"],
             Expected: TestTools.Build(() =>
             {
                 // Text domain
@@ -780,7 +780,7 @@ public class InterlisFileTest
                 IMPORTS Unknown_Model;
             END Model_C.
             """,
-            ExpectedLog: ["Could not resolve 'reference 'Unknown_Model' from Model_C' at 12:12-12:25"],
+            ExpectedErrors: ["Could not resolve 'reference 'Unknown_Model' from Model_C' at 12:12-12:25"],
             Expected: TestTools.Build(() =>
             {
                 var modelA = new ModelDef

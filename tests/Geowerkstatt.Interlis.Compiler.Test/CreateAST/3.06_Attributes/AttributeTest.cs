@@ -73,7 +73,7 @@ public class AttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassName -> Name' at 5:12-5:39: is TRANSIENT but has no factor assignment fixing its value."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.ClassName -> Name' at 5:12-5:39: is TRANSIENT but has no factor assignment fixing its value."],
             RefHB: "3.6.1-5",
             AssertOutput: false));
 
@@ -250,7 +250,7 @@ public class AttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:38: the value range must not be wider than the inherited range."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:38: the value range must not be wider than the inherited range."],
             RefHB: "3.6.1-7",
             AssertOutput: false));
 
@@ -275,7 +275,7 @@ public class AttributeTest
                 The narrowing check compares what the attribute types stand for: a domain alias is followed to the
                 domain's effective type, so hiding the wider range behind a domain does not evade the check.
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 10:12-10:34: the value range must not be wider than the inherited range."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.ClassB -> attr' at 10:12-10:34: the value range must not be wider than the inherited range."],
             RefHB: "3.6.1-7",
             AssertOutput: false));
 
@@ -296,7 +296,7 @@ public class AttributeTest
                 An attribute whose type is abstract must itself be declared ABSTRACT — whether the abstract type is
                 written inline or referenced through a domain.
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.ClassA -> inline' at 6:8-6:25: must be declared ABSTRACT because its type is not fully defined.",
                 "Type check error in 'Model.ClassA -> aliased' at 7:8-7:23: must be declared ABSTRACT because its type is not fully defined.",
@@ -324,7 +324,7 @@ public class AttributeTest
                 again instead of restricting it — an extended attribute can not shed the inherited numeric bounds
                 the way it inherits omitted enumeration or line-type parts (ili2c agrees on both counts).
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:38: an abstract NUMERIC can not extend a concrete numeric range."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:38: an abstract NUMERIC can not extend a concrete numeric range."],
             RefHB: "3.8.5-1",
             AssertOutput: false));
 
@@ -376,7 +376,7 @@ public class AttributeTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.Topic.ClassB -> must' at 12:12-12:38: the cardinality must not be wider than the inherited cardinality.",
                 "Type check error in 'Model.Topic.ClassB -> bag' at 13:12-13:45: the cardinality must not be wider than the inherited cardinality.",
@@ -400,7 +400,7 @@ public class AttributeTest
             END Model.
             """,
             Description: "The unit-extension rules apply to extended attributes like to domain extensions.",
-            ExpectedLog: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:49: the inherited concrete unit 'm' can not be overridden."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.ClassB -> attr' at 8:12-8:49: the inherited concrete unit 'm' can not be overridden."],
             RefHB: "3.8.5-10",
             AssertOutput: false));
 
@@ -566,7 +566,7 @@ public class AttributeTest
                 A only extends INTO the cycle — its own chain never returns to it, so it carries no cycle error.
                 """,
             RefHB: "3.5.3-13",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.Topic.B' at 4:8-5:14: the class transitively EXTENDS itself.",
                 "Type check error in 'Model.Topic.C' at 6:8-7:14: the class transitively EXTENDS itself.",

@@ -299,7 +299,7 @@ public class DomainTest
             END Model.
             """,
             Description: "Domain extension legality: an extension must restrict its base.",
-            ExpectedLog: ["Type check error in 'Model.txt' at 5:8-5:33: the domain must be of the same kind as its base 'num'."],
+            ExpectedErrors: ["Type check error in 'Model.txt' at 5:8-5:33: the domain must be of the same kind as its base 'num'."],
             RefHB: "3.8.1",
             AssertOutput: false));
 
@@ -314,7 +314,7 @@ public class DomainTest
             END Model.
             """,
             Description: "Domain extension legality (RefHB 3.8.1): an extension must restrict its base.",
-            ExpectedLog: ["Type check error in 'Model.wide' at 5:8-5:38: the value range must not be wider than the inherited range."],
+            ExpectedErrors: ["Type check error in 'Model.wide' at 5:8-5:38: the value range must not be wider than the inherited range."],
             RefHB: "3.8.5",
             AssertOutput: false));
 
@@ -330,7 +330,7 @@ public class DomainTest
             END Model.
             """,
             Description: "Domain extension legality (RefHB 3.8.1): an extension must restrict its base.",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.normal' at 5:8-5:46: the precision must match the inherited precision.",
                 "Type check error in 'Model.lenient' at 6:8-6:54: the domain must be of the same kind as its base 'normal'.",
@@ -351,7 +351,7 @@ public class DomainTest
             END Model.
             """,
             Description: "Domain extension legality (RefHB 3.8.1): an extension must restrict its base.",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.long' at 5:8-5:37: the text length must not exceed the inherited length.",
                 "Type check error in 'Model.multi' at 6:8-6:38: an MTEXT can not extend a TEXT.",
@@ -375,7 +375,7 @@ public class DomainTest
                 (RefHB 3.8.5-1), and a pure alias of an abstract domain concretizes nothing. Only coordinate ranges have
                 the GENERIC alternative (see the accepted "Generic coordinate domain" case).
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.size' at 4:8-4:23: must be declared ABSTRACT because its type is not fully defined.",
                 "Type check error in 'Model.width' at 6:8-6:41: must be declared ABSTRACT because its type is not fully defined.",
@@ -414,7 +414,7 @@ public class DomainTest
                 bound-less domain extending a concrete range is the line marked invalid; ili2c rejects the form outright
                 ("Abstract numeric types can not extend concrete numeric types").
                 """,
-            ExpectedLog: ["Type check error in 'Model.openFloat' at 5:8-5:57: an abstract NUMERIC can not extend a concrete numeric range."],
+            ExpectedErrors: ["Type check error in 'Model.openFloat' at 5:8-5:57: an abstract NUMERIC can not extend a concrete numeric range."],
             RefHB: "3.8.5-1",
             AssertOutput: false));
 
@@ -432,7 +432,7 @@ public class DomainTest
                 The notation is part of the type: a mantissa (float) range has no uniform grid, so extending a decimal
                 range in float notation replaces the base's grid even when the digit count and the bounds are identical.
                 """,
-            ExpectedLog: ["Type check error in 'Model.floatRange' at 5:8-5:57: the domain must be of the same kind as its base 'fixedRange'."],
+            ExpectedErrors: ["Type check error in 'Model.floatRange' at 5:8-5:57: the domain must be of the same kind as its base 'fixedRange'."],
             RefHB: "3.8.5-3",
             Ili2cDivergenceReason: "ili2c compares only the bounds of a numeric extension and accepts the notation change; the notation is part of the type for us (a mantissa range has no uniform grid, RefHB 3.8.5-3), so we reject.",
             AssertOutput: false));
@@ -446,7 +446,7 @@ public class DomainTest
                     a EXTENDS a = MANDATORY;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.a' at 4:8-4:32: the domain transitively EXTENDS itself."],
+            ExpectedErrors: ["Type check error in 'Model.a' at 4:8-4:32: the domain transitively EXTENDS itself."],
             RefHB: "3.8.1",
             AssertOutput: false));
 
@@ -493,7 +493,7 @@ public class DomainTest
                 The precision may not be changed in either direction — refining is as invalid as reducing
                 (the RefHB 3.8.5-5 example marks the refined 'Genau' as "falsch, da Stellenzahl grösser").
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.cityPopulation' at 5:8-5:70: the precision must match the inherited precision.",
                 "Type check error in 'Model.precisionNumber' at 7:8-7:57: the precision must match the inherited precision.",
@@ -522,7 +522,7 @@ public class DomainTest
                 (ili2c reports only the middle domain and never sees the widening further down the chain; the file
                 verdicts agree nonetheless.)
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.anySize' at 5:8-5:50: an abstract NUMERIC can not extend a concrete numeric range.",
                 "Type check error in 'Model.wideSize' at 7:8-7:44: the value range must not be wider than the inherited range.",
@@ -554,7 +554,7 @@ public class DomainTest
                 range is), and an inherited concrete unit can not be overridden. 'meters' and 'half' show the legal
                 forms: refining the abstract unit, and inheriting the concrete unit silently.
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.withUnit' at 5:8-5:53: the inherited definition has no unit, so the extension can not introduce one.",
                 "Type check error in 'Model.seconds' at 7:8-7:55: the unit 's' must be an extension of the inherited abstract unit 'LENGTH'.",
@@ -591,7 +591,7 @@ public class DomainTest
                     bad = 0.0 .. 9.9 [INTERLIS.LENGTH];
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.bad' at 4:8-4:43: the abstract unit 'LENGTH' is only allowed while the value range is undefined."],
+            ExpectedErrors: ["Type check error in 'Model.bad' at 4:8-4:43: the abstract unit 'LENGTH' is only allowed while the value range is undefined."],
             RefHB: "3.8.5-6",
             AssertOutput: false));
 
@@ -610,7 +610,7 @@ public class DomainTest
                 definition part — so it can not extend a length-restricted base (a lengthening is explicitly called
                 incompatible with the base there). ili2c rejects this too.
                 """,
-            ExpectedLog: ["Type check error in 'Model.unlimited' at 5:8-5:39: the text length must not exceed the inherited length."],
+            ExpectedErrors: ["Type check error in 'Model.unlimited' at 5:8-5:39: the text length must not exceed the inherited length."],
             RefHB: "3.8.1-3",
             AssertOutput: false));
 
@@ -631,7 +631,7 @@ public class DomainTest
                 narrowing an identity value range would invalidate identities existing objects already carry.
                 """,
             RefHB: "3.8.9-13",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.Oid6' at 5:8-5:39: a concrete OID definition can not be extended.",
                 "Type check error in 'Model.StillAny' at 6:8-6:51: an OID ANY definition can only be extended by a concrete OID definition (not OID ANY).",
@@ -658,7 +658,7 @@ public class DomainTest
                 any bound-less NUMERIC (RefHB 3.8.5-1), so the domain must be declared ABSTRACT (RefHB 3.8-3).
                 """,
             RefHB: "3.8.9-3",
-            ExpectedLog: ["Type check error in 'Model.Open' at 4:8-4:27: must be declared ABSTRACT because its type is not fully defined."],
+            ExpectedErrors: ["Type check error in 'Model.Open' at 4:8-4:27: must be declared ABSTRACT because its type is not fully defined."],
             Ili2cDivergenceReason: """
                 ili2c accepts a concrete domain defined as OID NUMERIC; a bound-less NUMERIC counts as abstract
                 (RefHB 3.8.5-1) and an incomplete definition must be declared ABSTRACT (RefHB 3.8-3), so we
@@ -700,7 +700,7 @@ public class DomainTest
                 (RefHB 3.8-10; ili2c's grammar rejects any other path outright).
                 """,
             RefHB: "3.8-8",
-            ExpectedLog: ["'Unknown' at 4:43-4:50 can not be used in domain constraint 'c' of 'Model.ShortText' because the condition can only refer to the domain value itself (THIS)"],
+            ExpectedErrors: ["'Unknown' at 4:43-4:50 can not be used in domain constraint 'c' of 'Model.ShortText' because the condition can only refer to the domain value itself (THIS)"],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -714,7 +714,7 @@ public class DomainTest
             """,
             Description: "A domain value has no members to step into; only the bare THIS is resolvable (RefHB 3.8-10).",
             RefHB: "3.8-8",
-            ExpectedLog: ["'Foo' at 4:43-4:54 can not be used in domain constraint 'c' of 'Model.ShortText' because the condition can only refer to the domain value itself (THIS)"],
+            ExpectedErrors: ["'Foo' at 4:43-4:54 can not be used in domain constraint 'c' of 'Model.ShortText' because the condition can only refer to the domain value itself (THIS)"],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -728,7 +728,7 @@ public class DomainTest
             """,
             Description: "RefHB 3.8-10: the condition is a Logical-Expression, so its result must be boolean.",
             RefHB: "3.8-8",
-            ExpectedLog: ["Type check error in 'Model.ShortText' at 4:43-4:44: the condition of domain constraint 'c' must be a boolean expression."],
+            ExpectedErrors: ["Type check error in 'Model.ShortText' at 4:43-4:44: the condition of domain constraint 'c' must be a boolean expression."],
             Ili2cDivergenceReason: """
                 ili2c does not judge a domain constraint's result type at all (a bare numeric constant is
                 accepted); RefHB 3.8-10 demands a Logical-Expression, so we reject.
@@ -750,7 +750,7 @@ public class DomainTest
                 build time.
                 """,
             RefHB: "3.8-8",
-            ExpectedLog: ["Compile error at 4:67-4:68 Duplicate domain constraint c."],
+            ExpectedErrors: ["Compile error at 4:67-4:68 Duplicate domain constraint c."],
             Ili2cDivergenceReason: """
                 ili2c accepts duplicate domain constraint names; RefHB 3.8-8 demands per-domain uniqueness
                 ("Jede Einschränkung hat innerhalb der Wertebereichsdefinition einen eindeutigen Namen"), so we
@@ -794,7 +794,7 @@ public class DomainTest
                 effective domain, unaddressable for diagnostics and tooling.
                 """,
             RefHB: "3.8-8",
-            ExpectedLog: ["Type check error in 'Model.Sub' at 6:8-6:75: the domain constraint name 'c' is already used by an inherited constraint."],
+            ExpectedErrors: ["Type check error in 'Model.Sub' at 6:8-6:75: the domain constraint name 'c' is already used by an inherited constraint."],
             Ili2cDivergenceReason: """
                 ili2c accepts a domain constraint whose name repeats an inherited one; both restrictions apply
                 (RefHB 3.8-8 "gelten alle", no override semantics), leaving two same-named restrictions in the

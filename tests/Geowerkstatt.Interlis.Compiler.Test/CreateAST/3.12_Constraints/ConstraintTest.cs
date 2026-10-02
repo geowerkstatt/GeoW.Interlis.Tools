@@ -332,7 +332,7 @@ public class ConstraintTest
                 UNIQUE Entries->Code over a LIST). The (LOCAL) form exists for exactly that — its structure path is
                 exempt (see 'Local uniqueness over defined structure members is accepted').
                 """,
-            ExpectedLog: ["The attribute 'Model.Topic.ClassName -> sub' at 9:19-9:27 can not be used in a UNIQUE constraint because its maximum cardinality is above 1"],
+            ExpectedErrors: ["The attribute 'Model.Topic.ClassName -> sub' at 9:19-9:27 can not be used in a UNIQUE constraint because its maximum cardinality is above 1"],
             RefHB: "3.12-15",
             AssertOutput: false));
 
@@ -362,7 +362,7 @@ public class ConstraintTest
                 class's association accesses when the ASSOCIATION is parsed, so a class-inline UNIQUE over a role of a
                 later association fails in ili2c with "not applicable" before its cardinality rule is even evaluated.
                 """,
-            ExpectedLog: ["The role 'Model.Topic.Ownership -> OwnerRole' at 14:19-14:36 can not be used in a UNIQUE constraint because its maximum cardinality is above 1"],
+            ExpectedErrors: ["The role 'Model.Topic.Ownership -> OwnerRole' at 14:19-14:36 can not be used in a UNIQUE constraint because its maximum cardinality is above 1"],
             RefHB: "3.12-15",
             AssertOutput: false));
 
@@ -425,7 +425,7 @@ public class ConstraintTest
                 END Topic;
             END Model.
             """,
-            ExpectedLog: ["Could not resolve 'sub' in 'Model.Topic.ClassName' at 5:27-5:30"],
+            ExpectedErrors: ["Could not resolve 'sub' in 'Model.Topic.ClassName' at 5:27-5:30"],
             RefHB: "3.12-38",
             AssertOutput: false));
 
@@ -657,7 +657,7 @@ public class ConstraintTest
                 RefHB 3.12: a constraint condition must be a boolean expression. A numeric (non-boolean) body is rejected
                 (GEOW previously accepted it, unlike ili2c).
                 """,
-            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:33-6:38: the constraint condition must be a boolean expression."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.C.Constraint1' at 6:33-6:38: the constraint condition must be a boolean expression."],
             RefHB: "3.12-32",
             AssertOutput: false));
 
@@ -692,7 +692,7 @@ public class ConstraintTest
             END Model.
             """,
             Description: "The plausibility constraint condition must be boolean too.",
-            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:30-6:35: the constraint condition must be a boolean expression."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.C.Constraint1' at 6:30-6:35: the constraint condition must be a boolean expression."],
             RefHB: "3.12-38",
             AssertOutput: false));
 
@@ -710,7 +710,7 @@ public class ConstraintTest
             END Model.
             """,
             Description: "The set constraint condition must be boolean too.",
-            ExpectedLog: ["Type check error in 'Model.Topic.C.Constraint1' at 6:27-6:32: the constraint condition must be a boolean expression."],
+            ExpectedErrors: ["Type check error in 'Model.Topic.C.Constraint1' at 6:27-6:32: the constraint condition must be a boolean expression."],
             RefHB: "3.12-39",
             AssertOutput: false));
 
@@ -760,7 +760,7 @@ public class ConstraintTest
                 Circular domain EXTENDS: each domain in the cycle is reported; the constraint condition itself stays
                 unchecked (the alias can not be seen through, so its value type is unknown — and the walk must not loop).
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Type check error in 'Model.a' at 4:8-4:32: the domain transitively EXTENDS itself.",
                 "Type check error in 'Model.b' at 5:8-5:32: the domain transitively EXTENDS itself.",

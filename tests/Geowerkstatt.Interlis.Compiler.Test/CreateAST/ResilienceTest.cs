@@ -25,7 +25,7 @@ public class ResilienceTest
             TOPIC
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 3:5-3:6 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 3:5-3:6 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -37,7 +37,7 @@ public class ResilienceTest
             CLASS
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 4:5-4:6 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 4:5-4:6 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -49,7 +49,7 @@ public class ResilienceTest
             VIEW
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 4:4-4:5 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 4:4-4:5 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -61,7 +61,7 @@ public class ResilienceTest
             GRAPHIC
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 4:7-4:8 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 4:7-4:8 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -72,7 +72,7 @@ public class ResilienceTest
             FUNCTION
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 3:8-3:9 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 3:8-3:9 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -83,7 +83,7 @@ public class ResilienceTest
             FUNCTION f()
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 3:12-3:13 mismatched input '<EOF>' expecting ':'."],
+            ExpectedErrors: ["Compile error at 3:12-3:13 mismatched input '<EOF>' expecting ':'."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -94,7 +94,7 @@ public class ResilienceTest
             SIGN BASKET
             """,
             Description: "Definitions whose mandatory name is not yet typed: the definition is dropped, the model survives.",
-            ExpectedLog: ["Compile error at 3:11-3:12 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 3:11-3:12 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -107,7 +107,7 @@ public class ResilienceTest
             SUBDIVISION
             """,
             Description: "Attribute name absent although a CONTINUOUS/SUBDIVISION prefix already committed the attribute rule.",
-            ExpectedLog: ["Compile error at 5:11-5:12 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 5:11-5:12 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -120,7 +120,7 @@ public class ResilienceTest
             a : REFERENCE TO
             """,
             Description: "A reference attribute whose target is not yet written.",
-            ExpectedLog: ["Compile error at 5:16-5:17 mismatched input '<EOF>' expecting {'(', 'ANYCLASS', 'ANYSTRUCTURE', 'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            ExpectedErrors: ["Compile error at 5:16-5:17 mismatched input '<EOF>' expecting {'(', 'ANYCLASS', 'ANYSTRUCTURE', 'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -136,7 +136,7 @@ public class ResilienceTest
                 Constraints whose mandatory condition expression is not yet written: the constraint is dropped so it
                 never reaches the type checker with a null condition.
                 """,
-            ExpectedLog: ["Compile error at 5:23-5:24 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
+            ExpectedErrors: ["Compile error at 5:23-5:24 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -152,7 +152,7 @@ public class ResilienceTest
                 Constraints whose mandatory condition expression is not yet written: the constraint is dropped so it
                 never reaches the type checker with a null condition.
                 """,
-            ExpectedLog: ["Compile error at 5:24-5:25 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
+            ExpectedErrors: ["Compile error at 5:24-5:25 mismatched input '<EOF>' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -168,7 +168,7 @@ public class ResilienceTest
                 Constraints whose mandatory condition expression is not yet written: the constraint is dropped so it
                 never reaches the type checker with a null condition.
                 """,
-            ExpectedLog: ["Compile error at 5:7-5:8 mismatched input ';' expecting {'(', 'AGGREGATES', 'PARENT', 'THATAREA', 'THIS', 'THISAREA', 'WHERE', IDENTIFIER, '\\\\'}."],
+            ExpectedErrors: ["Compile error at 5:7-5:8 mismatched input ';' expecting {'(', 'AGGREGATES', 'PARENT', 'THATAREA', 'THIS', 'THISAREA', 'WHERE', IDENTIFIER, '\\\\'}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -179,7 +179,7 @@ public class ResilienceTest
             DOMAIN D = TEXT *;
             """,
             Description: "Numeric tokens that are absent or synthetic (would otherwise fail int.Parse).",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 3:17-3:18 missing POS_NUMBER at ';'.",
                 "Compile error at 3:18-3:19 extraneous input '<EOF>' expecting {'CLASS', 'CONTEXT', 'DOMAIN', 'END', 'FUNCTION', 'LINE', 'PARAMETER', 'REFSYSTEM', 'SIGN', 'STRUCTURE', 'TOPIC', 'UNIT', 'VIEW'}.",
@@ -194,7 +194,7 @@ public class ResilienceTest
             DOMAIN D = COORD 0.0 .. 1.0, 0.0 .. 1.0, ROTATION ->
             """,
             Description: "Numeric tokens that are absent or synthetic (would otherwise fail int.Parse).",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 3:50-3:52 missing POS_NUMBER at '->'.",
                 "Compile error at 3:52-3:53 mismatched input '<EOF>' expecting POS_NUMBER.",
@@ -209,7 +209,7 @@ public class ResilienceTest
             DOMAIN D = NUMERIC {
             """,
             Description: "Numeric tokens that are absent or synthetic (would otherwise fail int.Parse).",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 3:20-3:21 mismatched input '<EOF>' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}.",
                 "Type check error in 'M.D' at 3:7-3:20: must be declared ABSTRACT because its type is not fully defined.",
@@ -225,7 +225,7 @@ public class ResilienceTest
             VIEW V PROJECTION
             """,
             Description: "A view formation and a signature assignment whose operands are not yet written.",
-            ExpectedLog: ["Compile error at 4:17-4:18 mismatched input '<EOF>' expecting 'OF'."],
+            ExpectedErrors: ["Compile error at 4:17-4:18 mismatched input '<EOF>' expecting 'OF'."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -238,7 +238,7 @@ public class ResilienceTest
             r : ( p := )
             """,
             Description: "A view formation and a signature assignment whose operands are not yet written.",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 5:11-5:12 mismatched input ')' expecting {'{', '>', '>>', '#', 'ACCORDING', 'AGGREGATES', 'AREA', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}.",
                 "Compile error at 5:12-5:13 mismatched input '<EOF>' expecting {';', ','}.",
@@ -257,7 +257,7 @@ public class ResilienceTest
             MANDATORY CONSTRAINT c: a ->
             """,
             Description: "An object path with a trailing '->' (the following step is not yet written).",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 5:28-5:29 mismatched input '<EOF>' expecting {'AGGREGATES', 'PARENT', 'THATAREA', 'THIS', 'THISAREA', IDENTIFIER, '\\\\'}.",
                 // The head 'a' is completely typed and names no member of C, so the path resolver reports it even
@@ -274,7 +274,7 @@ public class ResilienceTest
             UNIT u = 5 *
             """,
             Description: "A derived unit whose conversion factor is not yet written.",
-            ExpectedLog: ["Compile error at 3:12-3:13 mismatched input '<EOF>' expecting {'LNBASE', 'PI', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER}."],
+            ExpectedErrors: ["Compile error at 3:12-3:13 mismatched input '<EOF>' expecting {'LNBASE', 'PI', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -285,7 +285,7 @@ public class ResilienceTest
             IMPORTS
             """,
             Description: "An import whose model name is not yet written.",
-            ExpectedLog: ["Compile error at 3:7-3:8 mismatched input '<EOF>' expecting {'INTERLIS', 'UNQUALIFIED', IDENTIFIER}."],
+            ExpectedErrors: ["Compile error at 3:7-3:8 mismatched input '<EOF>' expecting {'INTERLIS', 'UNQUALIFIED', IDENTIFIER}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -299,7 +299,7 @@ public class ResilienceTest
             CARDINALITY =
             """,
             Description: "An association whose CARDINALITY clause has no bounds yet (the whole association still compiles).",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 6:13-6:14 mismatched input '<EOF>' expecting '{'.",
                 "Compile error at 4:0-4:11 Start name 'A' and end name '' do not match.",
@@ -315,7 +315,7 @@ public class ResilienceTest
             DOMAIN D = (red,
             """,
             Description: "An enumeration with a trailing ',' whose next value is not written yet.",
-            ExpectedLog: ["Compile error at 3:16-3:17 mismatched input '<EOF>' expecting IDENTIFIER."],
+            ExpectedErrors: ["Compile error at 3:16-3:17 mismatched input '<EOF>' expecting IDENTIFIER."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -328,7 +328,7 @@ public class ResilienceTest
             EXISTENCE CONSTRAINT
             """,
             Description: "An existence constraint whose checked path is not yet written.",
-            ExpectedLog: ["Compile error at 5:20-5:21 mismatched input '<EOF>' expecting {'AGGREGATES', 'PARENT', 'THATAREA', 'THIS', 'THISAREA', IDENTIFIER, '\\\\'}."],
+            ExpectedErrors: ["Compile error at 5:20-5:21 mismatched input '<EOF>' expecting {'AGGREGATES', 'PARENT', 'THATAREA', 'THIS', 'THISAREA', IDENTIFIER, '\\\\'}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -341,7 +341,7 @@ public class ResilienceTest
             MANDATORY CONSTRAINT k: PARAMETER
             """,
             Description: "A 'PARAMETER' runtime-parameter reference used as an expression factor, left incomplete.",
-            ExpectedLog: ["Compile error at 5:33-5:34 mismatched input '<EOF>' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            ExpectedErrors: ["Compile error at 5:33-5:34 mismatched input '<EOF>' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -371,7 +371,7 @@ public class ResilienceTest
                 without a viable alternative. Those nodes are not one of the implemented alternatives, but only the
                 syntax error is reported, not a misleading "rule not implemented" warning.
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 14:11-14:13 mismatched input '->' expecting {';', ':='}.",
                 "Type check error in 'M.T.HutView -> city' at 14:2-14:13: a class can only be referenced with REFERENCE TO.",

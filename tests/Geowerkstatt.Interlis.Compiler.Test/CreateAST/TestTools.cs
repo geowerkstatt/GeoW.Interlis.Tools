@@ -98,13 +98,13 @@ public class TestTools
     }
 
     /// <summary>
-    /// Asserts the messages logged by the compiler against <see cref="CompilationTestCase.ExpectedWarnings"/> (warnings)
-    /// and <see cref="CompilationTestCase.ExpectedLog"/> (everything else).
+    /// Asserts the messages logged by the compiler against <see cref="CompilationTestCase.ExpectedErrors"/> (error level
+    /// and above) and <see cref="CompilationTestCase.ExpectedWarnings"/> (warning level and below).
     /// </summary>
     private static async Task AssertLog(CompilationTestCase data, TestLoggerProvider logProvider)
     {
-        await Assert.That(logProvider.GetMessages(level => level != LogLevel.Warning)).IsEquivalentTo(data.ExpectedLog ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
-        await Assert.That(logProvider.GetMessages(level => level == LogLevel.Warning)).IsEquivalentTo(data.ExpectedWarnings ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(logProvider.GetMessages(level => level >= LogLevel.Error)).IsEquivalentTo(data.ExpectedErrors ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(logProvider.GetMessages(level => level <= LogLevel.Warning)).IsEquivalentTo(data.ExpectedWarnings ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
     /// <summary>
