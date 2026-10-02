@@ -4,7 +4,7 @@ namespace Geowerkstatt.Interlis.Compiler.Test;
 
 public class TestLogger() : ILogger
 {
-    public List<string> Messages { get; } = [];
+    public List<(LogLevel Level, string Message)> Entries { get; } = [];
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
@@ -17,6 +17,6 @@ public class TestLogger() : ILogger
             return;
         }
 
-        Messages.Add(formatter(state, exception));
+        Entries.Add((logLevel, formatter(state, exception)));
     }
 }

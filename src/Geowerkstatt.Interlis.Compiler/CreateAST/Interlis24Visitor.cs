@@ -148,6 +148,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     /// <summary>
     /// Create a meta-attribute dictionary from the meta comments preceding the specified <paramref name="context"/>.
+    /// Meta-attribute names must be unique within a meta element (eCH-0117 2.1); a duplicate name is reported as a
+    /// warning, since the model is still valid INTERLIS, and the last value wins.
     /// </summary>
     public Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context)
     {
@@ -166,14 +168,14 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 .Select(g => $"'{g.Key}'")
                 .ToList();
 
-            if (duplicateMetaAttributes.Count == 0)
+            if (duplicateMetaAttributes.Count > 0)
             {
-                return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
+                ReportWarning(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
             }
-            else
-            {
-                ReportError(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
-            }
+
+            return metaAttributeList
+                .GroupBy(m => m.Item1)
+                .ToDictionary(g => g.Key, g => g.Last().Item2);
         }
 
         return new Dictionary<string, string>();

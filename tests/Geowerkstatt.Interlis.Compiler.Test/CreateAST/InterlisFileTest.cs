@@ -18,7 +18,7 @@ public class InterlisFileTest
         yield return FullFile(new(
             "Unsupported version is rejected",
             "INTERLIS 2.3;",
-            ExpectedLog: ["Unsupported INTERLIS version 2.3 at 1:9-1:12. Only version 2.4 is supported."],
+            ExpectedWarnings: ["Unsupported INTERLIS version 2.3 at 1:9-1:12. Only version 2.4 is supported."],
             RefHB: "3.3-1",
             AssertOutput: false));
 
@@ -28,11 +28,8 @@ public class InterlisFileTest
             MODEL ModelName AT "foo:test" VERSION "1" =
             END ModelName.
             """,
-            ExpectedLog:
-            [
-                "Compile error at 1:0-1:5 mismatched input 'MODEL' expecting 'INTERLIS'.",
-                "Unsupported INTERLIS version (null) at 1:0-1:5. Only version 2.4 is supported.",
-            ],
+            ExpectedLog: ["Compile error at 1:0-1:5 mismatched input 'MODEL' expecting 'INTERLIS'."],
+            ExpectedWarnings: ["Unsupported INTERLIS version (null) at 1:0-1:5. Only version 2.4 is supported."],
             RefHB: "3.3-4",
             AssertOutput: false));
 

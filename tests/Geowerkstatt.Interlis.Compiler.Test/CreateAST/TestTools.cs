@@ -5,7 +5,6 @@ using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.CreateAST;
 using Geowerkstatt.Interlis.Compiler.Test;
 using Microsoft.Extensions.Logging;
-using Microsoft.Testing.Platform.Logging;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -75,7 +74,7 @@ public class TestTools
                         );
             }
 
-            await Assert.That(logProvider.GetMessages()).IsEquivalentTo(data.ExpectedLog ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+            await AssertLog(data, logProvider);
         }
     }
 
@@ -94,8 +93,18 @@ public class TestTools
                 await AssertDeepEqual(data.Expected, actual);
             }
 
-            await Assert.That(testLogger.GetMessages()).IsEquivalentTo(data.ExpectedLog ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+            await AssertLog(data, testLogger);
         }
+    }
+
+    /// <summary>
+    /// Asserts the messages logged by the compiler against <see cref="CompilationTestCase.ExpectedWarnings"/> (warnings)
+    /// and <see cref="CompilationTestCase.ExpectedLog"/> (everything else).
+    /// </summary>
+    private static async Task AssertLog(CompilationTestCase data, TestLoggerProvider logProvider)
+    {
+        await Assert.That(logProvider.GetMessages(level => level != LogLevel.Warning)).IsEquivalentTo(data.ExpectedLog ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(logProvider.GetMessages(level => level == LogLevel.Warning)).IsEquivalentTo(data.ExpectedWarnings ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
     /// <summary>
