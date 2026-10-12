@@ -159,8 +159,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     /// <summary>
     /// Create a meta-attribute dictionary from the meta comments preceding the specified <paramref name="context"/>.
-    /// Meta-attribute names must be unique within a meta element (eCH-0117 2.1); a duplicate name is reported as
-    /// information, since the model is still valid INTERLIS, and the last value wins.
+    /// Meta-attribute names must be unique within a meta element (eCH-0117 2.1); every repetition of a name is reported
+    /// as information at the repeated name, and once more at the definition with all duplicate names, since the model
+    /// is still valid INTERLIS. The last value wins.
     /// </summary>
     public Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context)
     {
@@ -171,10 +172,21 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             interlisParser.RemoveErrorListeners();
             interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
 
-            var metaAttributeList = VisitMetaComments(interlisParser.metaComments());
+            var metaAttributes = interlisParser.metaComments().metaComment().SelectMany(c => c.metaAttribute()).ToList();
+            var namedMetaAttributes = metaAttributes.Where(a => IsValidToken(a.name)).ToList();
 
-            var duplicateMetaAttributes = metaAttributeList
-                .GroupBy(m => m.Item1)
+            // The meta comment tokens keep their position in the source, so the repeated name can be reported directly.
+            var names = new HashSet<string>();
+            foreach (var metaAttribute in namedMetaAttributes)
+            {
+                if (!names.Add(metaAttribute.name.Text))
+                {
+                    ReportInformation(metaAttribute.name, $"Duplicate meta attribute '{metaAttribute.name.Text}', only the last value is used");
+                }
+            }
+
+            var duplicateMetaAttributes = namedMetaAttributes
+                .GroupBy(a => a.name.Text)
                 .Where(g => g.Count() > 1)
                 .Select(g => $"'{g.Key}'")
                 .ToList();
@@ -184,7 +196,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 ReportInformation(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
             }
 
-            return metaAttributeList
+            return metaAttributes
+                .Select(VisitMetaAttribute)
                 .GroupBy(m => m.Item1)
                 .ToDictionary(g => g.Key, g => g.Last().Item2);
         }
@@ -1894,16 +1907,6 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
 
         return root;
-    }
-
-    public override List<Tuple<string, string>> VisitMetaComments([NotNull] Interlis24Parser.MetaCommentsContext context)
-    {
-        return context.metaComment().SelectMany(VisitMetaComment).ToList();
-    }
-
-    public override List<Tuple<string, string>> VisitMetaComment([NotNull] Interlis24Parser.MetaCommentContext context)
-    {
-        return context.metaAttribute().Select(VisitMetaAttribute).ToList();
     }
 
     public override Tuple<string, string> VisitMetaAttribute([NotNull] Interlis24Parser.MetaAttributeContext context)

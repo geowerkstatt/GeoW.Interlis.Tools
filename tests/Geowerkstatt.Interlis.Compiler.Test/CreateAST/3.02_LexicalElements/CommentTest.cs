@@ -102,7 +102,12 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" =
             END Test.
             """,
-            ExpectedInfo: ["Compile info at 3:0-3:5 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'."],
+            ExpectedInfo:
+            [
+                "Compile info at 1:28-1:33 Duplicate meta attribute 'KEY_B', only the last value is used.",
+                "Compile info at 2:25-2:30 Duplicate meta attribute 'KEY_A', only the last value is used.",
+                "Compile info at 3:0-3:5 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.",
+            ],
             RefHB: "3.2.8.1-1",
             Ech0117: "2.1-3",
             Expected: new ModelDef
