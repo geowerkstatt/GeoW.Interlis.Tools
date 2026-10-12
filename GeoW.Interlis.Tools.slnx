@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="src/Geowerkstatt.Interlis.Common/Geowerkstatt.Interlis.Common.csproj" />
+  <Project Path="src/Geowerkstatt.Interlis.Compiler/Geowerkstatt.Interlis.Compiler.csproj" />
+  <Project Path="src/Geowerkstatt.Interlis.RepositoryCrawler/Geowerkstatt.Interlis.RepositoryCrawler.csproj" />
+  <Project Path="src/Geowerkstatt.Interlis.XtfReader/Geowerkstatt.Interlis.XtfReader.csproj" />
+  <Project Path="tests/Geowerkstatt.Interlis.Compiler.Test/Geowerkstatt.Interlis.Compiler.Test.csproj" />
+  <Project Path="tests/Geowerkstatt.Interlis.RepositoryCrawler.Test/Geowerkstatt.Interlis.RepositoryCrawler.Test.csproj" />
+  <Project Path="tests/Geowerkstatt.Interlis.XtfReader.Test/Geowerkstatt.Interlis.XtfReader.Test.csproj" />
+</Solution>
