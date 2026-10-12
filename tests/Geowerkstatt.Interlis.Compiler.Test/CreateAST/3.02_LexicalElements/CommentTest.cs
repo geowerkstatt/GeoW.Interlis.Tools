@@ -102,7 +102,7 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" =
             END Test.
             """,
-            ExpectedWarnings: ["Compile warn at 3:0-3:5 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'."],
+            ExpectedInfo: ["Compile info at 3:0-3:5 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'."],
             RefHB: "3.2.8.1-1",
             Ech0117: "2.1-3",
             Expected: new ModelDef

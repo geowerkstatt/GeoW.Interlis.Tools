@@ -54,6 +54,17 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     }
 
     /// <summary>
+    /// Logs a compile note for the given <paramref name="offendingToken"/>. Like <see cref="ReportWarning(IToken, string)"/>
+    /// this does not make the input invalid.
+    /// </summary>
+    /// <param name="offendingToken">The <see cref="IToken"/> the note refers to.</param>
+    /// <param name="message">The note message.</param>
+    private void ReportInformation(IToken offendingToken, string message)
+    {
+        logger.LogInformation("Compile info at {Range} {Message}.", offendingToken.ToRange(), message);
+    }
+
+    /// <summary>
     /// Check if a terminal node is valid (not an error node and not a missing token).
     /// </summary>
     private bool IsValidToken(IToken? terminal)
@@ -148,8 +159,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     /// <summary>
     /// Create a meta-attribute dictionary from the meta comments preceding the specified <paramref name="context"/>.
-    /// Meta-attribute names must be unique within a meta element (eCH-0117 2.1); a duplicate name is reported as a
-    /// warning, since the model is still valid INTERLIS, and the last value wins.
+    /// Meta-attribute names must be unique within a meta element (eCH-0117 2.1); a duplicate name is reported as
+    /// information, since the model is still valid INTERLIS, and the last value wins.
     /// </summary>
     public Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context)
     {
@@ -170,7 +181,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
             if (duplicateMetaAttributes.Count > 0)
             {
-                ReportWarning(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
+                ReportInformation(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
             }
 
             return metaAttributeList

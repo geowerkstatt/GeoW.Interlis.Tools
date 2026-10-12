@@ -25,9 +25,14 @@ namespace Geowerkstatt.Interlis.Compiler;
 /// the ili2c comparison, which only looks at whether each compiler produced any errors at all.
 /// </param>
 /// <param name="ExpectedWarnings">
-/// The messages the Geowerkstatt compiler is expected to log at warning level or below, in order;
-/// <see langword="null"/> is treated as "no messages". Asserted separately from <paramref name="ExpectedErrors"/>, so a case shows at a glance that its input is
+/// The messages the Geowerkstatt compiler is expected to log at warning level, in order;
+/// <see langword="null"/> is treated as "no warnings". Asserted separately from <paramref name="ExpectedErrors"/>, so a case shows at a glance that its input is
 /// accepted. Ignored by the ili2c comparison, for which a warning does not make an input invalid.
+/// </param>
+/// <param name="ExpectedInfo">
+/// The messages the Geowerkstatt compiler is expected to log at information level or below, in order;
+/// <see langword="null"/> is treated as "no messages". Asserted separately from <paramref name="ExpectedWarnings"/>, so a
+/// case shows whether a message is a warning or only a note. Ignored by the ili2c comparison.
 /// </param>
 /// <param name="Expected">
 /// The expected AST the parsed result is deep-compared against when <paramref name="AssertOutput"/> is
@@ -66,6 +71,7 @@ public record CompilationTestCase(
     string? Description = null,
     List<string>? ExpectedErrors = null,
     List<string>? ExpectedWarnings = null,
+    List<string>? ExpectedInfo = null,
     object? Expected = null,
     bool AssertOutput = true,
     string? RefHB = null,
