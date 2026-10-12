@@ -12,5 +12,9 @@ public sealed class TestLoggerProvider : ILoggerProvider
     {
     }
 
-    public List<string> GetMessages() => logger.Messages;
+    /// <summary>All logged messages, in order.</summary>
+    public List<string> GetMessages() => logger.Entries.Select(e => e.Message).ToList();
+
+    /// <summary>The logged messages whose level matches <paramref name="predicate"/>, in order.</summary>
+    public List<string> GetMessages(Func<LogLevel, bool> predicate) => logger.Entries.Where(e => predicate(e.Level)).Select(e => e.Message).ToList();
 }

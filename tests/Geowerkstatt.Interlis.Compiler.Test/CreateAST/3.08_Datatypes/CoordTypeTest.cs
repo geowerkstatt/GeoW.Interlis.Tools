@@ -346,7 +346,7 @@ public class CoordTypeTest
                 The compiler does not yet resolve generic domain references (DEFERRED GENERICS), so the generic
                 'Coord2' used by the class attribute is currently reported as unresolved.
                 """,
-            ExpectedLog: ["Could not resolve 'reference 'Coord2' from Model' at 4:22-4:28"],
+            ExpectedErrors: ["Could not resolve 'reference 'Coord2' from Model' at 4:22-4:28"],
             RefHB: "3.8.8-20",
             AssertOutput: false));
 
@@ -364,7 +364,7 @@ public class CoordTypeTest
               END Topic;
             END Model.
             """,
-            ExpectedLog: ["Type check error in 'Model.Topic' at 3:2-9:12: must declare DEFERRED GENERICS for the generic domain 'Coord2'."],
+            ExpectedErrors: ["Type check error in 'Model.Topic' at 3:2-9:12: must declare DEFERRED GENERICS for the generic domain 'Coord2'."],
             RefHB: "3.8.8-23",
             AssertOutput: false));
 
@@ -398,7 +398,7 @@ public class CoordTypeTest
                 The compiler does not yet resolve the CONTEXT definition nor the generic domain it binds, so both
                 the context target 'MyModel.Coord2' and the generic 'Coord2' are currently reported as unresolved.
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Could not resolve 'reference 'MyModel.Coord2' from MyModel' at 16:4-16:18",
                 "Could not resolve 'reference 'Coord2' from MyModel' at 18:22-18:28",
@@ -432,7 +432,7 @@ public class CoordTypeTest
                 The same current gap as in 'Context definition resolving a generic coord domain': the CONTEXT target
                 'MyModel.Coord2' and the generic 'Coord2' are not yet resolved, so both are reported as unresolved.
                 """,
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Could not resolve 'reference 'MyModel.Coord2' from MyModel' at 12:4-12:18",
                 "Could not resolve 'reference 'Coord2' from MyModel' at 14:22-14:28",

@@ -43,7 +43,7 @@ public class BlackboxTypeTest
         yield return Rule(new(
             "Blackbox rejects invalid variant",
             "Attr : BLACKBOX TEXT;",
-            ExpectedLog: ["Compile error at 1:16-1:20 mismatched input 'TEXT' expecting {'BINARY', 'XML'}."],
+            ExpectedErrors: ["Compile error at 1:16-1:20 mismatched input 'TEXT' expecting {'BINARY', 'XML'}."],
             RefHB: "3.8.10-3",
             Expected: new AttributeDef
             {

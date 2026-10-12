@@ -54,6 +54,17 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     }
 
     /// <summary>
+    /// Logs a compile note for the given <paramref name="offendingToken"/>. Like <see cref="ReportWarning(IToken, string)"/>
+    /// this does not make the input invalid.
+    /// </summary>
+    /// <param name="offendingToken">The <see cref="IToken"/> the note refers to.</param>
+    /// <param name="message">The note message.</param>
+    private void ReportInformation(IToken offendingToken, string message)
+    {
+        logger.LogInformation("Compile info at {Range} {Message}.", offendingToken.ToRange(), message);
+    }
+
+    /// <summary>
     /// Check if a terminal node is valid (not an error node and not a missing token).
     /// </summary>
     private bool IsValidToken(IToken? terminal)
@@ -148,6 +159,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     /// <summary>
     /// Create a meta-attribute dictionary from the meta comments preceding the specified <paramref name="context"/>.
+    /// Meta-attribute names must be unique within a meta element (eCH-0117 2.1); every repetition of a name is reported
+    /// as information at the repeated name, and once more at the definition with all duplicate names, since the model
+    /// is still valid INTERLIS. The last value wins.
     /// </summary>
     public Dictionary<string, string> ProcessMetaAttributes(ParserRuleContext context)
     {
@@ -158,22 +172,34 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             interlisParser.RemoveErrorListeners();
             interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
 
-            var metaAttributeList = VisitMetaComments(interlisParser.metaComments());
+            var metaAttributes = interlisParser.metaComments().metaComment().SelectMany(c => c.metaAttribute()).ToList();
+            var namedMetaAttributes = metaAttributes.Where(a => IsValidToken(a.name)).ToList();
 
-            var duplicateMetaAttributes = metaAttributeList
-                .GroupBy(m => m.Item1)
+            // The meta comment tokens keep their position in the source, so the repeated name can be reported directly.
+            var names = new HashSet<string>();
+            foreach (var metaAttribute in namedMetaAttributes)
+            {
+                if (!names.Add(metaAttribute.name.Text))
+                {
+                    ReportInformation(metaAttribute.name, $"Duplicate meta attribute '{metaAttribute.name.Text}', only the last value is used");
+                }
+            }
+
+            var duplicateMetaAttributes = namedMetaAttributes
+                .GroupBy(a => a.name.Text)
                 .Where(g => g.Count() > 1)
                 .Select(g => $"'{g.Key}'")
                 .ToList();
 
-            if (duplicateMetaAttributes.Count == 0)
+            if (duplicateMetaAttributes.Count > 0)
             {
-                return metaAttributeList.ToDictionary(m => m.Item1, m => m.Item2);
+                ReportInformation(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
             }
-            else
-            {
-                ReportError(context.Start, $"{Interlis24Parser.ruleNames[context.RuleIndex]} has meta attributes with duplicate keys: {string.Join(", ", duplicateMetaAttributes)}");
-            }
+
+            return metaAttributes
+                .Select(VisitMetaAttribute)
+                .GroupBy(m => m.Item1)
+                .ToDictionary(g => g.Key, g => g.Last().Item2);
         }
 
         return new Dictionary<string, string>();
@@ -1881,16 +1907,6 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
 
         return root;
-    }
-
-    public override List<Tuple<string, string>> VisitMetaComments([NotNull] Interlis24Parser.MetaCommentsContext context)
-    {
-        return context.metaComment().SelectMany(VisitMetaComment).ToList();
-    }
-
-    public override List<Tuple<string, string>> VisitMetaComment([NotNull] Interlis24Parser.MetaCommentContext context)
-    {
-        return context.metaAttribute().Select(VisitMetaAttribute).ToList();
     }
 
     public override Tuple<string, string> VisitMetaAttribute([NotNull] Interlis24Parser.MetaAttributeContext context)

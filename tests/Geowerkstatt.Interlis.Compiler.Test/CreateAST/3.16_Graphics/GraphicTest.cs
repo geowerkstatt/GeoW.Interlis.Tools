@@ -775,7 +775,7 @@ public class GraphicTest
             END Model.
             """,
             Description: "3.16-10: a graphic whose END name does not match its start name is rejected.",
-            ExpectedLog:
+            ExpectedErrors:
             [
                 "Compile error at 6:12-6:21 Start name 'G' and end name 'WrongName' do not match.",
                 "Type check error in 'Model.Topic.G' at 4:8-6:22: must be BASED ON a class or view, or EXTEND a graphic to inherit its base.",

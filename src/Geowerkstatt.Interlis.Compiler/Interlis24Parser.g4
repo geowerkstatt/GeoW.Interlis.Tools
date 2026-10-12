@@ -607,5 +607,5 @@ metaComment
     ;
 
 metaAttribute
-    : META_ATTR_NAME EQUAL_SIGN (META_ATTR_NAME | string)
+    : name=META_ATTR_NAME EQUAL_SIGN (META_ATTR_NAME | string)
     ;
