@@ -39,7 +39,7 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" //bad // inside// =
             END Test.
             """,
-            ExpectedLog: ["Compile error at 1:55-1:61 mismatched input 'inside' expecting {'=', 'TRANSLATION'}."],
+            ExpectedErrors: ["Compile error at 1:55-1:61 mismatched input 'inside' expecting {'=', 'TRANSLATION'}."],
             RefHB: "3.2.6-1",
             Expected: new ModelDef
             {
@@ -102,7 +102,12 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" =
             END Test.
             """,
-            ExpectedLog: ["Compile error at 3:0-3:5 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'."],
+            ExpectedInfo:
+            [
+                "Compile info at 1:28-1:33 Duplicate meta attribute 'KEY_B', only the last value is used.",
+                "Compile info at 2:25-2:30 Duplicate meta attribute 'KEY_A', only the last value is used.",
+                "Compile info at 3:0-3:5 modelDef has meta attributes with duplicate keys: 'KEY_A', 'KEY_B'.",
+            ],
             RefHB: "3.2.8.1-1",
             Ech0117: "2.1-3",
             Expected: new ModelDef
@@ -113,14 +118,14 @@ public class CommentTest
                     new RangePosition(2, 6, 2, 10),
                     new RangePosition(3, 4, 3, 8)
                 },
+                MetaAttributes = { { "KEY_A", "green" }, { "KEY_B", "2" }, { "OTHER_KEY", "value" } },
                 URI = "http://foo.test",
                 Version = "123",
                 Imports =
                 {
                     { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
                 },
-            },
-            Ili2cDivergenceReason: "we accept duplicate meta attributes (last wins), ili2c rejects them"));
+            }));
 
         yield return Rule(new(
             "Unclosed meta comment string",
@@ -129,7 +134,7 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" =
             END Test.
             """, @"(\r\n|\r|\n)", "\r\n"),
-            ExpectedLog: [@"Compile error at 1:16-2:0 extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}."],
+            ExpectedErrors: [@"Compile error at 1:16-2:0 extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}."],
             RefHB: "3.2.8.1-1",
             Ech0117: "4.2-9",
             Expected: new ModelDef

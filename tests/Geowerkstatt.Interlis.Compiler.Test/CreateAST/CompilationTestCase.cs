@@ -19,10 +19,20 @@ namespace Geowerkstatt.Interlis.Compiler;
 /// output verbatim, so it shows up next to a failing test instead of only in the source. Purely informational and
 /// optional; a case whose <paramref name="Name"/> already says everything needs none.
 /// </param>
-/// <param name="ExpectedLog">
-/// The diagnostic messages the Geowerkstatt compiler is expected to emit, in order. <see langword="null"/>
-/// is treated as "no diagnostics" (an empty list). Used by the AST/log assertions; ignored by the ili2c
-/// comparison, which only looks at whether each compiler produced any diagnostics at all.
+/// <param name="ExpectedErrors">
+/// The messages the Geowerkstatt compiler is expected to log at error level or above, in order.
+/// <see langword="null"/> is treated as "no errors" (an empty list). Used by the AST/log assertions; ignored by
+/// the ili2c comparison, which only looks at whether each compiler produced any errors at all.
+/// </param>
+/// <param name="ExpectedWarnings">
+/// The messages the Geowerkstatt compiler is expected to log at warning level, in order;
+/// <see langword="null"/> is treated as "no warnings". Asserted separately from <paramref name="ExpectedErrors"/>, so a case shows at a glance that its input is
+/// accepted. Ignored by the ili2c comparison, for which a warning does not make an input invalid.
+/// </param>
+/// <param name="ExpectedInfo">
+/// The messages the Geowerkstatt compiler is expected to log at information level or below, in order;
+/// <see langword="null"/> is treated as "no messages". Asserted separately from <paramref name="ExpectedWarnings"/>, so a
+/// case shows whether a message is a warning or only a note. Ignored by the ili2c comparison.
 /// </param>
 /// <param name="Expected">
 /// The expected AST the parsed result is deep-compared against when <paramref name="AssertOutput"/> is
@@ -59,7 +69,9 @@ public record CompilationTestCase(
     string Name,
     string Input,
     string? Description = null,
-    List<string>? ExpectedLog = null,
+    List<string>? ExpectedErrors = null,
+    List<string>? ExpectedWarnings = null,
+    List<string>? ExpectedInfo = null,
     object? Expected = null,
     bool AssertOutput = true,
     string? RefHB = null,
