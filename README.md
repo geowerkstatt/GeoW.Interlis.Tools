@@ -15,7 +15,7 @@ A collection of .NET libraries for working with [INTERLIS](https://www.interlis.
 
 ## Development Requirements
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 The ANTLR4 grammar files in `Geowerkstatt.Interlis.Compiler` are compiled automatically at build time via the `Antlr4BuildTasks` MSBuild package — no separate ANTLR installation is required.
 

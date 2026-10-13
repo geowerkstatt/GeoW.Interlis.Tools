@@ -81,6 +81,8 @@ public static class RepositoryModelTestCaseSource
             "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
         ["https://evd.vd.ch/geo/DGE/VD102.1_ArbresRemarquables_V1.1.0.ili"] =
             "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
+        ["https://evd.vd.ch/geo/DGE/VD102.1_ArbresRemarquables_V1.2.0.ili"] =
+            "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
         ["https://evd.vd.ch/geo/DGIP/VD14.1_SitesArcheologiques_V1.0.1.ili"] =
             "Known divergence: <Geowerkstatt.Interlis.Compiler> rejects an attribute of type 'OID NUMERIC' ('must be declared ABSTRACT because its type is not fully defined'), which <ili2c-tool> accepts.",
     };
