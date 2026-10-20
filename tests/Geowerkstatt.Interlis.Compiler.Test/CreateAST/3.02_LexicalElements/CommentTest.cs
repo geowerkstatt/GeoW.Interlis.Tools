@@ -278,6 +278,68 @@ public class CommentTest
                 },
             }));
 
+        yield return Rule(new(
+            "Empty meta comment line",
+            Regex.Replace("""
+            !!@ technicalContact=mailto:info@foo.test
+            !!@
+
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            END Test.
+            """, @"(\r\n|\r|\n)", "\r\n"),
+            Description: """
+                '!!@' with nothing after it is a line comment (RefHB 3.2.8.1-1) that contains no meta attribute: eCH-0117
+                adds meta attributes inside line comments without changing the language (3-1), so the empty comment is
+                accepted and contributes nothing.
+                """,
+            RefHB: "3.2.8.1-1",
+            Ech0117: "3-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(3, 6, 3, 10),
+                    new RangePosition(4, 4, 4, 8)
+                },
+                MetaAttributes = { { "technicalContact", "mailto:info@foo.test" } },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Empty meta comment between meta attributes",
+            """
+            !!@ key1 = a
+            !!@
+            !!@ key2 = "b"
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            END Test.
+            """,
+            Description: "The empty meta comment neither ends the meta attribute block nor contributes to it (RefHB 3.2.8.1-1, eCH-0117 3-1).",
+            RefHB: "3.2.8.1-1",
+            Ech0117: "3-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(3, 6, 3, 10),
+                    new RangePosition(4, 4, 4, 8)
+                },
+                MetaAttributes = { { "key1", "a" }, { "key2", "b" } },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
         yield return FullFile(new(
             "Block comment",
             """
