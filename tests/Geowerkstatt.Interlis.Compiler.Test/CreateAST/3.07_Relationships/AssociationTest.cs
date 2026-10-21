@@ -461,6 +461,37 @@ public class AssociationTest
                 Cardinality = new Cardinality { Min = 0, Max = Cardinality.Unbound },
             }));
 
+        yield return FullFile(new(
+            "Role value takes a factor, not an expression",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Target =
+                        n : 0 .. 10;
+                    END Target;
+                    CLASS Target2 =
+                    END Target2;
+                    ASSOCIATION A =
+                        role -- Target := thePath + 1;
+                        other -- Target2;
+                    END A;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                RoleDef ends in '[ ':=' Role-Factor ]' (RefHB 3.7.1-16): unlike attribute values (RefHB 3.6.1-3,
+                Expression) a role value stays a single factor, so the arithmetic '+' is a syntax error. Parser
+                recovery keeps 'role -- Target := thePath', whose path cannot be resolved — an independent second
+                diagnostic. (ili2c rejects at the '+' as well.)
+                """,
+            ExpectedErrors: [
+                "Compile error at 10:38-10:39 mismatched input '+' expecting ';'.",
+                "Could not resolve 'thePath' in 'Model.Topic.A' at 10:30-10:37",
+            ],
+            RefHB: "3.7.1-16",
+            AssertOutput: false));
+
         yield return Rule(new(
             "Aggregation role strength",
             """
