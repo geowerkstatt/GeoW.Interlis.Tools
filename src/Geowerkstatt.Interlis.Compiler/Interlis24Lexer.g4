@@ -231,12 +231,12 @@ POS_NUMBER     : DIGIT+;
 IDENTIFIER        : LETTER (LETTER | DIGIT | '_')*;
 DOUBLE_QUOTE_OPEN : '"' -> pushMode(StringLiteral);
 EXPLANATION       : '//' .*? '//';
-META_COMMENT_OPEN : '!!@'                            -> channel(META_COMMENT), pushMode(MetaComment);
-LINE_COMMENT      : '!!' (~[@] .*?)? (NEWLINE | EOF) -> channel(HIDDEN); // a line comment may also end at end-of-file (no trailing newline)
-DOC_COMMENT       : '/**' .*? '*/'                   -> channel(HIDDEN);
-BLOCK_COMMENT     : '/*' (BLOCK_COMMENT | .)*? '*/'  -> channel(HIDDEN); // RefHB 3.2.8.2-1: nested block comments are allowed
-LINEBREAK         : NEWLINE                          -> channel(HIDDEN);
-WHITESPACE        : (' ' | '\t')+                    -> channel(HIDDEN);
+META_COMMENT_OPEN : '!!@'                                -> channel(META_COMMENT), pushMode(MetaComment);
+LINE_COMMENT      : '!!' (~[@\r\n] .*?)? (NEWLINE | EOF) -> channel(HIDDEN); // RefHB 3.2.8.1-1: ends at the line end, also right after '!!', or at end-of-file; '!!@' is a meta attribute
+DOC_COMMENT       : '/**' .*? '*/'                       -> channel(HIDDEN);
+BLOCK_COMMENT     : '/*' (BLOCK_COMMENT | .)*? '*/'      -> channel(HIDDEN); // RefHB 3.2.8.2-1: nested block comments are allowed
+LINEBREAK         : NEWLINE                              -> channel(HIDDEN);
+WHITESPACE        : (' ' | '\t')+                        -> channel(HIDDEN);
 UNEXPECTED        : .;
 
 // Parsing string literal
