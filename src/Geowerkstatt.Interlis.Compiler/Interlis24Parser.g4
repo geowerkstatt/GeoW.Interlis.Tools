@@ -82,7 +82,7 @@ classDef
 
 attributeDef
     : (CONTINUOUS? SUBDIVISION)? name=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':' attrTypeDef (
-        ':=' factor ( ',' factor)*
+        ':=' expression ( ',' expression)*
     )? SEMICOLON
     ;
 
@@ -522,9 +522,9 @@ viewAttributes
     ;
 
 viewAttribute
-    : ALL OF base=IDENTIFIER SEMICOLON                                                                  # allOfViewAttribute
-    | attributeDef                                                                                      # definedViewAttribute
-    | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' factor SEMICOLON # derivedViewAttribute
+    : ALL OF base=IDENTIFIER SEMICOLON                                                                      # allOfViewAttribute
+    | attributeDef                                                                                          # definedViewAttribute
+    | attribute=IDENTIFIER properties? /* ABSTRACT, EXTENDED, FINAL, TRANSIENT */ ':=' expression SEMICOLON # derivedViewAttribute
     ;
 
 graphicDef
