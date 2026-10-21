@@ -912,10 +912,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
         // The target is an explicit reference or an ANYCLASS / ANYSTRUCTURE placeholder. The merged grammar rule allows
         // any of them in every position; the type checker enforces which kind each context permits (RefHB 3.6.1-13/-15/-17).
+        // The target name can still be missing while typing (e.g. 'r -- {1} ;'); it then becomes an empty reference
+        // that is never registered nor resolved, so consumers see an unresolved target instead of a null reference.
         RestrictedRef.RefTarget value =
             context.ANYCLASS() != null ? RestrictedRef.AnyKind.Class :
             context.ANYSTRUCTURE() != null ? RestrictedRef.AnyKind.Structure :
-            new RestrictedRef.DefinitionRef { Reference = CreateReference(context.@ref, acceptTypes)! };
+            new RestrictedRef.DefinitionRef { Reference = CreateReference(context.@ref, acceptTypes) ?? new Reference<IInterlisDefinition>() };
 
         return new RestrictedRef
         {

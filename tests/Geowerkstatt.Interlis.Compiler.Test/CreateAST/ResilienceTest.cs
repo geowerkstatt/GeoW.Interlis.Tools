@@ -368,6 +368,32 @@ public class ResilienceTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Role without a target followed by a path through it",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+              TOPIC T =
+                CLASS C =
+                  b : BOOLEAN;
+                END C;
+                ASSOCIATION A =
+                  r1 -- C;
+                  r2 -- {1} ;
+                END A;
+                CONSTRAINTS OF C =
+                  MANDATORY CONSTRAINT r2->b;
+                END;
+              END T;
+            END M.
+            """,
+            Description: """
+                A role (RefHB 3.7.1-16) whose target class is not yet written, navigated by an object path elsewhere in
+                the topic: the role keeps an unresolved target, so the path ends there without a further error.
+                """,
+            ExpectedErrors: ["Compile error at 9:16-9:17 mismatched input ';' expecting {'ANYCLASS', 'ANYSTRUCTURE', 'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Enumeration with a trailing comma",
             """
             INTERLIS 2.4;
