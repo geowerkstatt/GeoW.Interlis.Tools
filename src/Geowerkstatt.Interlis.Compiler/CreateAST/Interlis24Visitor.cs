@@ -988,12 +988,15 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     public override List<ParameterDef> VisitRunTimeParameterDef([NotNull] Interlis24Parser.RunTimeParameterDefContext context)
     {
         // PARAMETER (name ':' attrTypeDef ';')* — runtime parameters (RefHB 3.11). Each name pairs with the
-        // attrTypeDef at the same index. Reuses ParameterDef (name + type).
+        // attrTypeDef at the same index. Reuses ParameterDef (name + type). While typing, the last name can still lack
+        // its type (e.g. 'PARAMETER p'); such a parameter is dropped, like a definition without a name.
         var names = context.IDENTIFIER();
         var types = context.attrTypeDef();
         var result = new List<ParameterDef>();
-        for (var i = 0; i < names.Length; i++)
+        for (var i = 0; i < Math.Min(names.Length, types.Length); i++)
         {
+            if (!IsValidToken(names[i].Symbol)) continue;
+
             result.Add(new ParameterDef
             {
                 Name = names[i].GetText(),

@@ -405,6 +405,31 @@ public class ResilienceTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Runtime parameter without a type",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            PARAMETER
+              MaxLength
+            """,
+            Description: "A runtime parameter (RefHB 3.11-3) whose ':' and type are not yet written: the parameter is dropped.",
+            ExpectedErrors: ["Compile error at 4:11-4:12 mismatched input '<EOF>' expecting ':'."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Runtime parameter without a type after a complete one",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            PARAMETER
+              p1 : TEXT;
+              p2
+            """,
+            Description: "Only the incomplete runtime parameter (RefHB 3.11-3) is dropped, the complete one before it is kept.",
+            ExpectedErrors: ["Compile error at 5:4-5:5 mismatched input '<EOF>' expecting ':'."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Derived view attribute with ':' instead of ':='",
             """
             INTERLIS 2.4;
