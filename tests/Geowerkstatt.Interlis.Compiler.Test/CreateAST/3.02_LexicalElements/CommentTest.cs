@@ -68,6 +68,41 @@ public class CommentTest
                 Content = { { InternalModel.Interlis.Name, InternalModel.Interlis } },
             }));
 
+        yield return FullFile(new(
+            "Bare line comment at end of file",
+            """
+            INTERLIS 2.4;
+            !!
+            """,
+            Description: "A line comment without text and without a trailing line break ends at the end of the file.",
+            RefHB: "3.2.8.1-1",
+            Expected: new InterlisEnvironment
+            {
+                Version = 2.4,
+                Content = { { InternalModel.Interlis.Name, InternalModel.Interlis } },
+            }));
+
+        yield return Rule(new(
+            "Line comment with only spaces",
+            "!!   \nMODEL Test AT \"http://foo.test\" VERSION \"123\" =\nEND Test.",
+            Description: "A line comment consisting of trailing spaces only ends at the line end.",
+            RefHB: "3.2.8.1-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(1, 6, 1, 10),
+                    new RangePosition(2, 4, 2, 8)
+                },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
         yield return Rule(new(
             "With meta attributes",
             """
