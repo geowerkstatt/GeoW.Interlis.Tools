@@ -16,18 +16,45 @@ public class NamespaceTest
         // Visibility, qualification, shadowing and import resolution span multiple models or topics
         // and only surface during full-file resolution, so these cases are compiler-comparison only.
         yield return FullFile(new(
-            "Duplicate IMPORTS of same model",
+            "Qualified and UNQUALIFIED import of same model",
             """
             INTERLIS 2.4;
             MODEL ModelA AT "http://example.com" VERSION "1.0.0" =
+                DOMAIN
+                    MyDomain = TEXT*20;
             END ModelA.
             MODEL ModelB AT "http://example.com" VERSION "1.0.0" =
                 IMPORTS ModelA;
-                IMPORTS ModelA;
+                IMPORTS UNQUALIFIED ModelA;
+                TOPIC Topic =
+                    CLASS ClassName =
+                        Attr : MyDomain;
+                        Other : ModelA.MyDomain;
+                    END ClassName;
+                END Topic;
             END ModelB.
             """,
-            Description: "A repeated import is redundant, not forbidden (RefHB 3.5.1-9, 3.5.1-15).",
-            ExpectedInfo: ["Compile info at 6:12-6:18 Duplicate import of model 'ModelA', it is imported once and UNQUALIFIED if any of its imports is."],
+            Description: "Both the unqualified and the qualified reference resolve against the merged import.",
+            ExpectedInfo: ["Compile info at 8:24-8:30 Duplicate import of model 'ModelA', it is imported once and UNQUALIFIED if any of its imports is."],
+            RefHB: "3.5.1-15",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Repeated import of a missing model",
+            """
+            INTERLIS 2.4;
+            MODEL ModelB AT "http://example.com" VERSION "1.0.0" =
+                IMPORTS UNQUALIFIED Missing;
+                IMPORTS Missing;
+            END ModelB.
+            """,
+            Description: "Each written name is a reference of its own (navigation, rename), so the missing model is reported at both.",
+            ExpectedErrors:
+            [
+                "Could not resolve 'reference 'Missing' from ModelB' at 3:24-3:31",
+                "Could not resolve 'reference 'Missing' from ModelB' at 4:12-4:19",
+            ],
+            ExpectedInfo: ["Compile info at 4:12-4:19 Duplicate import of model 'Missing', it is imported once and UNQUALIFIED if any of its imports is."],
             RefHB: "3.5.1-15",
             AssertOutput: false));
 

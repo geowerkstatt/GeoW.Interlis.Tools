@@ -935,6 +935,77 @@ public class ModelTest
             }));
 
         yield return Rule(new(
+            "Model with duplicate import in one IMPORTS list",
+            """
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+              IMPORTS Other, Other;
+            END Model.
+            """,
+            Description: "A repeated import is redundant, not forbidden (RefHB 3.5.1-9, 3.5.1-15): the model is imported once.",
+            ExpectedInfo: ["Compile info at 2:17-2:22 Duplicate import of model 'Other', it is imported once and UNQUALIFIED if any of its imports is."],
+            RefHB: "3.5.1-15",
+            Expected: new ModelDef
+            {
+                Name = "Model",
+                NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(2, 4, 2, 9) },
+                Imports =
+                {
+                    { "Other", (false, new Reference<ModelDef> { Path = { new("Other") } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
+                },
+                URI = "http://example.com",
+                Version = "1.0.0",
+            }));
+
+        yield return Rule(new(
+            "Model with UNQUALIFIED import followed by qualified import",
+            """
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+              IMPORTS UNQUALIFIED Other;
+              IMPORTS Other;
+            END Model.
+            """,
+            Description: "The later qualified import does not take UNQUALIFIED back (RefHB 3.5.1-15).",
+            ExpectedInfo: ["Compile info at 3:10-3:15 Duplicate import of model 'Other', it is imported once and UNQUALIFIED if any of its imports is."],
+            RefHB: "3.5.1-15",
+            Expected: new ModelDef
+            {
+                Name = "Model",
+                NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(3, 4, 3, 9) },
+                Imports =
+                {
+                    { "Other", (true, new Reference<ModelDef> { Path = { new("Other") } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
+                },
+                URI = "http://example.com",
+                Version = "1.0.0",
+            }));
+
+        yield return Rule(new(
+            "Model with qualified import followed by UNQUALIFIED import",
+            """
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+              IMPORTS Other;
+              IMPORTS UNQUALIFIED Other;
+            END Model.
+            """,
+            Description: "The later UNQUALIFIED import widens the earlier qualified one (RefHB 3.5.1-15).",
+            ExpectedInfo: ["Compile info at 3:22-3:27 Duplicate import of model 'Other', it is imported once and UNQUALIFIED if any of its imports is."],
+            RefHB: "3.5.1-15",
+            Expected: new ModelDef
+            {
+                Name = "Model",
+                NameLocations = { new RangePosition(0, 6, 0, 11), new RangePosition(3, 4, 3, 9) },
+                Imports =
+                {
+                    { "Other", (true, new Reference<ModelDef> { Path = { new("Other") } }) },
+                    { "INTERLIS", (false, new Reference<ModelDef> { Path = { new("INTERLIS") } }) },
+                },
+                URI = "http://example.com",
+                Version = "1.0.0",
+            }));
+
+        yield return Rule(new(
             "Model with unqualified INTERLIS import",
             """
             MODEL Model AT "http://example.com" VERSION "1.0.0" =
