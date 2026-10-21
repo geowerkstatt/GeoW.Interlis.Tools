@@ -26,10 +26,10 @@ public class NamespaceTest
                 IMPORTS ModelA;
             END ModelB.
             """,
-            ExpectedErrors: ["Compile error at 6:12-6:18 Duplicate import ModelA."],
-            RefHB: "3.5.4",
-            AssertOutput: false,
-            Ili2cDivergenceReason: "RefHB-silent (3.5.1 does not forbid a duplicate IMPORTS): we keep the diagnostic, ili2c silently accepts"));
+            Description: "A repeated import is redundant, not forbidden (RefHB 3.5.1-9, 3.5.1-15).",
+            ExpectedInfo: ["Compile info at 6:12-6:18 Duplicate import of model 'ModelA', it is imported once and UNQUALIFIED if any of its imports is."],
+            RefHB: "3.5.1-15",
+            AssertOutput: false));
 
         yield return Rule(new(
             "Duplicate topic name in model",
