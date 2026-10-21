@@ -1495,6 +1495,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             // RefHB 3.8-8: every restriction has a unique name within its domain definition.
             var constraint = VisitDomainConstraint(constraintContext);
+            if (constraint == null) continue;
+
             if (!type.Constraints.TryAdd(constraint.Name, constraint))
             {
                 ReportError(constraintContext.IDENTIFIER().Symbol, $"Duplicate domain constraint {constraint.Name}");
@@ -1517,12 +1519,22 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         };
     }
 
-    public override DomainConstraint VisitDomainConstraint([NotNull] Interlis24Parser.DomainConstraintContext context)
+    public override DomainConstraint? VisitDomainConstraint([NotNull] Interlis24Parser.DomainConstraintContext context)
     {
+        // Name and condition are mandatory (RefHB 3.8-10) but either can still be missing while typing, e.g. right
+        // after 'CONSTRAINTS'. A restriction without a name cannot be keyed in its domain and one without a
+        // condition carries no meaning (and would break the type checker), so drop it; the syntax error is reported.
+        var name = context.IDENTIFIER();
+        var condition = context.expression() == null ? null : Visit(context.expression()) as IExpression;
+        if (name == null || !IsValidToken(name.Symbol) || condition == null)
+        {
+            return null;
+        }
+
         return new DomainConstraint
         {
-            Name = context.IDENTIFIER().GetText(),
-            Condition = Visit(context.expression()) as IExpression ?? new UndefinedConstant(),
+            Name = name.GetText(),
+            Condition = condition,
             SourceRange = context.ToRange(),
         };
     }

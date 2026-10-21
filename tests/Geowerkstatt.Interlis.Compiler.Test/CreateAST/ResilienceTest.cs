@@ -172,6 +172,66 @@ public class ResilienceTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Domain constraints without a name",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS
+            """,
+            Description: """
+                A domain whose restrictions (RefHB 3.8-10) are not yet written after 'CONSTRAINTS': the incomplete
+                restriction is dropped, the domain survives.
+                """,
+            ExpectedErrors: ["Compile error at 3:30-3:31 mismatched input '<EOF>' expecting IDENTIFIER."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Domain constraints followed by END",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS
+            END M.
+            """,
+            Description: """
+                A domain whose restrictions (RefHB 3.8-10) are not yet written after 'CONSTRAINTS', followed by the
+                model end: the parser skips 'END' and reads 'M' as the restriction name, so the condition is missing.
+                """,
+            ExpectedErrors:
+            [
+                "Compile error at 4:0-4:3 extraneous input 'END' expecting IDENTIFIER.",
+                "Compile error at 4:5-4:6 mismatched input '.' expecting ':'.",
+            ],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Domain constraint without a condition",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS c: ;
+            END M.
+            """,
+            Description: "A domain restriction (RefHB 3.8-10) whose logical expression is not yet written: the restriction is dropped.",
+            ExpectedErrors: ["Compile error at 3:34-3:35 mismatched input ';' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Domain constraint with a missing name",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS : DEFINED(THIS);
+            END M.
+            """,
+            Description: """
+                A domain restriction (RefHB 3.8-10) whose name is missing: the parser conjures the name, the restriction
+                cannot be keyed in its domain and is dropped.
+                """,
+            ExpectedErrors: ["Compile error at 3:31-3:32 missing IDENTIFIER at ':'."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Text type with '*' but no length",
             """
             INTERLIS 2.4;
