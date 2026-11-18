@@ -68,6 +68,130 @@ public class CommentTest
                 Content = { { InternalModel.Interlis.Name, InternalModel.Interlis } },
             }));
 
+        yield return FullFile(new(
+            "Bare line comment at end of file",
+            """
+            INTERLIS 2.4;
+            !!
+            """,
+            Description: "A line comment without text and without a trailing line break ends at the end of the file.",
+            RefHB: "3.2.8.1-1",
+            Expected: new InterlisEnvironment
+            {
+                Version = 2.4,
+                Content = { { InternalModel.Interlis.Name, InternalModel.Interlis } },
+            }));
+
+        yield return Rule(new(
+            "Bare line comment with LF line endings",
+            Regex.Replace("""
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            !!
+            END Test.
+            """, @"(\r\n|\r|\n)", "\n"),
+            Description: """
+                A line comment ends at the line end, also when nothing follows the '!!', so the next line is
+                not part of the comment (the lexer used to take the LF as comment text and swallow the next line).
+                """,
+            RefHB: "3.2.8.1-1",
+            Ili2cDivergenceReason: """
+                we accept this model, ili2c rejects it: its line comment rule takes the LF after a bare '!!'
+                as comment text and swallows 'END Test.'; RefHB 3.2.8.1-1 ends a line comment at the line end
+                """,
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(0, 6, 0, 10),
+                    new RangePosition(2, 4, 2, 8)
+                },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Bare line comment with CRLF line endings",
+            Regex.Replace("""
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            !!
+            END Test.
+            """, @"(\r\n|\r|\n)", "\r\n"),
+            Description: "A line comment ends at the line end, also when nothing follows the '!!'.",
+            RefHB: "3.2.8.1-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(0, 6, 0, 10),
+                    new RangePosition(2, 4, 2, 8)
+                },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Line comment with only spaces",
+            "!!   \nMODEL Test AT \"http://foo.test\" VERSION \"123\" =\nEND Test.",
+            Description: "A line comment consisting of trailing spaces only ends at the line end.",
+            RefHB: "3.2.8.1-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(1, 6, 1, 10),
+                    new RangePosition(2, 4, 2, 8)
+                },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Bare line comment before meta attributes",
+            Regex.Replace("""
+            !!
+            !!@ key = value
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            END Test.
+            """, @"(\r\n|\r|\n)", "\n"),
+            Description: """
+                The bare line comment ends at its line end, so the next line is a meta attribute
+                (a line comment starting with '!!@') and not part of the bare comment.
+                ili2c accepts the file too, but its line comment rule swallows the '!!@' line in an LF file.
+                """,
+            RefHB: "3.2.8.1-1",
+            Ech0117: "3-3",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(2, 6, 2, 10),
+                    new RangePosition(3, 4, 3, 8)
+                },
+                MetaAttributes = { { "key", "value" } },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
         yield return Rule(new(
             "With meta attributes",
             """
