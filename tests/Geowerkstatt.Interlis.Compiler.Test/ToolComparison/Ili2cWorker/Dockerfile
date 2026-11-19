@@ -2,13 +2,14 @@
 # Ili2cWorker.java). Built by the tests from the test output folder, which holds this file, the worker source and the
 # ili2c.jar that the test project downloads during build.
 
-# Java 17: the worker keeps the JVM alive with a security manager, which Java 24 and later no longer support.
-FROM eclipse-temurin:17-jdk AS build
+# Java 21, the newest LTS release that still supports a security manager (removed in Java 24), which the worker
+# needs to keep the JVM alive.
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /build
 COPY ili2c.jar Ili2cWorker.java ./
 RUN javac -cp ili2c.jar -d classes Ili2cWorker.java
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 COPY ili2c.jar /ili2c/
 COPY --from=build /build/classes /ili2c/classes
 EXPOSE 8080
