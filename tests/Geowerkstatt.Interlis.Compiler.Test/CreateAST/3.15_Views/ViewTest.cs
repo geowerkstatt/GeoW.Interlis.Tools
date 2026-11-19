@@ -1325,6 +1325,34 @@ public class ViewTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "View over a class of the extended base topic needs no dependency",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Base =
+                    CLASS Class =
+                        attr : TEXT;
+                    END Class;
+                END Base;
+                TOPIC Extended EXTENDS Base =
+                    VIEW V
+                        PROJECTION OF Model.Base.Class;
+                        =
+                        ATTRIBUTE
+                            ALL OF Class;
+                    END V;
+                END Extended;
+            END Model.
+            """,
+            Description: """
+                An extending topic inherits all names of its base topic (RefHB 3.5.4-11), so a view formed over a class
+                of the base topic stays within the topic; only a viewable of a foreign topic needs DEPENDS ON
+                (RefHB 3.5.2-17).
+                """,
+            RefHB: "3.5.4-11",
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "View derived attribute uses an expression, not a factor",
             """
             INTERLIS 2.4;
