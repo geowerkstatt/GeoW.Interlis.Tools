@@ -1,9 +1,10 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Images;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
-using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Geowerkstatt.Interlis.Compiler.Test.ToolComparison;
@@ -24,17 +25,49 @@ public sealed record ModelFile(IReadOnlyList<string> ModelNames, string Content,
 /// </summary>
 public sealed class CompilerComparison : IDisposable
 {
-    private readonly string jarPath;
+    // The Docker build context of the worker image: its Dockerfile and source plus the ili2c.jar downloaded during build.
+    private static readonly string WorkerDirectory = Path.Combine(AppContext.BaseDirectory, "ili2c-worker");
+
+    // Shared by all comparisons of a test run and kept across runs (see BuildWorkerImageAsync).
+    private static readonly Lazy<Task<IFutureDockerImage>> WorkerImage = new(BuildWorkerImageAsync);
+
     private readonly ObjectPool<Ili2cContainer> containerPool;
 
     public CompilerComparison()
     {
-        // Find ili2c JAR in output directory
-        var jarFile = Path.Combine(AppContext.BaseDirectory, "ili2c.jar");
-        jarPath = File.Exists(jarFile) ? jarFile : throw new FileNotFoundException(
-            "ili2c.jar not found in output directory. Ensure the project was built successfully.");
+        if (!File.Exists(Path.Combine(WorkerDirectory, "ili2c.jar")))
+        {
+            throw new FileNotFoundException("ili2c.jar not found in output directory. Ensure the project was built successfully.");
+        }
 
-        containerPool = new DefaultObjectPoolProvider().Create(new Ili2cContainerPoolPolicy(jarPath));
+        containerPool = new DefaultObjectPoolProvider().Create(new Ili2cContainerPoolPolicy());
+    }
+
+    /// <summary>
+    /// Builds the worker image unless it already exists. The tag is a hash of the build context, so a changed
+    /// Dockerfile, worker or ili2c version gets a new image, while an unchanged one is reused across test runs
+    /// instead of being rebuilt (about 15s) every time.
+    /// </summary>
+    private static async Task<IFutureDockerImage> BuildWorkerImageAsync()
+    {
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        foreach (var file in Directory.GetFiles(WorkerDirectory).Order(StringComparer.Ordinal))
+        {
+            hash.AppendData(Encoding.UTF8.GetBytes(Path.GetFileName(file)));
+            hash.AppendData(await File.ReadAllBytesAsync(file));
+        }
+
+        var tag = Convert.ToHexStringLower(hash.GetHashAndReset())[..16];
+        var image = new ImageFromDockerfileBuilder()
+            .WithDockerfileDirectory(WorkerDirectory)
+            .WithName($"ili2c-comparison-worker:{tag}")
+            .WithImageBuildPolicy(PullPolicy.Missing)
+            .WithDeleteIfExists(false)
+            .WithCleanUp(false)
+            .WithLogger(NullLogger.Instance)
+            .Build();
+        await image.CreateAsync();
+        return image;
     }
 
     /// <summary>
@@ -187,84 +220,87 @@ public sealed class CompilerComparison : IDisposable
     {
     }
 
-    private sealed class Ili2cContainerPoolPolicy(string jarPath) : IPooledObjectPolicy<Ili2cContainer>
+    private sealed class Ili2cContainerPoolPolicy : IPooledObjectPolicy<Ili2cContainer>
     {
-        public Ili2cContainer Create() => new(jarPath);
+        public Ili2cContainer Create() => new();
 
         // A container whose compilation threw is disposed by CompileWithIli2cAsync and never returned.
         public bool Return(Ili2cContainer obj) => true;
     }
 
     /// <summary>
-    /// A long-lived container holding the ili2c jar. Every compilation runs as its own exec in it, so a pooled
-    /// container serves many compilations while being started only once.
+    /// A container running the ili2c worker (see Ili2cWorker/Ili2cWorker.java): one warm JVM that compiles a model
+    /// per HTTP request, so a compilation pays neither a JVM startup nor a Docker exec.
     /// </summary>
-    private sealed class Ili2cContainer(string jarPath) : IDisposable
+    private sealed class Ili2cContainer : IDisposable
     {
-        private const string JarDirectory = "/jar";
+        private const ushort WorkerPort = 8080;
 
-        // ili2c hangs (never returns) on some malformed inputs. Kept comfortably above a normal ili2c run (~1-2s) so it
-        // never trips a legitimate compilation.
+        // ili2c hangs (never returns) on some malformed inputs. Kept comfortably above a normal ili2c run so it
+        // never trips a legitimate compilation, including the first, still cold one of a container.
         private static readonly TimeSpan CompileTimeout = TimeSpan.FromSeconds(10);
 
-        // The exit code of coreutils `timeout` when the command ran into the time limit.
-        private const long TimedOutExitCode = 124;
+        private IContainer? container;
+        private HttpClient? worker;
 
-        // Every compilation starts a fresh, short-lived JVM, and one such JVM runs in parallel per test. By default
-        // each JVM spreads JIT compilation and GC over all cores, which oversubscribes the machine several times
-        // over. Restricting it to the C1 JIT, the serial GC and one core lowers its CPU use and shortens the run.
-        private static readonly string[] JvmOptions = ["-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-XX:ActiveProcessorCount=1"];
+        private async Task StartAsync()
+        {
+            container = new ContainerBuilder(await WorkerImage.Value)
+                .WithPortBinding(WorkerPort, assignRandomHostPort: true)
+                .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("^ready$"))
+                .WithLogger(NullLogger.Instance) // it logs every copy, which would flood each test's output
+                .Build();
+            await container.StartAsync();
 
-        // The jar is copied in through the Docker API rather than bind-mounted, so it also reaches a daemon that
-        // runs on a different host than the tests (e.g. a containerized CI agent talking to the host daemon).
-        private readonly IContainer container = new ContainerBuilder("eclipse-temurin:17-jre")
-            .WithEntrypoint("sleep", "infinity")
-            .WithResourceMapping(FilePath.Of(jarPath), DirectoryPath.Of(JarDirectory))
-            .WithLogger(NullLogger.Instance) // it logs every copy and exec, which would flood each test's output
-            .Build();
-
-        private readonly string jarName = Path.GetFileName(jarPath);
-        private bool started;
+            // The worker is reached directly on its mapped port, never through a proxy configured for the machine.
+            worker = new HttpClient(new HttpClientHandler { UseProxy = false })
+            {
+                BaseAddress = new UriBuilder("http", container.Hostname, container.GetMappedPublicPort(WorkerPort)).Uri,
+                Timeout = CompileTimeout,
+            };
+        }
 
         public async Task<string> RunCompileAsync(string targetSource, IReadOnlyList<ModelFile> dependencies)
         {
-            if (!started)
+            if (worker is null)
             {
-                await container.StartAsync();
-                started = true;
+                await StartAsync();
             }
 
             // Each compilation gets its own work directory inside the (pooled, reused) container so leftover files
-            // from a previous run cannot be picked up when ili2c scans the model directory for imports.
+            // from a previous run cannot be picked up when ili2c scans the model directory for imports. The worker
+            // deletes it after the compilation.
             var workDir = $"/work/{TestContext.Current!.Isolation.UniqueId}";
-            var targetFile = $"{workDir}/model.ili";
-
-            await container.CopyAsync(Encoding.UTF8.GetBytes(targetSource), targetFile);
+            await container!.CopyAsync(Encoding.UTF8.GetBytes(targetSource), $"{workDir}/model.ili");
             for (var i = 0; i < dependencies.Count; i++)
             {
                 await container.CopyAsync(Encoding.UTF8.GetBytes(dependencies[i].Content), $"{workDir}/dep{i}.ili");
             }
 
-            // --modeldir confines model resolution to the work directory (the target and its written dependencies),
-            // so ili2c resolves imports from those files and never reaches out to the default network repository.
-            // The timeout runs inside the container: cancelling an exec from outside would leave ili2c running.
-            // The work directory is removed in the same exec, as every exec costs about 0.1s of CPU time.
-            var result = await container.ExecAsync([
-                "sh", "-c", """dir="$1"; shift; "$@"; status=$?; rm -rf "$dir"; exit $status""", "sh", workDir,
-                "timeout", CompileTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
-                "java", .. JvmOptions, "-jar", $"{JarDirectory}/{jarName}",
-                "--without-warnings", "--quiet", "--modeldir", workDir, targetFile]);
-
-            if (result.ExitCode == TimedOutExitCode)
+            try
             {
-                // ili2c hung on this input; surface a dedicated exception so the comparison can record the hang
-                // as a divergence instead of failing the whole run.
+                using var response = await worker!.PostAsync("compile", new StringContent(workDir));
+                var output = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException($"The ili2c worker failed ({(int)response.StatusCode}): {output}");
+                }
+
+                return output.Trim();
+            }
+            catch (TaskCanceledException)
+            {
+                // ili2c hung on this input; surface a dedicated exception so the comparison can record the hang as a
+                // divergence instead of failing the whole run. The caller disposes the container and with it the
+                // JVM stuck in the compilation.
                 throw new Ili2cCompilationTimeoutException(CompileTimeout);
             }
-
-            return (result.Stdout + result.Stderr).Trim();
         }
 
-        public void Dispose() => container.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        public void Dispose()
+        {
+            worker?.Dispose();
+            container?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
     }
 }

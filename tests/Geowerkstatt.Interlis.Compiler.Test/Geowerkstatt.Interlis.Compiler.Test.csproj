@@ -43,11 +43,16 @@
     <Unzip SourceFiles="$(Ili2cDownloadPath)$(Ili2cBindistFileName)" DestinationFolder="$(Ili2cDownloadPath)" />
   </Target>
 
+  <!-- Docker build context of the ili2c worker image, completed by the JAR below -->
+  <ItemGroup>
+    <None Update="ToolComparison\Ili2cWorker\*" CopyToOutputDirectory="PreserveNewest" Link="ili2c-worker\%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <!-- Include JAR in output; must run as a target after the download,
        because a static item would be evaluated before the JAR exists on a fresh build -->
   <Target Name="IncludeIli2cJar" BeforeTargets="AssignTargetPaths" DependsOnTargets="DownloadIli2cJar">
     <ItemGroup>
-      <None Include="$(Ili2cJarPath)" CopyToOutputDirectory="PreserveNewest" Link="ili2c.jar" Condition="Exists('$(Ili2cJarPath)')" />
+      <None Include="$(Ili2cJarPath)" CopyToOutputDirectory="PreserveNewest" Link="ili2c-worker\ili2c.jar" Condition="Exists('$(Ili2cJarPath)')" />
     </ItemGroup>
   </Target>
 
