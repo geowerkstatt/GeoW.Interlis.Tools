@@ -82,7 +82,8 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
             ResolveInspectionPath(inspection);
         }
 
-        // Selections (WHERE) and the AGGREGATION grouping paths are rooted at the view's base names (RefHB 3.15).
+        // Selections (WHERE) and the AGGREGATION grouping paths are rooted at the view object (RefHB 3.13-34): a head
+        // names a base (3.13-39) or an attribute of the view, including those taken over with ALL OF (3.13-40, 3.15-44).
         foreach (var selection in viewDef.Selections)
         {
             ResolveExpression(selection, viewDef);
@@ -233,8 +234,8 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
 
     /// <summary>
     /// Recursively resolves every <see cref="PathExpression"/> nested in <paramref name="expression"/> against
-    /// <paramref name="root"/> (the walk mirrors the collector the type checker uses for view-path checks), and
-    /// checks the inspection factors it passes on the way (see <see cref="CheckInspectionSource"/>).
+    /// <paramref name="root"/>, and checks the inspection factors it passes on the way (see
+    /// <see cref="CheckInspectionSource"/>).
     /// </summary>
     private void ResolveExpression(IExpression? expression, IInterlisDefinitionContainer? root)
     {
@@ -377,7 +378,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// </summary>
     private List<IInterlisDefinition> ResolveMemberStep(Reference<AttributeDef> path, PathSegment step, IReadOnlyList<IInterlisDefinitionContainer> containers)
     {
-        var members = LookupInAll(containers, c => LookupMember(c, step.Name), step.Name, report: true, step.Range);
+        var members = LookupInAll(containers, c => LookupMember(c, step.Name), step.Name, step.Range);
         if (members is [var member])
         {
             step.Target = member;
@@ -485,10 +486,6 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
         {
             var step = steps[i];
 
-            // The head of a path rooted at a view must name a base of the view — a stricter rule than membership,
-            // reported by the type checker (CheckPathHead) — so an unknown view head is not reported here as well.
-            var report = !(i == 0 && root is ViewDef);
-
             switch (step)
             {
                 case KeywordPathSegment { Keyword: PathKeyword.This }:
@@ -510,7 +507,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     break;
 
                 case RolePathSegment role:
-                    var accesses = LookupInAll(containers, c => LookupRole(c, role.Name, role.Association.Name), role.ToString(), report, path.SourceRange);
+                    var accesses = LookupInAll(containers, c => LookupRole(c, role.Name, role.Association.Name), role.ToString(), path.SourceRange);
                     var roles = accesses.Select(access => access.Role).ToList();
                     if (mustBeSingleValued)
                     {
@@ -529,7 +526,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     break;
 
                 case IndexedPathSegment indexed:
-                    var indexedAttributes = LookupInAll(containers, c => LookupMember(c, indexed.Name) as AttributeDef, indexed.Name, report, path.SourceRange);
+                    var indexedAttributes = LookupInAll(containers, c => LookupMember(c, indexed.Name) as AttributeDef, indexed.Name, path.SourceRange);
                     if (mustBeSingleValued)
                     {
                         CheckUniquePathElements(indexedAttributes, containers, path.SourceRange);
@@ -544,7 +541,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
                     break;
 
                 default:
-                    var members = LookupInAll(containers, c => LookupMember(c, step.Name), step.Name, report, path.SourceRange);
+                    var members = LookupInAll(containers, c => LookupMember(c, step.Name), step.Name, path.SourceRange);
                     if (mustBeSingleValued)
                     {
                         CheckUniquePathElements(members, containers, path.SourceRange);
@@ -688,10 +685,9 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
     /// definitions found — a single definition when all containers agree (e.g. an attribute inherited from a common
     /// base) — or an empty list when the element is missing somewhere or the context is unknown (no containers).
     /// Reporting is suppressed for an empty <paramref name="name"/> (a partially typed element, e.g. a trailing
-    /// <c>-&gt;</c> — the parse error is already reported) and when <paramref name="report"/> is
-    /// <see langword="false"/> (a view head, whose stricter rule the type checker reports).
+    /// <c>-&gt;</c> — the parse error is already reported).
     /// </summary>
-    private List<T> LookupInAll<T>(IReadOnlyList<IInterlisDefinitionContainer> containers, Func<IInterlisDefinitionContainer, T?> lookup, string name, bool report, RangePosition? range)
+    private List<T> LookupInAll<T>(IReadOnlyList<IInterlisDefinitionContainer> containers, Func<IInterlisDefinitionContainer, T?> lookup, string name, RangePosition? range)
         where T : class
     {
         var members = new List<T>();
@@ -711,7 +707,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
 
         if (missing.Count > 0)
         {
-            if (report && name.Length > 0)
+            if (name.Length > 0)
             {
                 logger.LogError("Could not resolve '{Name}' in '{Containers}' at {Range}", name, string.Join("', '", missing.Select(c => c.FullyQualifiedName)), range);
             }
