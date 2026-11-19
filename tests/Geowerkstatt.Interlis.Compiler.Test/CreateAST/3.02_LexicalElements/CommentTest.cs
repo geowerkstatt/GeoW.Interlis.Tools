@@ -258,9 +258,14 @@ public class CommentTest
             MODEL Test AT "http://foo.test" VERSION "123" =
             END Test.
             """, @"(\r\n|\r|\n)", "\r\n"),
-            ExpectedErrors: [@"Compile error at 1:16-2:0 extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}."],
+            Description: """
+                The line comment, and with it the meta attribute, ends at the line end (RefHB 3.2.8.1-1, eCH-0117 3-2).
+                A malformed meta attribute is only noted: it lives in a comment, so the model stays valid (eCH-0117 3-1).
+                """,
+            ExpectedInfo: [@"Compile info at 1:16-2:0 Malformed meta attribute: extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}."],
             RefHB: "3.2.8.1-1",
             Ech0117: "4.2-9",
+            Ili2cDivergenceReason: "ili2c rejects a meta attribute it cannot parse (\"failed to parse Metavalue\"); the '!!@' line is a line comment (RefHB 3.2.8.1-1), so the model is valid INTERLIS and we only note the malformed meta attribute (eCH-0117 3-1).",
             Expected: new ModelDef
             {
                 Name = "Test",
@@ -270,6 +275,108 @@ public class CommentTest
                     new RangePosition(2, 4, 2, 8)
                 },
                 MetaAttributes = { { "key", "value" } },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Meta comment string continued on the next meta comment line",
+            Regex.Replace("""
+            !!@ key = "value continued on the
+            !!@ next meta comment line"; other = 1
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            END Test.
+            """, @"(\r\n|\r|\n)", "\r\n"),
+            Description: """
+                A meta attribute ends with its line comment at the line end (eCH-0117 3-1/3-2, RefHB 3.2.8.1-1), so a
+                string value cannot continue on the next line: the string is unclosed and the next '!!@' line is a
+                malformed meta attribute of its own (every '!!@' starts a new 'Name = Value', eCH-0117 4.2-2). The model
+                itself is valid INTERLIS, so the malformed meta attributes are only noted. ili2c joins consecutive '!!@'
+                lines with ';' and reads the value "value continued on the;next meta comment line".
+                """,
+            ExpectedInfo:
+            [
+                @"Compile info at 1:33-2:0 Malformed meta attribute: extraneous input '\r\n' expecting {DOUBLE_QUOTE_CLOSE, LITERAL_NEWLINE, LITERAL_TEXT, '\\', '\""', UNICODE, INVALID_UNICODE, UNKNOWN_ESCAPE}.",
+                "Compile info at 2:9-2:13 Malformed meta attribute: missing '=' at 'meta'.",
+                "Compile info at 2:14-2:21 Malformed meta attribute: mismatched input 'comment' expecting {';', META_COMMENT_CLOSE}.",
+            ],
+            RefHB: "3.2.8.1-1",
+            Ech0117: "3-2",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(2, 6, 2, 10),
+                    new RangePosition(3, 4, 3, 8)
+                },
+                MetaAttributes = { { "key", "value continued on the" }, { "next", "meta" } },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Empty meta comment line",
+            Regex.Replace("""
+            !!@ technicalContact=mailto:info@foo.test
+            !!@
+
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            END Test.
+            """, @"(\r\n|\r|\n)", "\r\n"),
+            Description: """
+                '!!@' with nothing after it is a line comment (RefHB 3.2.8.1-1) that contains no meta attribute: eCH-0117
+                adds meta attributes inside line comments without changing the language (3-1), so the empty comment is
+                accepted and contributes nothing.
+                """,
+            RefHB: "3.2.8.1-1",
+            Ech0117: "3-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(3, 6, 3, 10),
+                    new RangePosition(4, 4, 4, 8)
+                },
+                MetaAttributes = { { "technicalContact", "mailto:info@foo.test" } },
+                URI = "http://foo.test",
+                Version = "123",
+                Imports =
+                {
+                    { InternalModel.Interlis.Name, (false, new Reference<ModelDef> { Path = { new(InternalModel.Interlis.Name) } }) }
+                },
+            }));
+
+        yield return Rule(new(
+            "Empty meta comment between meta attributes",
+            """
+            !!@ key1 = a
+            !!@
+            !!@ key2 = "b"
+            MODEL Test AT "http://foo.test" VERSION "123" =
+            END Test.
+            """,
+            Description: "The empty meta comment neither ends the meta attribute block nor contributes to it (RefHB 3.2.8.1-1, eCH-0117 3-1).",
+            RefHB: "3.2.8.1-1",
+            Ech0117: "3-1",
+            Expected: new ModelDef
+            {
+                Name = "Test",
+                NameLocations =
+                {
+                    new RangePosition(3, 6, 3, 10),
+                    new RangePosition(4, 4, 4, 8)
+                },
+                MetaAttributes = { { "key1", "a" }, { "key2", "b" } },
                 URI = "http://foo.test",
                 Version = "123",
                 Imports =

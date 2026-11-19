@@ -170,7 +170,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             var interlisParser = new Interlis24Parser(new CommonTokenStream(new ListTokenSource(metaCommentTokens), Interlis24Lexer.META_COMMENT));
             interlisParser.RemoveErrorListeners();
-            interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
+            interlisParser.AddErrorListener(new MetaCommentErrorListener(this));
 
             var metaAttributes = interlisParser.metaComments().metaComment().SelectMany(c => c.metaAttribute()).ToList();
             var namedMetaAttributes = metaAttributes.Where(a => IsValidToken(a.name)).ToList();
@@ -203,6 +203,19 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
 
         return new Dictionary<string, string>();
+    }
+
+    /// <summary>
+    /// Reports the syntax errors of meta comments as information. A meta attribute is formulated inside a line comment
+    /// (eCH-0117 3-1), so a malformed one, e.g. a string value continued on the next '!!@' line, leaves the model
+    /// valid INTERLIS (RefHB 3.2.8.1-1).
+    /// </summary>
+    private sealed class MetaCommentErrorListener(Interlis24Visitor visitor) : IAntlrErrorListener<IToken>
+    {
+        public void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
+        {
+            visitor.ReportInformation(offendingSymbol, $"Malformed meta attribute: {msg}");
+        }
     }
 
     /// <summary>
