@@ -172,6 +172,66 @@ public class ResilienceTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Domain constraints without a name",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS
+            """,
+            Description: """
+                A domain whose restrictions (RefHB 3.8-10) are not yet written after 'CONSTRAINTS': the incomplete
+                restriction is dropped, the domain survives.
+                """,
+            ExpectedErrors: ["Compile error at 3:30-3:31 mismatched input '<EOF>' expecting IDENTIFIER."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Domain constraints followed by END",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS
+            END M.
+            """,
+            Description: """
+                A domain whose restrictions (RefHB 3.8-10) are not yet written after 'CONSTRAINTS', followed by the
+                model end: the parser skips 'END' and reads 'M' as the restriction name, so the condition is missing.
+                """,
+            ExpectedErrors:
+            [
+                "Compile error at 4:0-4:3 extraneous input 'END' expecting IDENTIFIER.",
+                "Compile error at 4:5-4:6 mismatched input '.' expecting ':'.",
+            ],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Domain constraint without a condition",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS c: ;
+            END M.
+            """,
+            Description: "A domain restriction (RefHB 3.8-10) whose logical expression is not yet written: the restriction is dropped.",
+            ExpectedErrors: ["Compile error at 3:34-3:35 mismatched input ';' expecting {'(', '>', '>>', '#', 'AGGREGATES', 'AREA', 'DEFINED', 'HALIGNMENT', 'INSPECTION', 'INTERLIS', 'LNBASE', 'METAOBJECT', 'NAME', 'NOT', 'PARAMETER', 'PARENT', 'PI', 'REFSYSTEM', 'SIGN', 'THATAREA', 'THIS', 'THISAREA', 'UNDEFINED', 'URI', 'VALIGNMENT', EXP_NUMBER, DECIMAL_NUMBER, SIGNED_NUMBER, POS_NUMBER, IDENTIFIER, DOUBLE_QUOTE_OPEN, '\\\\'}."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Domain constraint with a missing name",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            DOMAIN D = TEXT*10 CONSTRAINTS : DEFINED(THIS);
+            END M.
+            """,
+            Description: """
+                A domain restriction (RefHB 3.8-10) whose name is missing: the parser conjures the name, the restriction
+                cannot be keyed in its domain and is dropped.
+                """,
+            ExpectedErrors: ["Compile error at 3:31-3:32 missing IDENTIFIER at ':'."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Text type with '*' but no length",
             """
             INTERLIS 2.4;
@@ -308,6 +368,32 @@ public class ResilienceTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Role without a target followed by a path through it",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+              TOPIC T =
+                CLASS C =
+                  b : BOOLEAN;
+                END C;
+                ASSOCIATION A =
+                  r1 -- C;
+                  r2 -- {1} ;
+                END A;
+                CONSTRAINTS OF C =
+                  MANDATORY CONSTRAINT r2->b;
+                END;
+              END T;
+            END M.
+            """,
+            Description: """
+                A role (RefHB 3.7.1-16) whose target class is not yet written, navigated by an object path elsewhere in
+                the topic: the role keeps an unresolved target, so the path ends there without a further error.
+                """,
+            ExpectedErrors: ["Compile error at 9:16-9:17 mismatched input ';' expecting {'ANYCLASS', 'ANYSTRUCTURE', 'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Enumeration with a trailing comma",
             """
             INTERLIS 2.4;
@@ -342,6 +428,31 @@ public class ResilienceTest
             """,
             Description: "A 'PARAMETER' runtime-parameter reference used as an expression factor, left incomplete.",
             ExpectedErrors: ["Compile error at 5:33-5:34 mismatched input '<EOF>' expecting {'HALIGNMENT', 'INTERLIS', 'METAOBJECT', 'NAME', 'REFSYSTEM', 'SIGN', 'URI', 'VALIGNMENT', IDENTIFIER}."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Runtime parameter without a type",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            PARAMETER
+              MaxLength
+            """,
+            Description: "A runtime parameter (RefHB 3.11-3) whose ':' and type are not yet written: the parameter is dropped.",
+            ExpectedErrors: ["Compile error at 4:11-4:12 mismatched input '<EOF>' expecting ':'."],
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Runtime parameter without a type after a complete one",
+            """
+            INTERLIS 2.4;
+            MODEL M AT "urn:example" VERSION "1" =
+            PARAMETER
+              p1 : TEXT;
+              p2
+            """,
+            Description: "Only the incomplete runtime parameter (RefHB 3.11-3) is dropped, the complete one before it is kept.",
+            ExpectedErrors: ["Compile error at 5:4-5:5 mismatched input '<EOF>' expecting ':'."],
             AssertOutput: false));
 
         yield return FullFile(new(
