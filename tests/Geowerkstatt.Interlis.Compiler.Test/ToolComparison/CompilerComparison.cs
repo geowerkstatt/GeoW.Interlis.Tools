@@ -3,7 +3,7 @@ using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.ObjectPool;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -23,7 +23,7 @@ public sealed record ModelFile(IReadOnlyList<string> ModelNames, string Content,
 /// Provides methods to compare compilation results between
 /// Geowerkstatt.Interlis.Compiler and ch.interlis.ili2c-tool.
 /// </summary>
-public sealed class CompilerComparison : IDisposable
+public sealed class CompilerComparison : IAsyncDisposable
 {
     // The Docker build context of the worker image: its Dockerfile and source plus the ili2c.jar downloaded during build.
     private static readonly string WorkerDirectory = Path.Combine(AppContext.BaseDirectory, "ili2c-worker");
@@ -31,7 +31,10 @@ public sealed class CompilerComparison : IDisposable
     // Shared by all comparisons of a test run and kept across runs (see BuildWorkerImageAsync).
     private static readonly Lazy<Task<IFutureDockerImage>> WorkerImage = new(BuildWorkerImageAsync);
 
-    private readonly ObjectPool<Ili2cContainer> containerPool;
+    // A compilation takes an idle container or starts a new one, so there are never more containers than
+    // compilations running in parallel.
+    private readonly ConcurrentBag<Ili2cContainer> idleContainers = [];
+    private readonly ConcurrentBag<Ili2cContainer> allContainers = [];
 
     public CompilerComparison()
     {
@@ -39,8 +42,6 @@ public sealed class CompilerComparison : IDisposable
         {
             throw new FileNotFoundException("ili2c.jar not found in output directory. Ensure the project was built successfully.");
         }
-
-        containerPool = new DefaultObjectPoolProvider().Create(new Ili2cContainerPoolPolicy());
     }
 
     /// <summary>
@@ -80,17 +81,22 @@ public sealed class CompilerComparison : IDisposable
     /// <exception cref="Ili2cCompilationTimeoutException">ili2c did not terminate within the compile timeout (it hung on the input).</exception>
     public async Task<string> CompileWithIli2cAsync(string interlisSource, IReadOnlyList<ModelFile> dependencies)
     {
-        var container = containerPool.Get();
+        if (!idleContainers.TryTake(out var container))
+        {
+            container = new Ili2cContainer();
+            allContainers.Add(container);
+        }
+
         try
         {
             var result = await container.RunCompileAsync(interlisSource, dependencies);
-            containerPool.Return(container);
+            idleContainers.Add(container);
             return result;
         }
         catch
         {
-            // After an exception it is unsafe to reuse the container
-            container.Dispose();
+            // After an exception it is unsafe to reuse the container, and its JVM may still be stuck in a compilation.
+            await container.DisposeAsync();
             throw;
         }
     }
@@ -179,9 +185,10 @@ public sealed class CompilerComparison : IDisposable
                 : "<Geowerkstatt.Interlis.Compiler> should accept or reject the input in the same way as the <ili2c-tool> compiler does");
     }
 
-    public void Dispose()
+    /// <summary>Stops all containers in parallel; one after another, they added about 2s to every test run.</summary>
+    public async ValueTask DisposeAsync()
     {
-        (containerPool as IDisposable)?.Dispose();
+        await Task.WhenAll(allContainers.Select(container => container.DisposeAsync().AsTask()));
     }
 
     /// <summary>Resolves imported models for the Geowerkstatt compiler from a fixed set of <see cref="ModelFile"/>s.</summary>
@@ -220,19 +227,11 @@ public sealed class CompilerComparison : IDisposable
     {
     }
 
-    private sealed class Ili2cContainerPoolPolicy : IPooledObjectPolicy<Ili2cContainer>
-    {
-        public Ili2cContainer Create() => new();
-
-        // A container whose compilation threw is disposed by CompileWithIli2cAsync and never returned.
-        public bool Return(Ili2cContainer obj) => true;
-    }
-
     /// <summary>
     /// A container running the ili2c worker (see Ili2cWorker/Ili2cWorker.java): one warm JVM that compiles a model
     /// per HTTP request, so a compilation pays neither a JVM startup nor a Docker exec.
     /// </summary>
-    private sealed class Ili2cContainer : IDisposable
+    private sealed class Ili2cContainer : IAsyncDisposable
     {
         private const ushort WorkerPort = 8080;
 
@@ -242,6 +241,7 @@ public sealed class CompilerComparison : IDisposable
 
         private IContainer? container;
         private HttpClient? worker;
+        private int disposed;
 
         private async Task StartAsync()
         {
@@ -297,10 +297,19 @@ public sealed class CompilerComparison : IDisposable
             }
         }
 
-        public void Dispose()
+        // Called twice for a container whose compilation failed: right away, and again when the comparison ends.
+        public async ValueTask DisposeAsync()
         {
+            if (Interlocked.Exchange(ref disposed, 1) == 1)
+            {
+                return;
+            }
+
             worker?.Dispose();
-            container?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            if (container is not null)
+            {
+                await container.DisposeAsync();
+            }
         }
     }
 }
