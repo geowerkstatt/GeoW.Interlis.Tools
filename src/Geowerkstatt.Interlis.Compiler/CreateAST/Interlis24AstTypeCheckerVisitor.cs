@@ -486,8 +486,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
             }
 
             var targetTopic = FindTopic(target);
-            if (targetTopic != null && targetTopic != sourceTopic
-                && !sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
+            if (targetTopic != null && !HasTopicDependency(sourceTopic, targetTopic))
             {
                 ReportError(viewDef, $"the base viewable '{target.Name}' is in topic '{targetTopic.Name}' and requires a topic dependency");
             }
@@ -1532,7 +1531,9 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
             return;
         }
 
-        // A role whose target class lives in another topic requires that topic to be a declared dependency.
+        // A role whose target class lives in another topic requires that topic to be a declared (or inherited)
+        // dependency; a class of a base topic of the association's topic is inherited and needs none (RefHB 3.5.2-17,
+        // 3.5.4-11, 3.7.5-1; see HasTopicDependency).
         foreach (var target in roleType.Targets)
         {
             if (target.Value is not RestrictedRef.DefinitionRef { Reference.Target: ClassDef targetClass })
@@ -1541,8 +1542,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
             }
 
             var targetTopic = FindTopic(targetClass);
-            if (targetTopic != null && targetTopic != sourceTopic
-                && !sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
+            if (targetTopic != null && !HasTopicDependency(sourceTopic, targetTopic))
             {
                 ReportError(role, $"the cross-topic role requires a topic dependency on '{targetTopic.Name}'");
             }
@@ -1590,7 +1590,7 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
             {
                 ReportError(attribute, "a cross-topic reference requires property EXTERNAL");
             }
-            else if (!sourceTopic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
+            else if (!HasTopicDependency(sourceTopic, targetTopic))
             {
                 ReportError(attribute, $"the EXTERNAL reference requires a topic dependency on '{targetTopic.Name}'");
             }
@@ -1688,6 +1688,28 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
     private static bool IsConcretizedInTopic(ClassDef abstractClass, TopicDef topic) =>
         topic.Content.Values.OfType<ClassDef>()
             .Any(candidate => !candidate.Properties.Contains(Property.Abstract) && ExtendsTransitively(candidate, abstractClass));
+
+    /// <summary>
+    /// Whether a role, reference or view in <paramref name="sourceTopic"/> may target a class or view of
+    /// <paramref name="targetTopic"/> without violating the dependency declarations (RefHB 3.5.2-17). It may when
+    /// the two are the same topic, when the target is a base topic of the source (an extending topic inherits all
+    /// names of its base topic, RefHB 3.5.4-11, so a role over an inherited class stays within the topic, RefHB
+    /// 3.7.5-1), or when the source or one of its base topics declares <c>DEPENDS ON</c> the target: "an extended
+    /// topic has, without additional declarations, the same dependencies as its base topic" (RefHB 3.5.2-17).
+    /// </summary>
+    private static bool HasTopicDependency(TopicDef sourceTopic, TopicDef targetTopic)
+    {
+        var visited = new HashSet<TopicDef>();
+        for (var topic = sourceTopic; topic != null && visited.Add(topic); topic = topic.Extends?.Target)
+        {
+            if (topic == targetTopic || topic.DependsOn.Any(dependency => dependency.Path.LastOrDefault()?.Name == targetTopic.Name))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static bool ExtendsTransitively<T>(T definition, T target) where T : class, IInterlisDefinition, IExtending<T>
     {
