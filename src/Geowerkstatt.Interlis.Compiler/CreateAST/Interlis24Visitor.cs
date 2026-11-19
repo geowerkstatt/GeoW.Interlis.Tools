@@ -912,10 +912,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
         // The target is an explicit reference or an ANYCLASS / ANYSTRUCTURE placeholder. The merged grammar rule allows
         // any of them in every position; the type checker enforces which kind each context permits (RefHB 3.6.1-13/-15/-17).
+        // The target name can still be missing while typing (e.g. 'r -- {1} ;'); it then becomes an empty reference
+        // that is never registered nor resolved, so consumers see an unresolved target instead of a null reference.
         RestrictedRef.RefTarget value =
             context.ANYCLASS() != null ? RestrictedRef.AnyKind.Class :
             context.ANYSTRUCTURE() != null ? RestrictedRef.AnyKind.Structure :
-            new RestrictedRef.DefinitionRef { Reference = CreateReference(context.@ref, acceptTypes)! };
+            new RestrictedRef.DefinitionRef { Reference = CreateReference(context.@ref, acceptTypes) ?? new Reference<IInterlisDefinition>() };
 
         return new RestrictedRef
         {
@@ -988,12 +990,15 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     public override List<ParameterDef> VisitRunTimeParameterDef([NotNull] Interlis24Parser.RunTimeParameterDefContext context)
     {
         // PARAMETER (name ':' attrTypeDef ';')* — runtime parameters (RefHB 3.11). Each name pairs with the
-        // attrTypeDef at the same index. Reuses ParameterDef (name + type).
+        // attrTypeDef at the same index. Reuses ParameterDef (name + type). While typing, the last name can still lack
+        // its type (e.g. 'PARAMETER p'); such a parameter is dropped, like a definition without a name.
         var names = context.IDENTIFIER();
         var types = context.attrTypeDef();
         var result = new List<ParameterDef>();
-        for (var i = 0; i < names.Length; i++)
+        for (var i = 0; i < Math.Min(names.Length, types.Length); i++)
         {
+            if (!IsValidToken(names[i].Symbol)) continue;
+
             result.Add(new ParameterDef
             {
                 Name = names[i].GetText(),
@@ -1495,6 +1500,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             // RefHB 3.8-8: every restriction has a unique name within its domain definition.
             var constraint = VisitDomainConstraint(constraintContext);
+            if (constraint == null) continue;
+
             if (!type.Constraints.TryAdd(constraint.Name, constraint))
             {
                 ReportError(constraintContext.IDENTIFIER().Symbol, $"Duplicate domain constraint {constraint.Name}");
@@ -1517,12 +1524,22 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         };
     }
 
-    public override DomainConstraint VisitDomainConstraint([NotNull] Interlis24Parser.DomainConstraintContext context)
+    public override DomainConstraint? VisitDomainConstraint([NotNull] Interlis24Parser.DomainConstraintContext context)
     {
+        // Name and condition are mandatory (RefHB 3.8-10) but either can still be missing while typing, e.g. right
+        // after 'CONSTRAINTS'. A restriction without a name cannot be keyed in its domain and one without a
+        // condition carries no meaning (and would break the type checker), so drop it; the syntax error is reported.
+        var name = context.IDENTIFIER();
+        var condition = context.expression() == null ? null : Visit(context.expression()) as IExpression;
+        if (name == null || !IsValidToken(name.Symbol) || condition == null)
+        {
+            return null;
+        }
+
         return new DomainConstraint
         {
-            Name = context.IDENTIFIER().GetText(),
-            Condition = Visit(context.expression()) as IExpression ?? new UndefinedConstant(),
+            Name = name.GetText(),
+            Condition = condition,
             SourceRange = context.ToRange(),
         };
     }
