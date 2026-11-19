@@ -332,8 +332,12 @@ public sealed class CompilerComparison : IDisposable
 
             // --modeldir confines model resolution to the work directory (the target and its written dependencies),
             // so ili2c resolves imports from those files and never reaches out to the default network repository.
+            // Every compilation starts a fresh, short-lived JVM, and one such JVM runs in parallel per test. By default
+            // each JVM spreads JIT compilation and GC over all cores, which oversubscribes the machine several times
+            // over. Restricting it to the C1 JIT, the serial GC and one core lowers its CPU use and shortens the run.
             var jarName = Path.GetFileName(jarPath);
-            var command = $"java -jar /jar/{jarName} --without-warnings --quiet --modeldir {workDir} {targetFile} 2>&1; rm -rf {workDir}; echo && echo '{OutputMarker}'\n";
+            var jvmOptions = "-XX:TieredStopAtLevel=1 -XX:+UseSerialGC -XX:ActiveProcessorCount=1";
+            var command = $"java {jvmOptions} -jar /jar/{jarName} --without-warnings --quiet --modeldir {workDir} {targetFile} 2>&1; rm -rf {workDir}; echo && echo '{OutputMarker}'\n";
             await WriteAsync(command);
 
             try
