@@ -675,6 +675,44 @@ public class ViewTest
                 },
             }));
 
+        yield return Rule(new(
+            "View attribute derived by a comparison expression",
+            "VIEW V PROJECTION OF base~Class; = ATTRIBUTE NewAttr := base->Attr > 5; END V;",
+            Description: "ViewAttributes 'Attribute-Name Properties := Expression' (RefHB 3.15-6): the value is a full expression, here a comparison of a base attribute path with a constant.",
+            RefHB: "3.15-6",
+            Expected: new ViewDef
+            {
+                Name = "V",
+                NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 76, 0, 77) },
+                Content = {
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
+                    { "NewAttr", new AttributeDef
+                    {
+                        Name = "NewAttr",
+                        NameLocations = { new RangePosition(0, 45, 0, 52) },
+                        TypeDef = UndefinedType.Instance,
+                        Values = {
+                            new ComparisonExpression
+                            {
+                                Operator = ComparisonExpression.ComparisonOperator.Greater,
+                                FirstOperand = new PathExpression
+                                {
+                                    Reference = new Reference<IInterlisDefinition> { Path = {
+                                        new("base"),
+                                        new("Attr"),
+                                    } },
+                                },
+                                SecondOperand = new NumericConstant { Value = 5 },
+                            },
+                        },
+                    } },
+                },
+                Formation = new ProjectionView
+                {
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                },
+            }));
+
         yield return FullFile(new(
             "Join view in a topic",
             """
@@ -1353,7 +1391,7 @@ public class ViewTest
             AssertOutput: false));
 
         yield return FullFile(new(
-            "View derived attribute uses an expression, not a factor",
+            "View derived attribute with an arithmetic expression",
             """
             INTERLIS 2.4;
             MODEL Model AT "http://example.com" VERSION "1.0.0" =
@@ -1367,22 +1405,18 @@ public class ViewTest
                         =
                         ATTRIBUTE
                             ALL OF Class;
-                            newAttr := attr + 1;
+                            newAttr := Class -> attr + 1;
                     END V;
                 END Topic;
             END Model.
             """,
             Description: """
-                RefHB 3.15: a derived view attribute is defined by a single Factor, not a full expression, so the
-                arithmetic '+' is a syntax error. Parser recovery leaves 'newAttr := attr', whose head 'attr' is not a
-                base either — surfacing the base-name rule as a second, independent diagnostic.
-                (Verified: ili2c also rejects at the '+'.)
+                RefHB 3.15-6: a derived view attribute is 'Attribute-Name Properties := Expression' (RefHB 2.3 2.15-41
+                allowed only a Factor), so the arithmetic over a base attribute is accepted. The base-name rule still
+                applies to every path inside the expression.
                 """,
-            ExpectedErrors: [
-                "Compile error at 13:32-13:33 mismatched input '+' expecting ';'.",
-                "Type check error in 'Model.Topic.V' at 13:27-13:31: the path must start with a base of the view, but 'attr' is not a base.",
-            ],
-            RefHB: "3.15-38",
+            RefHB: "3.15-6",
+            Ili2cDivergenceReason: "we accept an expression after ':=' as RefHB 2.4 3.15-6 defines it ('Attribute-Name Properties := Expression'), ili2c 5.6.8 still parses only a factor there (the RefHB 2.3 2.15-41 rule) and rejects every operator",
             AssertOutput: false));
 
         yield return FullFile(new(

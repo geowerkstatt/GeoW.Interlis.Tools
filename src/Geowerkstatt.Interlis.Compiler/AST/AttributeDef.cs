@@ -37,8 +37,9 @@ public sealed class AttributeDef : InterlisDefinition
     }
 
     /// <summary>
-    /// The factor expression(s) assigned with <c>:=</c> (a default/derived value). Multiple factors can be
-    /// given within views and view extensions; the last defined one applies (RefHB 3.6.1-4/6).
+    /// The expression(s) assigned with <c>:=</c> (a default/derived value, RefHB 3.6.1-3; a role's value is a
+    /// factor, RefHB 3.7.1-16). Multiple values can be given within views and view extensions; the last defined
+    /// one applies (RefHB 3.6.1-4/5).
     /// </summary>
     public List<IExpression> Values { get; } = new List<IExpression>();
 

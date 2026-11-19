@@ -428,6 +428,95 @@ public class AttributeTest
                 },
             }));
 
+        yield return Rule(new(
+            "Attribute with an expression value",
+            "Name : 0 .. 100 := 1 + 2;",
+            Description: """
+                RefHB 3.6.1-3 defines the assigned value as an Expression (RefHB 2.3 2.6.1-3 allowed only a Factor), so
+                arithmetic after ':=' parses and yields the expression node; a bare factor keeps yielding the factor's
+                own node (see 'Attribute with constant value').
+                """,
+            RefHB: "3.6.1-3",
+            Ili2cDivergenceReason: "we accept an expression after ':=' as RefHB 2.4 3.6.1-3 defines it (':=' Expression { ',' Expression }), ili2c 5.6.8 still parses only a factor there (the RefHB 2.3 2.6.1-3 rule) and rejects every operator",
+            Expected: new AttributeDef
+            {
+                Name = "Name",
+                NameLocations = { new RangePosition(0, 0, 0, 4) },
+                TypeDef = new DecimalType
+                {
+                    Min = 0,
+                    Max = 100,
+                    Precision = 0,
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                    SourceRange = new RangePosition(0, 7, 0, 15),
+                },
+                Values = {
+                    new ArithmeticExpression
+                    {
+                        Operator = ArithmeticExpression.ArithmeticOperator.Addition,
+                        FirstOperand = new NumericConstant { Value = 1 },
+                        SecondOperand = new NumericConstant { Value = 2 },
+                    },
+                },
+            }));
+
+        yield return Rule(new(
+            "Attribute with factor and expression values",
+            "Name : 0 .. 100 := 50, 1 + 2;",
+            Description: """
+                ':=' Expression { ',' Expression } (RefHB 3.6.1-3): each value is parsed on its own, so a plain factor
+                in the list still yields the constant node it yielded before expressions were allowed.
+                """,
+            RefHB: "3.6.1-3",
+            Ili2cDivergenceReason: "we accept an expression after ':=' as RefHB 2.4 3.6.1-3 defines it (':=' Expression { ',' Expression }), ili2c 5.6.8 still parses only a factor there (the RefHB 2.3 2.6.1-3 rule) and rejects every operator",
+            Expected: new AttributeDef
+            {
+                Name = "Name",
+                NameLocations = { new RangePosition(0, 0, 0, 4) },
+                TypeDef = new DecimalType
+                {
+                    Min = 0,
+                    Max = 100,
+                    Precision = 0,
+                    Cardinality = new Cardinality { Min = 0, Max = 1 },
+                    SourceRange = new RangePosition(0, 7, 0, 15),
+                },
+                Values = {
+                    new NumericConstant { Value = 50 },
+                    new ArithmeticExpression
+                    {
+                        Operator = ArithmeticExpression.ArithmeticOperator.Addition,
+                        FirstOperand = new NumericConstant { Value = 1 },
+                        SecondOperand = new NumericConstant { Value = 2 },
+                    },
+                },
+            }));
+
+        yield return FullFile(new(
+            "Boolean attribute with a logical expression value",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        a : BOOLEAN;
+                        b : BOOLEAN;
+                        n : 0 .. 10;
+                        both (TRANSIENT) : BOOLEAN := a AND b;
+                        big (TRANSIENT) : BOOLEAN := n > 5;
+                    END Class;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                RefHB 3.6.1-3: the value of an attribute is an Expression, so a logical expression over other attributes
+                of the class (an attribute name means the value of the context object, RefHB 3.13-40) and a comparison
+                are accepted.
+                """,
+            RefHB: "3.6.1-3",
+            Ili2cDivergenceReason: "we accept an expression after ':=' as RefHB 2.4 3.6.1-3 defines it (':=' Expression { ',' Expression }), ili2c 5.6.8 still parses only a factor there (the RefHB 2.3 2.6.1-3 rule) and rejects every operator",
+            AssertOutput: false));
+
         yield return FullFile(new(
             "Overriding constant-fixed attribute",
             """

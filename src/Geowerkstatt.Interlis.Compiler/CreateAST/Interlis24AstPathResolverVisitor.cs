@@ -216,7 +216,7 @@ public class Interlis24AstPathResolverVisitor(ILoggerFactory loggerFactory) : In
 
     public override bool VisitAttributeDef([NotNull] AttributeDef attributeDef)
     {
-        // Default / derived-value factors (RefHB 3.6.1-4/6, view attributes 3.15) are rooted at the enclosing viewable.
+        // Default / derived-value expressions (RefHB 3.6.1-3/4, view attributes 3.15-6) are rooted at the enclosing viewable.
         foreach (var value in attributeDef.Values)
         {
             ResolveExpression(value, currentViewable.Value);
