@@ -1,6 +1,9 @@
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Containers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.ObjectPool;
-using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 
 namespace Geowerkstatt.Interlis.Compiler.Test.ToolComparison;
@@ -22,7 +25,7 @@ public sealed record ModelFile(IReadOnlyList<string> ModelNames, string Content,
 public sealed class CompilerComparison : IDisposable
 {
     private readonly string jarPath;
-    private readonly ObjectPool<DockerContainer> containerPool;
+    private readonly ObjectPool<Ili2cContainer> containerPool;
 
     public CompilerComparison()
     {
@@ -31,7 +34,7 @@ public sealed class CompilerComparison : IDisposable
         jarPath = File.Exists(jarFile) ? jarFile : throw new FileNotFoundException(
             "ili2c.jar not found in output directory. Ensure the project was built successfully.");
 
-        containerPool = new DefaultObjectPoolProvider().Create(new DockerContainerPoolPolicy(jarPath));
+        containerPool = new DefaultObjectPoolProvider().Create(new Ili2cContainerPoolPolicy(jarPath));
     }
 
     /// <summary>
@@ -184,195 +187,84 @@ public sealed class CompilerComparison : IDisposable
     {
     }
 
-    private sealed class DockerContainerPoolPolicy(string jarPath) : IPooledObjectPolicy<DockerContainer>
+    private sealed class Ili2cContainerPoolPolicy(string jarPath) : IPooledObjectPolicy<Ili2cContainer>
     {
-        public DockerContainer Create() => new(jarPath);
+        public Ili2cContainer Create() => new(jarPath);
 
-        public bool Return(DockerContainer obj) => obj.IsAlive;
+        // A container whose compilation threw is disposed by CompileWithIli2cAsync and never returned.
+        public bool Return(Ili2cContainer obj) => true;
     }
 
     /// <summary>
-    /// Encapsulates a single persistent Docker container running /bin/sh.
+    /// A long-lived container holding the ili2c jar. Every compilation runs as its own exec in it, so a pooled
+    /// container serves many compilations while being started only once.
     /// </summary>
-    private sealed class DockerContainer(string jarPath) : IDisposable
+    private sealed class Ili2cContainer(string jarPath) : IDisposable
     {
-        private const string ReadyMarker = "---READY---";
-        private const string WriteMarker = "---WRITE-END---";
-        private const string OutputMarker = "---COMPILE-END---";
-        private readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
+        private const string JarDirectory = "/jar";
 
-        // The compile step is bounded more tightly than container startup: ili2c hangs (never returns) on some
-        // malformed inputs. Kept comfortably above a normal ili2c run (~1-2s) so it never trips a legitimate compilation.
-        private readonly TimeSpan CompileTimeout = TimeSpan.FromSeconds(10);
+        // ili2c hangs (never returns) on some malformed inputs. Kept comfortably above a normal ili2c run (~1-2s) so it
+        // never trips a legitimate compilation.
+        private static readonly TimeSpan CompileTimeout = TimeSpan.FromSeconds(10);
 
-        private readonly string jarPath = jarPath;
+        // The exit code of coreutils `timeout` when the command ran into the time limit.
+        private const long TimedOutExitCode = 124;
 
-        private Process? process;
-        private StreamWriter? stdin;
-        private StreamReader? stdout;
-        private string? containerId;
+        // Every compilation starts a fresh, short-lived JVM, and one such JVM runs in parallel per test. By default
+        // each JVM spreads JIT compilation and GC over all cores, which oversubscribes the machine several times
+        // over. Restricting it to the C1 JIT, the serial GC and one core lowers its CPU use and shortens the run.
+        private static readonly string[] JvmOptions = ["-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-XX:ActiveProcessorCount=1"];
 
-        public bool IsAlive => process != null && !process.HasExited;
+        // The jar is copied in through the Docker API rather than bind-mounted, so it also reaches a daemon that
+        // runs on a different host than the tests (e.g. a containerized CI agent talking to the host daemon).
+        private readonly IContainer container = new ContainerBuilder("eclipse-temurin:17-jre")
+            .WithEntrypoint("sleep", "infinity")
+            .WithResourceMapping(FilePath.Of(jarPath), DirectoryPath.Of(JarDirectory))
+            .WithLogger(NullLogger.Instance) // it logs every copy and exec, which would flood each test's output
+            .Build();
 
-        private async Task<string> ReadUntilMarkerAsync(string marker, TimeSpan timeout, string timeoutMessage)
-        {
-            using var cts = new CancellationTokenSource(timeout);
-            var output = new StringBuilder();
-
-            try
-            {
-                while (!cts.Token.IsCancellationRequested)
-                {
-                    var line = await stdout!.ReadLineAsync(cts.Token)
-                        ?? throw new InvalidOperationException("Docker container stdout stream ended unexpectedly");
-                    if (line.Contains(marker))
-                    {
-                        break;
-                    }
-
-                    output.AppendLine(line);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw new TimeoutException(timeoutMessage);
-            }
-
-            return output.ToString().Trim();
-        }
-
-        private async Task WriteAsync(string command)
-        {
-            await stdin!.WriteAsync(command);
-            await stdin.FlushAsync();
-        }
-
-        /// <summary>Writes <paramref name="content"/> to <paramref name="containerPath"/> inside the container, base64-encoded to avoid shell escaping issues.</summary>
-        private async Task WriteFileAsync(string containerPath, string content)
-        {
-            var base64Content = Convert.ToBase64String(Encoding.UTF8.GetBytes(content));
-            await WriteAsync($"echo '{base64Content}' | base64 -d > {containerPath}\n");
-        }
-
-        private async Task StartAsync()
-        {
-            if (IsAlive) return;
-
-            var cidFilePath = Path.GetTempFileName();
-            File.Delete(cidFilePath); // docker requires the file to not exist yet
-
-            // The jar is copied into the container with `docker cp` after the shell is ready
-            // (see below) rather than bind-mounted. A bind mount (`-v`) only works when the jar's
-            // directory is shared with the Docker daemon, which is not the case when the daemon runs
-            // on a different host than the test process (e.g. a containerized CI agent talking to the
-            // host daemon, where the path resolves in the host namespace and fails with
-            // "path not shared"). `docker cp` streams the file through the CLI and works regardless.
-            var dockerArgs = $"run --rm -i " +
-                $"--cidfile \"{cidFilePath}\" " +
-                $"-w /work " +
-                $"eclipse-temurin:17-jre " +
-                $"/bin/sh";
-
-            process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "docker",
-                Arguments = dockerArgs,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            })!;
-
-            stdin = process.StandardInput;
-            stdout = process.StandardOutput;
-
-            // Wait for the shell to be ready by sending a probe command
-            await WriteAsync($"mkdir -p /work /jar && echo && echo '{ReadyMarker}'\n");
-
-            await ReadUntilMarkerAsync(ReadyMarker, Timeout, $"Docker container did not become ready within {Timeout:g}");
-
-            containerId = File.ReadAllText(cidFilePath).Trim();
-            File.Delete(cidFilePath);
-
-            // Copy the ili2c jar into the container (see the note above on why it is not bind-mounted).
-            using var copyProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "docker",
-                Arguments = $"cp \"{jarPath}\" \"{containerId}:/jar/{Path.GetFileName(jarPath)}\"",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            })!;
-            await copyProcess.WaitForExitAsync();
-            if (copyProcess.ExitCode != 0)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to copy the ili2c jar into container {containerId} (docker cp exit code {copyProcess.ExitCode}).");
-            }
-        }
+        private readonly string jarName = Path.GetFileName(jarPath);
+        private bool started;
 
         public async Task<string> RunCompileAsync(string targetSource, IReadOnlyList<ModelFile> dependencies)
         {
-            await StartAsync();
+            if (!started)
+            {
+                await container.StartAsync();
+                started = true;
+            }
 
             // Each compilation gets its own work directory inside the (pooled, reused) container so leftover files
             // from a previous run cannot be picked up when ili2c scans the model directory for imports.
             var workDir = $"/work/{TestContext.Current!.Isolation.UniqueId}";
             var targetFile = $"{workDir}/model.ili";
 
-            await WriteAsync($"rm -rf {workDir} && mkdir -p {workDir}\n");
-            await WriteFileAsync(targetFile, targetSource);
+            await container.CopyAsync(Encoding.UTF8.GetBytes(targetSource), targetFile);
             for (var i = 0; i < dependencies.Count; i++)
             {
-                await WriteFileAsync($"{workDir}/dep{i}.ili", dependencies[i].Content);
+                await container.CopyAsync(Encoding.UTF8.GetBytes(dependencies[i].Content), $"{workDir}/dep{i}.ili");
             }
-
-            await WriteAsync($"echo && echo '{WriteMarker}'\n");
-            await ReadUntilMarkerAsync(WriteMarker, Timeout, $"Docker container did not finish writing the input files within {Timeout:g}");
 
             // --modeldir confines model resolution to the work directory (the target and its written dependencies),
             // so ili2c resolves imports from those files and never reaches out to the default network repository.
-            // Every compilation starts a fresh, short-lived JVM, and one such JVM runs in parallel per test. By default
-            // each JVM spreads JIT compilation and GC over all cores, which oversubscribes the machine several times
-            // over. Restricting it to the C1 JIT, the serial GC and one core lowers its CPU use and shortens the run.
-            var jarName = Path.GetFileName(jarPath);
-            var jvmOptions = "-XX:TieredStopAtLevel=1 -XX:+UseSerialGC -XX:ActiveProcessorCount=1";
-            var command = $"java {jvmOptions} -jar /jar/{jarName} --without-warnings --quiet --modeldir {workDir} {targetFile} 2>&1; rm -rf {workDir}; echo && echo '{OutputMarker}'\n";
-            await WriteAsync(command);
+            // The timeout runs inside the container: cancelling an exec from outside would leave ili2c running.
+            // The work directory is removed in the same exec, as every exec costs about 0.1s of CPU time.
+            var result = await container.ExecAsync([
+                "sh", "-c", """dir="$1"; shift; "$@"; status=$?; rm -rf "$dir"; exit $status""", "sh", workDir,
+                "timeout", CompileTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
+                "java", .. JvmOptions, "-jar", $"{JarDirectory}/{jarName}",
+                "--without-warnings", "--quiet", "--modeldir", workDir, targetFile]);
 
-            try
-            {
-                return await ReadUntilMarkerAsync(OutputMarker, CompileTimeout, $"ili2c did not finish compiling within {CompileTimeout:g}");
-            }
-            catch (TimeoutException)
+            if (result.ExitCode == TimedOutExitCode)
             {
                 // ili2c hung on this input; surface a dedicated exception so the comparison can record the hang
-                // as a divergence instead of failing the whole run with a raw timeout.
+                // as a divergence instead of failing the whole run.
                 throw new Ili2cCompilationTimeoutException(CompileTimeout);
             }
+
+            return (result.Stdout + result.Stderr).Trim();
         }
 
-        public void Dispose()
-        {
-            if (!string.IsNullOrEmpty(containerId))
-            {
-                try
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = "docker",
-                        Arguments = $"kill {containerId}",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    })?.WaitForExit(5000);
-                }
-                catch
-                {
-                    // Ignore errors during container kill
-                }
-            }
-
-            process?.Dispose();
-        }
+        public void Dispose() => container.DisposeAsync().AsTask().GetAwaiter().GetResult();
     }
 }
