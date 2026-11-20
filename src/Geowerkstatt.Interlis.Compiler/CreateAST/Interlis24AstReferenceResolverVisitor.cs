@@ -39,7 +39,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// after a syntax error, an absent one) has nothing to resolve.
     /// </summary>
     /// <returns><see langword="true"/> if the <paramref name="reference"/> was resolved successfully, <see langword="false"/> otherwise.</returns>
-    private bool Resolve<T>(Reference<T>? reference) where T : class, IReferenceTarget
+    private bool Resolve(IReference? reference)
     {
         if (reference == null || reference.Source == null)
         {
@@ -109,11 +109,11 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// is resolved relatively for convenience so later stages have the target, but the model name is missing; this is
     /// logged as an error so the user adds it.
     /// </summary>
-    private void ReportMissingModelQualification<T>(Reference<T> reference) where T : class, IReferenceTarget
+    private void ReportMissingModelQualification(IReference reference)
     {
         // The qualification is the whole path for a general reference; for an attribute-path constant
         // (Reference<AttributeDef>) it is the viewable prefix, since the trailing segment is the attribute member.
-        var qualificationLength = typeof(T) == typeof(AttributeDef) ? reference.Path.Count - 1 : reference.Path.Count;
+        var qualificationLength = reference is Reference<AttributeDef> ? reference.Path.Count - 1 : reference.Path.Count;
         if (qualificationLength <= 1)
         {
             // Unqualified single name (or bare attribute) — always valid.
@@ -307,69 +307,54 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// </summary>
     private IEnumerable<IInterlisDefinitionContainer> BasesOf(IInterlisDefinitionContainer container)
     {
-        switch (container)
+        if (container is ConstraintsBlockDef { Target: { } blockTarget })
         {
-            case ConstraintsBlockDef { Target: { } blockTarget }:
-                Resolve(blockTarget);
-                if (blockTarget.Target is IInterlisDefinitionContainer targetViewable)
-                {
-                    yield return targetViewable;
-                }
+            Resolve(blockTarget);
+            if (blockTarget.Target is IInterlisDefinitionContainer targetViewable)
+            {
+                yield return targetViewable;
+            }
 
-                break;
-
-            case TopicDef { Extends: { } topicBase }:
-                Resolve(topicBase);
-                if (topicBase.Target is { } baseTopic)
-                {
-                    yield return baseTopic;
-                }
-
-                break;
-
-            case ClassDef { Extends: { } classBase }:
-                Resolve(classBase);
-                if (classBase.Target is { } baseClass)
-                {
-                    yield return baseClass;
-                }
-
-                break;
-
-            case AssociationDef { Extends: { } associationBase }:
-                Resolve(associationBase);
-                if (associationBase.Target is { } baseAssociation)
-                {
-                    yield return baseAssociation;
-                }
-
-                break;
-
-            case ViewDef viewDef:
-                if (viewDef.Extends is { } viewBase)
-                {
-                    Resolve(viewBase);
-                    if (viewBase.Target is { } baseView)
-                    {
-                        yield return baseView;
-                    }
-                }
-
-                foreach (var allOf in viewDef.AllOfBases)
-                {
-                    Resolve(allOf);
-                    if (allOf.Target is { Viewable: { } viewable })
-                    {
-                        Resolve(viewable);
-                        if (viewable.Target is IInterlisDefinitionContainer allOfViewable)
-                        {
-                            yield return allOfViewable;
-                        }
-                    }
-                }
-
-                break;
+            yield break;
         }
+
+        if (ExtensionBaseOf(container) is IInterlisDefinitionContainer extensionBase)
+        {
+            yield return extensionBase;
+        }
+
+        if (container is ViewDef viewDef)
+        {
+            foreach (var allOf in viewDef.AllOfBases)
+            {
+                Resolve(allOf);
+                if (allOf.Target is { Viewable: { } viewable })
+                {
+                    Resolve(viewable);
+                    if (viewable.Target is IInterlisDefinitionContainer allOfViewable)
+                    {
+                        yield return allOfViewable;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// The definition <paramref name="definition"/> explicitly extends: the target of its <c>EXTENDS</c> clause (a
+    /// domain's is the one its type extends), resolved on demand like the bases in <see cref="BasesOf"/>.
+    /// <see langword="null"/> for a definition that extends nothing, cannot extend, or whose base is unresolved.
+    /// </summary>
+    private IInterlisDefinition? ExtensionBaseOf(IInterlisDefinition definition)
+    {
+        IExtending? extending = definition is DomainDef domain ? domain.TypeDef : definition as IExtending;
+        if (extending?.Extends is not { } baseReference)
+        {
+            return null;
+        }
+
+        Resolve(baseReference);
+        return baseReference.Target as IInterlisDefinition;
     }
 
     protected internal override bool DefaultResult => true;
