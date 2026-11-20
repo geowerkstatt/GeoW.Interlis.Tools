@@ -113,5 +113,34 @@ namespace Geowerkstatt.Interlis.RepositoryCrawler.Test
             Assert.AreEqual("Error reading file <NonExistingFile.xml> from HTTP repository <https://models.geo.admin.testdata/>", ex.Message);
             Assert.IsInstanceOfType(ex.InnerException, typeof(HttpRequestException));
         }
+
+        [TestMethod]
+        public async Task TestGetRepositoryFileStreamSendsUserAgent()
+        {
+            mockHttp
+                .Expect("https://models.interlis.testdata/ilimodels.xml")
+                .With(request => request.Headers.UserAgent.Single().Product is { Name: "Geowerkstatt.Interlis.RepositoryCrawler", Version.Length: > 0 })
+                .Respond("application/xml", "<IliModels/>");
+            var reader = new HttpRepositoryReader(new Uri("https://models.interlis.testdata"), mockHttpClient);
+
+            await using var stream = await reader.GetRepositoryFileStream("ilimodels.xml");
+
+            mockHttp.VerifyNoOutstandingExpectation();
+        }
+
+        [TestMethod]
+        public async Task TestGetRepositoryFileStreamKeepsUserAgentOfHttpClient()
+        {
+            mockHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("INTERLIS-Language-Server/1.0");
+            mockHttp
+                .Expect("https://models.interlis.testdata/ilimodels.xml")
+                .With(request => request.Headers.UserAgent.ToString() == "INTERLIS-Language-Server/1.0")
+                .Respond("application/xml", "<IliModels/>");
+            var reader = new HttpRepositoryReader(new Uri("https://models.interlis.testdata"), mockHttpClient);
+
+            await using var stream = await reader.GetRepositoryFileStream("ilimodels.xml");
+
+            mockHttp.VerifyNoOutstandingExpectation();
+        }
     }
 }
