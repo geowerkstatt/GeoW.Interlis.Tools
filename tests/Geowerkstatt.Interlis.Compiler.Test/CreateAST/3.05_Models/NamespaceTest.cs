@@ -641,6 +641,11 @@ public class NamespaceTest
                 END Topic;
             END ModelB.
             """,
+            Description: """
+                RefHB 3.5.4 defines no precedence between a local name and the same name from an UNQUALIFIED import,
+                so the reference stays ambiguous. 'IMPORTS UNQUALIFIED INTERLIS' is an ordinary import too (RefHB
+                3.5.1-16): swissTLM3D and swissBOUNDARIES3D define their own UUIDOID beside INTERLIS.UUIDOID.
+                """,
             ExpectedErrors: ["Ambiguous 'reference 'MyDomain' from ModelB.Topic.ClassName' at 12:19-12:27 could be resolved to multiple targets: ModelB.MyDomain, ModelA.MyDomain"],
             RefHB: "3.5.4-11",
             AssertOutput: false,
