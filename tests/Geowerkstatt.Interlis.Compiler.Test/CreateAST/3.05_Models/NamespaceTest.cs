@@ -2,6 +2,7 @@ using Geowerkstatt.Interlis.Compiler.AST;
 using Geowerkstatt.Interlis.Compiler.AST.Expression;
 using Geowerkstatt.Interlis.Compiler.AST.Types;
 using static Geowerkstatt.Interlis.Compiler.CompilationTestCase;
+using static Geowerkstatt.Interlis.Compiler.TestTools;
 
 namespace Geowerkstatt.Interlis.Compiler;
 
@@ -682,6 +683,232 @@ public class NamespaceTest
             RefHB: "3.5.4-11",
             AssertOutput: false,
             Ili2cDivergenceReason: "RefHB 3.5.4-11 mandates this error (a local name must not collide with a name taken over from the superordinate element): we reject it, ili2c is lenient"));
+
+        yield return FullFile(new(
+            "Topic class extending model-level class of the same name",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                CLASS Anpassung (ABSTRACT) =
+                END Anpassung;
+                TOPIC Topic =
+                    CLASS Anpassung EXTENDS Model.Anpassung =
+                    END Anpassung;
+                    CLASS Flaeche =
+                    END Flaeche;
+                    ASSOCIATION Flaeche_Anpassung =
+                        Anpassung -- {0..1} Anpassung;
+                        Flaeche -- {0..*} Flaeche;
+                    END Flaeche_Anpassung;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                A topic takes over the type names of its model, and a local name may coincide with a taken-over one
+                only as an explicit extension of it (RefHB 3.5.4-11). The topic class 'Anpassung' extends the
+                model-level class of that name, so the unqualified role target resolves to the topic class — the
+                extension stands for the name within the topic (cf. RefHB 3.5.3-8: with C (EXTENDED) there is only
+                one class C) — and is not ambiguous with its own base.
+                """,
+            RefHB: "3.5.4-11",
+            Verify: ReferenceTargets("Model.Topic.Flaeche_Anpassung", "Anpassung -> Model.Topic.Anpassung", "Flaeche -> Model.Topic.Flaeche")));
+
+        yield return FullFile(new(
+            "Attribute path constant through topic class extending model-level namesake",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                DOMAIN
+                    CoordD = COORD 0.000 .. 9.000, 0.000 .. 9.000;
+                CLASS Anpassung (ABSTRACT) =
+                    Geometrie : SURFACE WITH (STRAIGHTS) VERTEX CoordD WITHOUT OVERLAPS > 0.005;
+                END Anpassung;
+                TOPIC Topic =
+                    CLASS Anpassung EXTENDS Model.Anpassung =
+                        SET CONSTRAINT INTERLIS.areAreas(ALL, UNDEFINED, >> Anpassung -> Geometrie);
+                    END Anpassung;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                The shadowing is decided by the name a path starts with — RefHB 3.5.4-11 is about the local name —
+                not by what the path ends in: '>> Anpassung -> Geometrie' names the topic class and descends to the
+                attribute it inherits, and the same descent from the model-level 'Anpassung' reaches that very
+                attribute. The topic class extends its namesake, so the viewable is the topic class and the
+                constant is not ambiguous.
+                """,
+            RefHB: "3.5.4-11",
+            Verify: ReferenceTargets("Model.Topic.Anpassung", "INTERLIS -> INTERLIS, areAreas -> INTERLIS.areAreas", "Anpassung -> Model.Topic.Anpassung, Geometrie -> Model.Anpassung -> Geometrie")));
+
+        yield return FullFile(new(
+            "Topic domain extending model-level domain of the same name",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                DOMAIN
+                    Farbe = (rot, gruen);
+                TOPIC Topic =
+                    DOMAIN
+                        Farbe EXTENDS Model.Farbe = (blau);
+                    CLASS Flaeche =
+                        Lokal : Farbe;
+                        Global : Model.Farbe;
+                    END Flaeche;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                Same rule as for classes (RefHB 3.5.4-11): the topic domain 'Farbe' explicitly extends the
+                model-level domain of that name, so the unqualified 'Farbe' resolves to the topic domain, while the
+                qualified 'Model.Farbe' still reaches the model-level one (RefHB 3.5.4-12).
+                """,
+            RefHB: "3.5.4-11",
+            Verify: ReferenceTargets("Model.Topic.Flaeche", "Farbe -> Model.Topic.Farbe", "Model -> Model, Farbe -> Model.Farbe")));
+
+        yield return FullFile(new(
+            "Topic unit extending model-level unit of the same name",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                UNIT
+                    Laenge (ABSTRACT);
+                TOPIC Topic =
+                    UNIT
+                        Laenge [Laenge] EXTENDS Model.Laenge;
+                    CLASS Flaeche =
+                        Wert : 0.0 .. 100.0 [Laenge];
+                    END Flaeche;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                Unit short names are type names like class and domain names (RefHB 3.5.4-8) and a unit may extend
+                another (RefHB 3.9.3-5), so the same rule applies (RefHB 3.5.4-11): the topic unit 'Laenge' explicitly
+                extends the model-level unit of that name, and the unqualified '[Laenge]' resolves to the topic unit.
+                """,
+            RefHB: "3.5.4-11",
+            Verify: ReferenceTargets("Model.Topic.Flaeche", "Laenge -> Model.Topic.Laenge")));
+
+        yield return FullFile(new(
+            "Extended topic class with model-level base of the same name",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                CLASS Anpassung (ABSTRACT) =
+                END Anpassung;
+                TOPIC Base =
+                    CLASS Anpassung EXTENDS Model.Anpassung =
+                    END Anpassung;
+                END Base;
+                TOPIC Topic EXTENDS Base =
+                    CLASS Anpassung (EXTENDED) =
+                    END Anpassung;
+                    CLASS Flaeche =
+                        Ref : REFERENCE TO Anpassung;
+                    END Flaeche;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                The extension chain is followed transitively: 'Topic.Anpassung' (EXTENDED) extends 'Base.Anpassung',
+                which extends the model-level 'Anpassung', so the unqualified name inside 'Topic' is the EXTENDED
+                class and not ambiguous with the model-level base (RefHB 3.5.4-11, 3.5.3-8).
+                """,
+            RefHB: "3.5.4-11",
+            Verify: ReferenceTargets("Model.Topic.Flaeche", "Anpassung -> Model.Topic.Anpassung")));
+
+        yield return FullFile(new(
+            "Extended topic class declared after a reference to it",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                CLASS Anpassung (ABSTRACT) =
+                END Anpassung;
+                TOPIC Base =
+                    CLASS Anpassung EXTENDS Model.Anpassung =
+                    END Anpassung;
+                END Base;
+                TOPIC Topic EXTENDS Base =
+                    CLASS Flaeche =
+                        Ref : REFERENCE TO Anpassung;
+                    END Flaeche;
+                    CLASS Anpassung (EXTENDED) =
+                    END Anpassung;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                As above, but 'Flaeche' comes first: its reference is resolved before the EXTENDED class is visited,
+                so the base the EXTENDED class implies has to be looked up on demand.
+                """,
+            RefHB: "3.5.4-11",
+            Verify: ReferenceTargets("Model.Topic.Flaeche", "Anpassung -> Model.Topic.Anpassung")));
+
+        yield return FullFile(new(
+            "Topic class colliding with model-level domain of the same name",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                DOMAIN
+                    Serie = (a, b);
+                TOPIC Topic =
+                    CLASS Serie =
+                        Bezeichnung : MANDATORY Model.Serie;
+                    END Serie;
+                    CLASS Stufe =
+                    END Stufe;
+                    ASSOCIATION Serie_Stufe =
+                        Serie -- {1} Serie;
+                        Stufe -- {0..*} Stufe;
+                    END Serie_Stufe;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                Without an extension the collision stays illegal: domains and classes share the type-name category
+                (RefHB 3.5.4-8), the topic takes over the model's 'Serie' and defines its own, which RefHB 3.5.4-11
+                forbids ("darf nicht mit einem übernommenen Namen kollidieren"). The unqualified role target is
+                therefore still reported ambiguous although a domain can never be a role target.
+                """,
+            ExpectedErrors: ["Ambiguous 'reference 'Serie' from Model.Topic.Serie_Stufe' at 12:25-12:30 could be resolved to multiple targets: Model.Topic.Serie, Model.Serie"],
+            RefHB: "3.5.4-11",
+            AssertOutput: false,
+            Ili2cDivergenceReason: "RefHB 3.5.4-11 mandates this error (a local name must not collide with a name taken over from the superordinate element unless it extends it): we reject it, ili2c is lenient"));
+
+        yield return FullFile(new(
+            "Topic domain extending one of two unqualified import namesakes",
+            """
+            INTERLIS 2.4;
+            MODEL ModelA AT "http://example.com" VERSION "1.0.0" =
+                DOMAIN
+                    Shared = (a, b);
+            END ModelA.
+            MODEL ModelB AT "http://example.com" VERSION "1.0.0" =
+                DOMAIN
+                    Shared = (c, d);
+            END ModelB.
+            MODEL ModelC AT "http://example.com" VERSION "1.0.0" =
+                IMPORTS UNQUALIFIED ModelA;
+                IMPORTS UNQUALIFIED ModelB;
+                TOPIC Topic =
+                    DOMAIN
+                        Shared EXTENDS ModelA.Shared = (e);
+                    CLASS ClassName =
+                        Attr : Shared;
+                    END ClassName;
+                END Topic;
+            END ModelC.
+            """,
+            Description: """
+                The extension rule of RefHB 3.5.4-11 is about names taken over from the superordinate modelling
+                element; names from UNQUALIFIED imports are not taken over that way (RefHB 3.5.4-12), so the
+                topic domain extending 'ModelA.Shared' does not settle the name: it stays ambiguous between the
+                local domain and the two imported ones.
+                """,
+            ExpectedErrors: ["Ambiguous 'reference 'Shared' from ModelC.Topic.ClassName' at 17:19-17:25 could be resolved to multiple targets: ModelC.Topic.Shared, ModelA.Shared, ModelB.Shared"],
+            RefHB: "3.5.4-12",
+            AssertOutput: false,
+            Ili2cDivergenceReason: "RefHB-silent (3.5.4 defines no resolution for the same unqualified name from several UNQUALIFIED imports): we report it ambiguous, ili2c silently accepts"));
 
         yield return FullFile(new(
             "Reference to model without IMPORTS",

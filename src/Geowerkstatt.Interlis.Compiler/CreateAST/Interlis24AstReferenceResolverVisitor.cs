@@ -190,14 +190,23 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         // Resolve relative to the enclosing scope chain: a single name is the element found there; a longer path
         // descends into it (an attribute-path constant '>>Class->attr', or a topic-relative 'Topic.X'). Each scope
         // level also provides the names inherited from its EXTENDS chain (RefHB 3.5.4-11).
+        // A modelling element also takes over the names of its superordinate element (a topic those of its model),
+        // and a local name may coincide with a taken-over one only as an explicit extension of it (RefHB 3.5.4-11).
+        // Such an extension stands for the name within the local scope — as with C (EXTENDED) there is only one
+        // class C in the extending topic (RefHB 3.5.3-8) — so an outer element that the inner scope's element
+        // extends is the base of that one, not a second target; any other outer namesake stays a candidate and the
+        // reference is reported ambiguous, since the collision itself is illegal. The rule is about the name the
+        // path starts with (path[0]), so the first segments are compared, not what a longer path descends to.
         IInterlisDefinitionContainer? current = source;
         IInterlisDefinitionContainer root = source;
         while (current != null)
         {
             root = current;
-            if (LookupIncludingBases(current, path[0].Name) is { } element)
+            if (LookupIncludingBases(current, path[0].Name) is { } element
+                && Descend(element, path) is { } candidate
+                && !candidates.Any(inner => ExtensionBases(inner.Segments[0]).Contains(candidate.Segments[0])))
             {
-                candidates.AddIfNotNull(Descend(element, path));
+                candidates.Add(candidate);
             }
 
             current = current.Parent;
@@ -342,19 +351,44 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
 
     /// <summary>
     /// The definition <paramref name="definition"/> explicitly extends: the target of its <c>EXTENDS</c> clause (a
-    /// domain's is the one its type extends), resolved on demand like the bases in <see cref="BasesOf"/>.
+    /// domain's is the one its type extends), resolved on demand like the bases in <see cref="BasesOf"/>. A class or
+    /// association marked <c>EXTENDED</c> extends the namesake its topic inherits without naming it; until
+    /// <see cref="VisitClassDef"/> / <see cref="VisitAssociationDef"/> has wired that base, it is looked up here on
+    /// demand, so a reference resolved before the element is visited sees the same base as one resolved after.
     /// <see langword="null"/> for a definition that extends nothing, cannot extend, or whose base is unresolved.
     /// </summary>
     private IInterlisDefinition? ExtensionBaseOf(IInterlisDefinition definition)
     {
         IExtending? extending = definition is DomainDef domain ? domain.TypeDef : definition as IExtending;
-        if (extending?.Extends is not { } baseReference)
+        if (extending?.Extends is { } baseReference)
         {
-            return null;
+            Resolve(baseReference);
+            return baseReference.Target as IInterlisDefinition;
         }
 
-        Resolve(baseReference);
-        return baseReference.Target as IInterlisDefinition;
+        return definition switch
+        {
+            ClassDef extendedClass when extendedClass.Properties.Contains(Property.Extended)
+                => FindInheritedNamesake<ClassDef>(extendedClass),
+            AssociationDef extendedAssociation when extendedAssociation.Properties.Contains(Property.Extended)
+                => FindInheritedNamesake<AssociationDef>(extendedAssociation),
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// The definitions <paramref name="definition"/> extends, nearest base first, following the <c>EXTENDS</c>
+    /// chain through <see cref="ExtensionBaseOf"/> until a definition extends nothing (or its base is unresolved).
+    /// Cycle-guarded; the definition itself is not part of its own chain.
+    /// </summary>
+    private IEnumerable<IInterlisDefinition> ExtensionBases(IInterlisDefinition definition)
+    {
+        var visited = new HashSet<IInterlisDefinition> { definition };
+        while (ExtensionBaseOf(definition) is { } baseDefinition && visited.Add(baseDefinition))
+        {
+            yield return baseDefinition;
+            definition = baseDefinition;
+        }
     }
 
     protected internal override bool DefaultResult => true;
