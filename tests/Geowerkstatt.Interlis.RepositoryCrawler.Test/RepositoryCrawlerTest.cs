@@ -187,6 +187,27 @@ public class RepositoryCrawlerTest
     }
 
     [TestMethod]
+    public async Task CrawlerSendsUserAgentWithEveryRequest()
+    {
+        // Like models.kgk-cgc.ch, which answers 403 to requests without a User-Agent from GitHub-hosted runners.
+        // Starting at an http:// root also covers the HEAD request of the https upgrade.
+        var mockHttp = new MockHttpMessageHandler();
+        mockHttp
+            .When("*")
+            .With(request => request.Headers.UserAgent.Count == 0)
+            .Respond(HttpStatusCode.Forbidden);
+        mockHttp.SetupHttpMockForTestdataFiles();
+
+        SetupRepositoryCrawlerInstance(mockHttp.ToHttpClient());
+        var result = await repositoryCrawler.CrawlModelRepositories(new RepositoryCrawlerOptions { RootRepositoryUri = "http://models.multiparent.testdata" });
+        var model = result.AssertCount(1).Single().Value.Models.AssertCount(7).Single(m => m.Name == "TwoModelsInOneFile_Model1");
+        var file = await repositoryCrawler.FetchInterlisFile(model, _ => null);
+
+        Assert.AreEqual("https://models.multiparent.testdata/", result.Single().Key);
+        Assert.IsNotNull(file);
+    }
+
+    [TestMethod]
     public async Task CrawlerSkipsMultipleOccurences()
     {
         var result = await repositoryCrawler.CrawlModelRepositories(new RepositoryCrawlerOptions { RootRepositoryUri = "https://models.interlis.testdata" });
