@@ -36,13 +36,20 @@ namespace Geowerkstatt.Interlis.Compiler;
 /// </param>
 /// <param name="Expected">
 /// The expected AST the parsed result is deep-compared against when <paramref name="AssertOutput"/> is
-/// <see langword="true"/>. <see langword="null"/> asserts the produced AST is also <see langword="null"/>.
-/// Ignored by the ili2c comparison.
+/// <see langword="true"/> and no <paramref name="Verify"/> is given. <see langword="null"/> asserts the produced AST
+/// is also <see langword="null"/>. Ignored by the ili2c comparison.
 /// </param>
 /// <param name="AssertOutput">
-/// Whether to deep-compare the produced AST against <paramref name="Expected"/>. Set to
+/// Whether to check the produced AST, against <paramref name="Expected"/> or with <paramref name="Verify"/>. Set to
 /// <see langword="false"/> when only the emitted diagnostics matter (e.g. error cases, or large files whose
 /// full AST is not worth spelling out). Ignored by the ili2c comparison.
+/// </param>
+/// <param name="Verify">
+/// Asserts on the produced AST instead of the deep comparison against <paramref name="Expected"/>, for a case where
+/// only a detail matters that the comparison ignores or that would be lost in a full expected AST, e.g. what a
+/// reference resolves to (<see cref="TestTools.ReferenceTargets"/>). Receives the result of the full-file or
+/// rule-level parse. Leave <paramref name="Expected"/> unset and <paramref name="AssertOutput"/> on when using it.
+/// Ignored by the ili2c comparison.
 /// </param>
 /// <param name="RefHB">
 /// Optional INTERLIS reference-handbook paragraph tag in digit form (e.g. <c>"3.5.3-4"</c>), written to the
@@ -74,6 +81,7 @@ public record CompilationTestCase(
     List<string>? ExpectedInfo = null,
     object? Expected = null,
     bool AssertOutput = true,
+    Func<object?, Task>? Verify = null,
     string? RefHB = null,
     string? Ech0117 = null,
     string? Ili2cDivergenceReason = null,

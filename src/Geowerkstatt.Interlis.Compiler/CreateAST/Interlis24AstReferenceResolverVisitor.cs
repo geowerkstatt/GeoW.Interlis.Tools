@@ -39,7 +39,7 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// after a syntax error, an absent one) has nothing to resolve.
     /// </summary>
     /// <returns><see langword="true"/> if the <paramref name="reference"/> was resolved successfully, <see langword="false"/> otherwise.</returns>
-    private bool Resolve<T>(Reference<T>? reference) where T : class, IReferenceTarget
+    private bool Resolve(IReference? reference)
     {
         if (reference == null || reference.Source == null)
         {
@@ -109,11 +109,11 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// is resolved relatively for convenience so later stages have the target, but the model name is missing; this is
     /// logged as an error so the user adds it.
     /// </summary>
-    private void ReportMissingModelQualification<T>(Reference<T> reference) where T : class, IReferenceTarget
+    private void ReportMissingModelQualification(IReference reference)
     {
         // The qualification is the whole path for a general reference; for an attribute-path constant
         // (Reference<AttributeDef>) it is the viewable prefix, since the trailing segment is the attribute member.
-        var qualificationLength = typeof(T) == typeof(AttributeDef) ? reference.Path.Count - 1 : reference.Path.Count;
+        var qualificationLength = reference is Reference<AttributeDef> ? reference.Path.Count - 1 : reference.Path.Count;
         if (qualificationLength <= 1)
         {
             // Unqualified single name (or bare attribute) — always valid.
@@ -190,14 +190,23 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
         // Resolve relative to the enclosing scope chain: a single name is the element found there; a longer path
         // descends into it (an attribute-path constant '>>Class->attr', or a topic-relative 'Topic.X'). Each scope
         // level also provides the names inherited from its EXTENDS chain (RefHB 3.5.4-11).
+        // A modelling element also takes over the names of its superordinate element (a topic those of its model),
+        // and a local name may coincide with a taken-over one only as an explicit extension of it (RefHB 3.5.4-11).
+        // Such an extension stands for the name within the local scope — as with C (EXTENDED) there is only one
+        // class C in the extending topic (RefHB 3.5.3-8) — so an outer element that the inner scope's element
+        // extends is the base of that one, not a second target; any other outer namesake stays a candidate and the
+        // reference is reported ambiguous, since the collision itself is illegal. The rule is about the name the
+        // path starts with (path[0]), so the first segments are compared, not what a longer path descends to.
         IInterlisDefinitionContainer? current = source;
         IInterlisDefinitionContainer root = source;
         while (current != null)
         {
             root = current;
-            if (LookupIncludingBases(current, path[0].Name) is { } element)
+            if (LookupIncludingBases(current, path[0].Name) is { } element
+                && Descend(element, path) is { } candidate
+                && !candidates.Any(inner => ExtensionBases(inner.Segments[0]).Contains(candidate.Segments[0])))
             {
-                candidates.AddIfNotNull(Descend(element, path));
+                candidates.Add(candidate);
             }
 
             current = current.Parent;
@@ -307,68 +316,78 @@ public class Interlis24AstReferenceResolverVisitor(ILoggerFactory loggerFactory)
     /// </summary>
     private IEnumerable<IInterlisDefinitionContainer> BasesOf(IInterlisDefinitionContainer container)
     {
-        switch (container)
+        if (container is ConstraintsBlockDef { Target: { } blockTarget })
         {
-            case ConstraintsBlockDef { Target: { } blockTarget }:
-                Resolve(blockTarget);
-                if (blockTarget.Target is IInterlisDefinitionContainer targetViewable)
+            Resolve(blockTarget);
+            if (blockTarget.Target is IInterlisDefinitionContainer targetViewable)
+            {
+                yield return targetViewable;
+            }
+
+            yield break;
+        }
+
+        if (ExtensionBaseOf(container) is IInterlisDefinitionContainer extensionBase)
+        {
+            yield return extensionBase;
+        }
+
+        if (container is ViewDef viewDef)
+        {
+            foreach (var allOf in viewDef.AllOfBases)
+            {
+                Resolve(allOf);
+                if (allOf.Target is { Viewable: { } viewable })
                 {
-                    yield return targetViewable;
-                }
-
-                break;
-
-            case TopicDef { Extends: { } topicBase }:
-                Resolve(topicBase);
-                if (topicBase.Target is { } baseTopic)
-                {
-                    yield return baseTopic;
-                }
-
-                break;
-
-            case ClassDef { Extends: { } classBase }:
-                Resolve(classBase);
-                if (classBase.Target is { } baseClass)
-                {
-                    yield return baseClass;
-                }
-
-                break;
-
-            case AssociationDef { Extends: { } associationBase }:
-                Resolve(associationBase);
-                if (associationBase.Target is { } baseAssociation)
-                {
-                    yield return baseAssociation;
-                }
-
-                break;
-
-            case ViewDef viewDef:
-                if (viewDef.Extends is { } viewBase)
-                {
-                    Resolve(viewBase);
-                    if (viewBase.Target is { } baseView)
+                    Resolve(viewable);
+                    if (viewable.Target is IInterlisDefinitionContainer allOfViewable)
                     {
-                        yield return baseView;
+                        yield return allOfViewable;
                     }
                 }
+            }
+        }
+    }
 
-                foreach (var allOf in viewDef.AllOfBases)
-                {
-                    Resolve(allOf);
-                    if (allOf.Target is { Viewable: { } viewable })
-                    {
-                        Resolve(viewable);
-                        if (viewable.Target is IInterlisDefinitionContainer allOfViewable)
-                        {
-                            yield return allOfViewable;
-                        }
-                    }
-                }
+    /// <summary>
+    /// The definition <paramref name="definition"/> explicitly extends: the target of its <c>EXTENDS</c> clause (a
+    /// domain's is the one its type extends), resolved on demand like the bases in <see cref="BasesOf"/>. A class or
+    /// association marked <c>EXTENDED</c> extends the namesake its topic inherits without naming it; until
+    /// <see cref="VisitClassDef"/> / <see cref="VisitAssociationDef"/> has wired that base, it is looked up here on
+    /// demand, so a reference resolved before the element is visited sees the same base as one resolved after.
+    /// <see langword="null"/> for a definition that extends nothing, cannot extend, or whose base is unresolved.
+    /// </summary>
+    private IInterlisDefinition? ExtensionBaseOf(IInterlisDefinition definition)
+    {
+        IExtending? extending = definition is DomainDef domain ? domain.TypeDef : definition as IExtending;
+        if (extending?.Extends is { } baseReference)
+        {
+            Resolve(baseReference);
+            return baseReference.Target as IInterlisDefinition;
+        }
 
-                break;
+        return definition switch
+        {
+            ClassDef extendedClass when extendedClass.Properties.Contains(Property.Extended)
+                => FindInheritedNamesake<ClassDef>(extendedClass),
+            AssociationDef extendedAssociation when extendedAssociation.Properties.Contains(Property.Extended)
+                => FindInheritedNamesake<AssociationDef>(extendedAssociation),
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// The definitions <paramref name="definition"/> extends, nearest base first, following the <c>EXTENDS</c>
+    /// chain through <see cref="ExtensionBaseOf"/> until a definition extends nothing (or its base is unresolved).
+    /// Cycle-guarded; the definition itself is not part of its own chain.
+    /// </summary>
+    private IEnumerable<IInterlisDefinition> ExtensionBases(IInterlisDefinition definition)
+    {
+        var visited = new HashSet<IInterlisDefinition> { definition };
+        while (ExtensionBaseOf(definition) is { } baseDefinition && visited.Add(baseDefinition))
+        {
+            yield return baseDefinition;
+            definition = baseDefinition;
         }
     }
 
