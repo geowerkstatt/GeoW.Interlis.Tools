@@ -4,6 +4,7 @@ using DotNet.Testcontainers.Images;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -248,7 +249,7 @@ public sealed class CompilerComparison : IAsyncDisposable
             container = new ContainerBuilder(await WorkerImage.Value)
                 .WithPortBinding(WorkerPort, assignRandomHostPort: true)
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("^ready$"))
-                .WithLogger(NullLogger.Instance) // it logs every copy, which would flood each test's output
+                .WithLogger(NullLogger.Instance) // its log would end up in the output of the test starting the container
                 .Build();
             await container.StartAsync();
 
@@ -267,19 +268,12 @@ public sealed class CompilerComparison : IAsyncDisposable
                 await StartAsync();
             }
 
-            // Each compilation gets its own work directory inside the (pooled, reused) container so leftover files
-            // from a previous run cannot be picked up when ili2c scans the model directory for imports. The worker
-            // deletes it after the compilation.
-            var workDir = $"/work/{TestContext.Current!.Isolation.UniqueId}";
-            await container!.CopyAsync(Encoding.UTF8.GetBytes(targetSource), $"{workDir}/model.ili");
-            for (var i = 0; i < dependencies.Count; i++)
-            {
-                await container.CopyAsync(Encoding.UTF8.GetBytes(dependencies[i].Content), $"{workDir}/dep{i}.ili");
-            }
-
+            // The files travel in the request body: copying each file into the container through the Docker API took
+            // longer than the request itself.
+            using var archive = new ByteArrayContent(CreateArchive(targetSource, dependencies));
             try
             {
-                using var response = await worker!.PostAsync("compile", new StringContent(workDir));
+                using var response = await worker!.PostAsync("compile", archive);
                 var output = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                 {
@@ -295,6 +289,31 @@ public sealed class CompilerComparison : IAsyncDisposable
                 // JVM stuck in the compilation.
                 throw new Ili2cCompilationTimeoutException(CompileTimeout);
             }
+        }
+
+        /// <summary>
+        /// Packs the model as model.ili and its dependencies as dep{i}.ili into a ZIP archive, the request body the
+        /// worker expects.
+        /// </summary>
+        private static byte[] CreateArchive(string targetSource, IReadOnlyList<ModelFile> dependencies)
+        {
+            using var archive = new MemoryStream();
+            using (var zip = new ZipArchive(archive, ZipArchiveMode.Create))
+            {
+                AddFile(zip, "model.ili", targetSource);
+                for (var i = 0; i < dependencies.Count; i++)
+                {
+                    AddFile(zip, $"dep{i}.ili", dependencies[i].Content);
+                }
+            }
+
+            return archive.ToArray();
+        }
+
+        private static void AddFile(ZipArchive zip, string name, string content)
+        {
+            using var entry = zip.CreateEntry(name, CompressionLevel.Fastest).Open();
+            entry.Write(Encoding.UTF8.GetBytes(content));
         }
 
         // Called twice for a container whose compilation failed: right away, and again when the comparison ends.

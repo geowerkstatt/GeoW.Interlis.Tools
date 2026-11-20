@@ -3,6 +3,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -13,11 +14,13 @@ import java.nio.file.Path;
 import java.security.Permission;
 import java.util.Comparator;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Keeps one warm JVM with ili2c loaded, so a compilation does not pay the JVM startup and JIT warm-up. Each
- * POST /compile names a work directory holding model.ili and the files it imports; the response is ili2c's console
- * output (empty when the model is valid), and the work directory is deleted afterwards.
+ * POST /compile sends a ZIP archive holding model.ili and the files it imports; the response is ili2c's console
+ * output (empty when the model is valid).
  *
  * Requests are handled one at a time on the server's dispatcher thread: ili2c logs through a process-wide
  * singleton (EhiLogger), so two compilations in the same JVM would mix their messages.
@@ -57,8 +60,11 @@ public final class Ili2cWorker {
         int status = 200;
         String response;
         try {
-            Path workDir = Path.of(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8).trim());
+            // A fresh work directory per compilation, so ili2c never picks up files of a previous one when it scans
+            // the directory for imports.
+            Path workDir = Files.createTempDirectory("compile");
             try {
+                unzip(exchange.getRequestBody(), workDir);
                 response = compile(workDir);
             } finally {
                 deleteRecursively(workDir);
@@ -103,11 +109,15 @@ public final class Ili2cWorker {
         return output.toString(StandardCharsets.UTF_8);
     }
 
-    private static void deleteRecursively(Path directory) throws IOException {
-        if (!Files.exists(directory)) {
-            return;
+    private static void unzip(InputStream archive, Path workDir) throws IOException {
+        try (ZipInputStream zip = new ZipInputStream(archive)) {
+            for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+                Files.copy(zip, workDir.resolve(entry.getName()));
+            }
         }
+    }
 
+    private static void deleteRecursively(Path directory) throws IOException {
         try (Stream<Path> paths = Files.walk(directory)) {
             for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
                 Files.delete(path);
