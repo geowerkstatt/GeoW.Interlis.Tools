@@ -108,6 +108,29 @@ public class NamespaceTest
                 },
             }));
 
+        yield return FullFile(new(
+            "Duplicate class name in topic extending its namesake",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Anpassung =
+                    END Anpassung;
+                    CLASS Anpassung EXTENDS Anpassung =
+                    END Anpassung;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                An EXTENDS does not make a second definition of the same name legal: names in a topic are unique
+                (RefHB 3.5.4-1), and only an extending topic may extend an inherited class under its own name
+                (EXTENDED, RefHB 3.5.3-8).
+                """,
+            ExpectedErrors: ["Compile error at 3:10-3:15 An element with name Anpassung already exists in the scope Topic."],
+            RefHB: "3.5.4-1",
+            AssertOutput: false,
+            Ili2cDivergenceReason: "RefHB 3.5.4-1 requires unique names in a topic: we reject the second 'Anpassung', ili2c accepts it and emits two classes 'Model.Topic.Anpassung' in its IMD"));
+
         yield return Rule(new(
             "Duplicate attribute name in class",
             """
@@ -848,6 +871,30 @@ public class NamespaceTest
                 """,
             RefHB: "3.5.4-11",
             Verify: ReferenceTargets("Model.Topic.Flaeche", "Anpassung -> Model.Topic.Anpassung")));
+
+        yield return FullFile(new(
+            "Topic class extending its own unqualified name beside a model-level namesake",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                CLASS Anpassung (ABSTRACT) =
+                END Anpassung;
+                TOPIC Topic =
+                    CLASS Anpassung EXTENDS Anpassung =
+                    END Anpassung;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                Inside the topic, 'Anpassung' names both the class being declared and the model-level class the topic
+                takes over. The local class shadows the model-level one only as its extension (RefHB 3.5.4-11), and
+                that extension is what this very EXTENDS would have to state, so the unqualified base stays
+                ambiguous; it has to be written 'Model.Anpassung'.
+                """,
+            ExpectedErrors: ["Ambiguous 'reference 'Anpassung' from Model.Topic' at 6:32-6:41 could be resolved to multiple targets: Model.Topic.Anpassung, Model.Anpassung"],
+            RefHB: "3.5.4-11",
+            AssertOutput: false,
+            Ili2cDivergenceReason: "we report the unqualified base ambiguous between the class itself and its model-level namesake; ili2c resolves names in a single pass, before the class is declared, and takes the model-level class"));
 
         yield return FullFile(new(
             "Topic class colliding with model-level domain of the same name",
