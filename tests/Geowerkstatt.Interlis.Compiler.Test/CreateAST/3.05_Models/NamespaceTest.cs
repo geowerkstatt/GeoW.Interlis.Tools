@@ -1025,6 +1025,31 @@ public class NamespaceTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Reference to element in different topic qualified without model",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC TopicA =
+                    DOMAIN
+                        LocalDomain = TEXT*20;
+                END TopicA;
+                TOPIC TopicB =
+                    CLASS ClassName =
+                        Attr : TopicA.LocalDomain;
+                    END ClassName;
+                END TopicB;
+            END Model.
+            """,
+            Description: """
+                A qualified name is prefixed with the model name and then the topic name (RefHB 3.5.4-12, DomainRef =
+                [Model-Name '.' [Topic-Name '.']] Domain-Name), so 'TopicA.LocalDomain' must be written
+                'Model.TopicA.LocalDomain'.
+                """,
+            ExpectedErrors: ["'reference 'TopicA.LocalDomain' from Model.TopicB.ClassName' at 9:19-9:37 must be fully qualified with its model name."],
+            RefHB: "3.5.4-12",
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Reference resolution where Model, Topic and Class have same name",
             """
             INTERLIS 2.4;
