@@ -7,7 +7,7 @@ public class CompilerComparisonTest
 {
     private const string FullTestCasesMethodName = "GetFullTestCases";
 
-    private static CompilerComparison comparison = default!;
+    private static CompilerComparison? comparison;
 
     [Before(Class)]
     public static void Initialize()
@@ -16,9 +16,12 @@ public class CompilerComparisonTest
     }
 
     [After(Class)]
-    public static void Cleanup()
+    public static async Task Cleanup()
     {
-        comparison.Dispose();
+        if (comparison is not null)
+        {
+            await comparison.DisposeAsync();
+        }
     }
 
     public sealed class ProcessorCountLimit : IParallelLimit
@@ -48,7 +51,7 @@ public class CompilerComparisonTest
     public async Task CompareCompilers(CompilationTestCase data)
     {
         TestTools.WriteTestCaseInfo(data);
-        await comparison.CompareCompilersAsync(data.Input, data.Ili2cDivergenceReason);
+        await comparison!.CompareCompilersAsync(data.Input, data.Ili2cDivergenceReason);
     }
 
     /// <summary>
