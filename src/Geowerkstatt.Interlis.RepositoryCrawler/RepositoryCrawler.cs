@@ -286,7 +286,7 @@ public class RepositoryCrawler : IRepositoryCrawler
 
     private async Task<Stream> GetStreamFromUrl(Uri url)
     {
-        var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+        var response = await httpClient.SendWithUserAgentAsync(HttpMethod.Get, url).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         var content = response.Content;
         return await content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -309,11 +309,8 @@ public class RepositoryCrawler : IRepositoryCrawler
         try
         {
             var httpsUri = new Uri(uri.OriginalString.Replace(Uri.UriSchemeHttp, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase));
-            using (var request = new HttpRequestMessage(HttpMethod.Head, httpsUri))
-            {
-                var response = await httpClient.SendAsync(request).ConfigureAwait(false);
-                return response.IsSuccessStatusCode ? httpsUri : uri;
-            }
+            var response = await httpClient.SendWithUserAgentAsync(HttpMethod.Head, httpsUri).ConfigureAwait(false);
+            return response.IsSuccessStatusCode ? httpsUri : uri;
         }
         catch (Exception ex) when (ex is HttpRequestException || ex is OperationCanceledException)
         {

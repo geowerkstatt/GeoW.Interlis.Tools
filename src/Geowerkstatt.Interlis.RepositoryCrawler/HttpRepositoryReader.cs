@@ -26,7 +26,7 @@
             {
                 var fullFilePath = repositoryUri.Append(filePath);
 
-                var response = await httpClient.GetAsync(fullFilePath).ConfigureAwait(false);
+                var response = await httpClient.SendWithUserAgentAsync(HttpMethod.Get, fullFilePath).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 var content = response.Content;
 
