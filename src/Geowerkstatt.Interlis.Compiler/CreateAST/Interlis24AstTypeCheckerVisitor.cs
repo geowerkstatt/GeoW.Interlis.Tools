@@ -1042,9 +1042,9 @@ public class Interlis24AstTypeCheckerVisitor(ILoggerFactory loggerFactory) : Int
     };
 
     /// <summary>
-    /// Whether the extending numeric range is wider than the inherited one. Callers only compare ranges whose
-    /// precisions match (RefHB 3.8.5-4), so the bounds lie on the same grid and are compared exactly. Open
-    /// (unbounded) ranges on either side are not compared.
+    /// Whether the extending numeric range is wider than the inherited one. The bounds are compared exactly, so
+    /// 9007199254740993 is wider than 9007199254740992, which is the same double. Open (unbounded) ranges on either
+    /// side are not compared.
     /// </summary>
     private static bool IsRangeWider(NumericType type, NumericType baseType) =>
         type.Min is { } min && type.Max is { } max

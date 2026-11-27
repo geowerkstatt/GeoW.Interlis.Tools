@@ -592,7 +592,7 @@ public static class InternalModel
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
                                 Min = 0,
-                                Max = 59.999,
+                                Max = new ExactNumber(59999, 3),
                                 Precision = -3,
                                 Unit = new Reference<UnitDef> { Target = (UnitDef)Interlis.Content["s"] },
                                 Circular = true,
@@ -746,7 +746,7 @@ public static class InternalModel
                             {
                                 Cardinality = new Cardinality { Min = 0, Max = 1 },
                                 Min = 0,
-                                Max = 59.999,
+                                Max = new ExactNumber(59999, 3),
                                 Precision = -3,
                                 Unit = new Reference<UnitDef> { Target = (UnitDef)Interlis.Content["s"] },
                                 Circular = true,
