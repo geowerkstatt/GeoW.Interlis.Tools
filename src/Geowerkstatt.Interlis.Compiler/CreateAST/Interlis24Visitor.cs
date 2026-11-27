@@ -728,7 +728,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             SourceRange = context.ToRange(),
             TypeDef = UndefinedType.Instance,
             Properties = { properties },
-            Values = { VisitFactor(context.factor()) },
+            // The expression can still be unwritten while typing (':=' at the caret).
+            Values = { context.expression() is { } expression ? Visit(expression) as IExpression ?? new UndefinedConstant() : new UndefinedConstant() },
         };
     }
 
@@ -883,7 +884,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Properties = { properties },
         };
 
-        // Derived associations may assign the role a value with ':=' (RefHB 3.7.1); reuse AttributeDef.Values.
+        // Derived associations may assign the role a value with ':=' (RefHB 3.7.1-16, a Role-Factor, unlike the
+        // expressions of attribute values); reuse AttributeDef.Values.
         if (context.role != null)
         {
             roleDef.Values.Add(VisitFactor(context.role));
@@ -968,7 +970,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             Subdivision = context.SUBDIVISION() == null ? AttributeDef.SubdivisionKind.None
                 : context.CONTINUOUS() != null ? AttributeDef.SubdivisionKind.ContinuousSubdivision
                 : AttributeDef.SubdivisionKind.Subdivision,
-            Values = { context.factor().Select(VisitFactor) },
+            // An expression can still be unwritten while typing (e.g. 'NOT' at the caret).
+            Values = { context.expression().Select(e => Visit(e) as IExpression ?? new UndefinedConstant()) },
         };
     }
 

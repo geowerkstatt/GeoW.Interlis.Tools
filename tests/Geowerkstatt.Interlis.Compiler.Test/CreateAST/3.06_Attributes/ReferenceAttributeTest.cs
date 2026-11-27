@@ -415,6 +415,37 @@ public class ReferenceAttributeTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Reference with EXTERNAL to a class of a topic the base topic depends on",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC TopicA =
+                    CLASS Target =
+                    END Target;
+                END TopicA;
+                TOPIC Base =
+                    DEPENDS ON TopicA;
+                END Base;
+                TOPIC Extended EXTENDS Base =
+                    CLASS Source =
+                        attr: REFERENCE TO (EXTERNAL) Model.TopicA.Target;
+                    END Source;
+                END Extended;
+            END Model.
+            """,
+            Description: """
+                RefHB 3.5.2-17: "An extended topic has, without additional declarations, the same dependencies as its
+                base topic." Extended inherits Base's DEPENDS ON TopicA, so the EXTERNAL reference needs no own declaration.
+                """,
+            RefHB: "3.5.2-17",
+            Ili2cDivergenceReason: """
+                ili2c only looks at the DEPENDS ON of the attribute's own topic and rejects with "This reference attribute
+                requires a topic dependency between Extended and Model.TopicA"; RefHB 3.5.2-17 states that an extended topic
+                has the same dependencies as its base topic, so we accept.
+                """,
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Extension removes EXTERNAL property",
             """
             INTERLIS 2.4;

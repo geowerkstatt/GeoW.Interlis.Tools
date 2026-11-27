@@ -68,10 +68,10 @@ public class TestTools
         {
             if (data.AssertOutput)
             {
-                await AssertDeepEqual(data.Expected, actual, deepEqual => deepEqual
+                await (VerifyOutput(data, actual) ?? AssertDeepEqual(data.Expected, actual, deepEqual => deepEqual
                         .IgnoreProperty<IInterlisDefinition>(p => p.NameLocations) // Ignore NameLocations because it adds too much clutter in tests for whole interlis files
                         .IgnoreProperty<ISourceRange>(p => p.SourceRange)
-                        );
+                        ));
             }
 
             await AssertLog(data, logProvider);
@@ -90,7 +90,7 @@ public class TestTools
         {
             if (data.AssertOutput)
             {
-                await AssertDeepEqual(data.Expected, actual);
+                await (VerifyOutput(data, actual) ?? AssertDeepEqual(data.Expected, actual));
             }
 
             await AssertLog(data, testLogger);
@@ -108,6 +108,55 @@ public class TestTools
         await Assert.That(logProvider.GetMessages(level => level == LogLevel.Warning)).IsEquivalentTo(data.ExpectedWarnings ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
         await Assert.That(logProvider.GetMessages(level => level <= LogLevel.Information)).IsEquivalentTo(data.ExpectedInfo ?? [], TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
+
+    /// <summary>
+    /// Runs the case's <see cref="CompilationTestCase.Verify"/> on <paramref name="actual"/>, or returns
+    /// <see langword="null"/> when the case has none and the output is deep-compared against
+    /// <see cref="CompilationTestCase.Expected"/> instead.
+    /// </summary>
+    private static Task? VerifyOutput(CompilationTestCase data, object? actual)
+    {
+        if (data.Verify is null)
+        {
+            return null;
+        }
+
+        if (data.Expected is not null)
+        {
+            throw new InvalidOperationException($"Test case '{data.Name}' sets both Verify and Expected; Verify replaces the comparison against Expected.");
+        }
+
+        return data.Verify(actual);
+    }
+
+    /// <summary>
+    /// A <see cref="CompilationTestCase.Verify"/> for an output of type <typeparamref name="T"/> (an
+    /// <see cref="InterlisEnvironment"/> for a full-file case), so the assertion does not have to cast.
+    /// </summary>
+    internal static Func<object?, Task> VerifyAs<T>(Func<T, Task> verify) => actual => verify((T)actual!);
+
+    /// <summary>
+    /// A <see cref="CompilationTestCase.Verify"/> for a full-file case asserting what the references written in the
+    /// definition at <paramref name="definitionPath"/> (e.g. <c>Model.Topic.ClassName</c>) resolve to: one entry per
+    /// reference in source order, each segment as <c>name -&gt; target</c>, separated by <c>", "</c> (e.g.
+    /// <c>Model -&gt; Model, Farbe -&gt; Model.Farbe</c>). For what the AST comparison cannot show, because it ignores
+    /// reference targets (see <see cref="BareReferenceComparison"/>).
+    /// </summary>
+    internal static Func<object?, Task> ReferenceTargets(string definitionPath, params string[] expected)
+        => VerifyAs<InterlisEnvironment>(async environment =>
+        {
+            var names = definitionPath.Split('.');
+            IInterlisDefinition definition = environment.Content[names[0]];
+            foreach (var name in names.Skip(1))
+            {
+                definition = ((IInterlisDefinitionContainer)definition).Content[name];
+            }
+
+            // Compared as one text, so a failure shows every actual target, not just the first that differs.
+            var actual = ((IInterlisDefinitionContainer)definition).ContainerReferences
+                .Select(reference => string.Join(", ", reference.Path.Select(segment => $"{segment.Name} -> {Describe(segment.Target)}")));
+            await Assert.That(string.Join("\n", actual)).IsEqualTo(string.Join("\n", expected));
+        });
 
     /// <summary>
     /// Writes the reference handbook (and eCH-0117) links of the given <paramref name="data"/>, its description and

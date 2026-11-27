@@ -1045,6 +1045,155 @@ public class TopicTest
             AssertOutput: false));
 
         yield return FullFile(new(
+            "Role to a class of the extended base topic",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Base =
+                    CLASS Organisation =
+                    END Organisation;
+                END Base;
+                TOPIC Extended EXTENDS Base =
+                    CLASS Object =
+                    END Object;
+                    ASSOCIATION =
+                        Owner -- {1} Organisation;
+                        Owned -- {0..*} Object;
+                    END;
+                END Extended;
+            END Model.
+            """,
+            Description: """
+                An extending topic inherits all names of its base topic (RefHB 3.5.4-11), so a role over a class of the
+                base topic stays within the topic and needs no DEPENDS ON: RefHB 3.7.5-1 explicitly speaks of a role
+                that refers to "a class inherited from the inherited topic". Real-world case: VSADSSMINI_2020_LV95.VSADSSMini
+                EXTENDS SIA405_Base_Abwasser_LV95.Administration and its DatenherrAssoc targets Administration.Organisation.
+                """,
+            RefHB: "3.5.4-11",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Role to a class of a transitively extended topic",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Base =
+                    CLASS Organisation =
+                    END Organisation;
+                END Base;
+                TOPIC Middle EXTENDS Base =
+                END Middle;
+                TOPIC Leaf EXTENDS Middle =
+                    CLASS Object =
+                    END Object;
+                    ASSOCIATION =
+                        Owner -- {1} Organisation;
+                        Owned -- {0..*} Object;
+                    END;
+                END Leaf;
+            END Model.
+            """,
+            Description: """
+                The names of the base topic are added to the extending topic's namespaces (RefHB 3.5.4-11), and Middle
+                passes them on to Leaf in turn, so Leaf sees Base.Organisation as an inherited class.
+                """,
+            RefHB: "3.5.4-11",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Role from an extending topic to an unrelated topic still needs DEPENDS ON",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Other =
+                    CLASS Thing =
+                    END Thing;
+                END Other;
+                TOPIC Base =
+                END Base;
+                TOPIC Extended EXTENDS Base =
+                    CLASS Object =
+                    END Object;
+                    ASSOCIATION =
+                        Owner -- {1} Model.Other.Thing;
+                        Owned -- {0..*} Object;
+                    END;
+                END Extended;
+            END Model.
+            """,
+            Description: """
+                Extending a topic only brings in the base topic's names and dependencies (RefHB 3.5.4-11, 3.5.2-17);
+                a topic neither extended nor depended on by Base or Extended remains out of reach without DEPENDS ON.
+                """,
+            ExpectedErrors: ["Type check error in 'Model.Extended.OwnerOwned -> Owner' at 13:12-13:43: the cross-topic role requires a topic dependency on 'Other'."],
+            RefHB: "3.5.2-17",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Role to a class of a topic the base topic depends on",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Other =
+                    CLASS Thing =
+                    END Thing;
+                END Other;
+                TOPIC Base =
+                    DEPENDS ON Other;
+                END Base;
+                TOPIC Extended EXTENDS Base =
+                    CLASS Object =
+                    END Object;
+                    ASSOCIATION =
+                        Owner (EXTERNAL) -- {1} Model.Other.Thing;
+                        Owned -- {0..*} Object;
+                    END;
+                END Extended;
+            END Model.
+            """,
+            Description: """
+                RefHB 3.5.2-17: "An extended topic has, without additional declarations, the same dependencies as its
+                base topic." Extended inherits Base's DEPENDS ON Other, so its role into Other needs no own declaration.
+                """,
+            RefHB: "3.5.2-17",
+            Ili2cDivergenceReason: """
+                ili2c only looks at the DEPENDS ON of the association's own topic and rejects with "This reference to a
+                viewable requires a topic dependency between Extended and Other"; RefHB 3.5.2-17 (identically RefHB 2.3
+                2.5.2-15) states that an extended topic has the same dependencies as its base topic, so we accept.
+                """,
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "Role to a class of the extended base topic of an imported model",
+            """
+            INTERLIS 2.4;
+            MODEL BaseModel AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Administration =
+                    CLASS Organisation =
+                    END Organisation;
+                END Administration;
+            END BaseModel.
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                IMPORTS BaseModel;
+                TOPIC Mini EXTENDS BaseModel.Administration =
+                    CLASS BaseClass =
+                    END BaseClass;
+                    ASSOCIATION DatenherrAssoc =
+                        DatenherrRef (EXTERNAL) -- {1} BaseModel.Administration.Organisation;
+                        BaseClassRef -- {0..*} BaseClass;
+                    END DatenherrAssoc;
+                END Mini;
+            END Model.
+            """,
+            Description: """
+                The shape of the real-world case (VSADSSMINI_2020_LV95 extending SIA405_Base_Abwasser_LV95.Administration):
+                the base topic lives in an imported model and the role names its class fully qualified. The inherited
+                names of RefHB 3.5.4-11 do not depend on where the base topic is defined.
+                """,
+            RefHB: "3.5.4-11",
+            AssertOutput: false));
+
+        yield return FullFile(new(
             "Cyclic dependency",
             """
             INTERLIS 2.4;

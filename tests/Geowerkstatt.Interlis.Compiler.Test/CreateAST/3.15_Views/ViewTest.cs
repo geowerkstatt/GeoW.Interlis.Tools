@@ -675,6 +675,44 @@ public class ViewTest
                 },
             }));
 
+        yield return Rule(new(
+            "View attribute derived by a comparison expression",
+            "VIEW V PROJECTION OF base~Class; = ATTRIBUTE NewAttr := base->Attr > 5; END V;",
+            Description: "ViewAttributes 'Attribute-Name Properties := Expression' (RefHB 3.15-6): the value is a full expression, here a comparison of a base attribute path with a constant.",
+            RefHB: "3.15-6",
+            Expected: new ViewDef
+            {
+                Name = "V",
+                NameLocations = { new RangePosition(0, 5, 0, 6), new RangePosition(0, 76, 0, 77) },
+                Content = {
+                    { "base", new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } } },
+                    { "NewAttr", new AttributeDef
+                    {
+                        Name = "NewAttr",
+                        NameLocations = { new RangePosition(0, 45, 0, 52) },
+                        TypeDef = UndefinedType.Instance,
+                        Values = {
+                            new ComparisonExpression
+                            {
+                                Operator = ComparisonExpression.ComparisonOperator.Greater,
+                                FirstOperand = new PathExpression
+                                {
+                                    Reference = new Reference<IInterlisDefinition> { Path = {
+                                        new("base"),
+                                        new("Attr"),
+                                    } },
+                                },
+                                SecondOperand = new NumericConstant { Value = 5 },
+                            },
+                        },
+                    } },
+                },
+                Formation = new ProjectionView
+                {
+                    Source = new BaseView { Name = "base", NameLocations = { new RangePosition(0, 21, 0, 25) }, IsRenamed = true, Viewable = new Reference<IInterlisDefinition> { Path = { new("Class") } } },
+                },
+            }));
+
         yield return FullFile(new(
             "Join view in a topic",
             """
@@ -1240,7 +1278,7 @@ public class ViewTest
             AssertOutput: false));
 
         yield return FullFile(new(
-            "View object-path head must be a base",
+            "View object-path head is neither a base nor an attribute of the view",
             """
             INTERLIS 2.4;
             MODEL Model AT "http://example.com" VERSION "1.0.0" =
@@ -1259,12 +1297,194 @@ public class ViewTest
             END Model.
             """,
             Description: """
-                RefHB 3.13/3.15: a view has no implicit "this object" (it may be formed from several bases), so an
-                object-path head must denote a base of the view. Here 'other' is neither a base nor a keyword.
-                (Verified: ili2c rejects with "Name other is not applicable to VIEW".)
+                RefHB 3.13-39/-40: an object-path head in a view denotes a base or an attribute of the view. Here
+                'other' is neither. (Verified: ili2c rejects with "Name other is not applicable to VIEW".)
                 """,
-            ExpectedErrors: ["Type check error in 'Model.Topic.V' at 12:21-12:34: the path must start with a base of the view, but 'other' is not a base."],
+            ExpectedErrors: ["Could not resolve 'other' in 'Model.Topic.V' at 12:21-12:34"],
             RefHB: "3.15-38",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View derived attribute starts at an attribute taken over with ALL OF",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        attr : 0 .. 10;
+                    END Class;
+
+                    VIEW V
+                        PROJECTION OF Class;
+                        =
+                        ATTRIBUTE
+                            ALL OF Class;
+                            x := attr;
+                    END V;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                A path in a view starts at the view object (RefHB 3.13-34): an attribute name means the attribute of
+                that object (3.13-40), and 'ALL OF' takes the attributes of a base over into the view (3.15-44). So
+                'attr' needs no 'Class ->'.
+                """,
+            RefHB: "3.13-40",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View constraint starts at an attribute of the view",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        attr : 0 .. 10;
+                    END Class;
+
+                    VIEW V
+                        PROJECTION OF Class;
+                        =
+                        ATTRIBUTE
+                            n := Class -> attr;
+                        MANDATORY CONSTRAINT n > 5;
+                    END V;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                A constraint of a view is formulated over the view object like one of a class over its object (RefHB
+                3.13-33), so its path can start at a derived view attribute.
+                """,
+            RefHB: "3.13-40",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View attributes taken over from joined and renamed bases",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        attr : 0 .. 10;
+                    END Class;
+
+                    CLASS Second =
+                        sattr : 0 .. 10;
+                    END Second;
+
+                    VIEW V
+                        JOIN OF B ~ Class, Second;
+                        =
+                        ATTRIBUTE
+                            ALL OF B;
+                            ALL OF Second;
+                            x := attr;
+                            y := sattr;
+                    END V;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                Each 'ALL OF' takes over the attributes of one base, whatever its local name (RefHB 3.15-44), so paths
+                can start at the attributes of both join bases.
+                """,
+            RefHB: "3.13-40",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View path starts at a base name taken over from a base view",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        attr : 0 .. 10;
+                    END Class;
+
+                    VIEW V1
+                        PROJECTION OF b1 ~ Class;
+                        =
+                        ATTRIBUTE
+                            ALL OF b1;
+                    END V1;
+
+                    VIEW V2
+                        PROJECTION OF V1;
+                        =
+                        ATTRIBUTE
+                            ALL OF V1;
+                            x := b1 -> attr;
+                    END V2;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                'ALL OF V1' takes over everything V1 declares in its namespace, including its base name 'b1' (RefHB
+                3.5.4, 3.15-44). Without the 'ALL OF V1', ili2c rejects 'b1' as not applicable to V2.
+                """,
+            RefHB: "3.13-40",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View path starts at a base attribute that is not taken over",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        attr : 0 .. 10;
+                    END Class;
+
+                    VIEW V
+                        PROJECTION OF Class;
+                        =
+                        ATTRIBUTE
+                            n := Class -> attr;
+                        MANDATORY CONSTRAINT attr > 5;
+                    END V;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                Without 'ALL OF Class' the attributes of the base are not part of the view, so 'attr' is unknown in V
+                and must be written 'Class -> attr' (RefHB 3.13-39, 3.15-44). (Verified: ili2c rejects with "Name attr
+                is not applicable to VIEW".)
+                """,
+            ExpectedErrors: ["Could not resolve 'attr' in 'Model.Topic.V' at 13:33-13:37"],
+            RefHB: "3.13-40",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View selection starts at an attribute taken over with ALL OF",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Topic =
+                    CLASS Class =
+                        attr : 0 .. 10;
+                    END Class;
+
+                    VIEW V
+                        PROJECTION OF Class;
+                        WHERE attr > 5;
+                        =
+                        ATTRIBUTE
+                            ALL OF Class;
+                    END V;
+                END Topic;
+            END Model.
+            """,
+            Description: """
+                The selection restricts the objects of the view (RefHB 3.15-41), so like the attributes and constraints
+                it is formulated over the view object, and 'attr' is the attribute taken over with 'ALL OF Class'.
+                """,
+            RefHB: "3.15-41",
+            Ili2cDivergenceReason: """
+                ili2c resolves names in the order of declaration and the selection precedes the ATTRIBUTE block, so it
+                reports "Name attr is not applicable to VIEW"; the reference manual defines no such order, the view's
+                attributes are known in the whole view.
+                """,
             AssertOutput: false));
 
         yield return FullFile(new(
@@ -1325,7 +1545,35 @@ public class ViewTest
             AssertOutput: false));
 
         yield return FullFile(new(
-            "View derived attribute uses an expression, not a factor",
+            "View over a class of the extended base topic needs no dependency",
+            """
+            INTERLIS 2.4;
+            MODEL Model AT "http://example.com" VERSION "1.0.0" =
+                TOPIC Base =
+                    CLASS Class =
+                        attr : TEXT;
+                    END Class;
+                END Base;
+                TOPIC Extended EXTENDS Base =
+                    VIEW V
+                        PROJECTION OF Model.Base.Class;
+                        =
+                        ATTRIBUTE
+                            ALL OF Class;
+                    END V;
+                END Extended;
+            END Model.
+            """,
+            Description: """
+                An extending topic inherits all names of its base topic (RefHB 3.5.4-11), so a view formed over a class
+                of the base topic stays within the topic; only a viewable of a foreign topic needs DEPENDS ON
+                (RefHB 3.5.2-17).
+                """,
+            RefHB: "3.5.4-11",
+            AssertOutput: false));
+
+        yield return FullFile(new(
+            "View derived attribute with an arithmetic expression",
             """
             INTERLIS 2.4;
             MODEL Model AT "http://example.com" VERSION "1.0.0" =
@@ -1345,16 +1593,11 @@ public class ViewTest
             END Model.
             """,
             Description: """
-                RefHB 3.15: a derived view attribute is defined by a single Factor, not a full expression, so the
-                arithmetic '+' is a syntax error. Parser recovery leaves 'newAttr := attr', whose head 'attr' is not a
-                base either — surfacing the base-name rule as a second, independent diagnostic.
-                (Verified: ili2c also rejects at the '+'.)
+                RefHB 3.15-6: a derived view attribute is 'Attribute-Name Properties := Expression' (RefHB 2.3 2.15-41
+                allowed only a Factor), so the arithmetic over the attribute taken over with 'ALL OF Class' is accepted.
                 """,
-            ExpectedErrors: [
-                "Compile error at 13:32-13:33 mismatched input '+' expecting ';'.",
-                "Type check error in 'Model.Topic.V' at 13:27-13:31: the path must start with a base of the view, but 'attr' is not a base.",
-            ],
-            RefHB: "3.15-38",
+            RefHB: "3.15-6",
+            Ili2cDivergenceReason: "we accept an expression after ':=' as RefHB 2.4 3.15-6 defines it ('Attribute-Name Properties := Expression'), ili2c 5.6.8 still parses only a factor there (the RefHB 2.3 2.15-41 rule) and rejects every operator",
             AssertOutput: false));
 
         yield return FullFile(new(

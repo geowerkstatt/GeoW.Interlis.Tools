@@ -8,7 +8,7 @@ namespace Geowerkstatt.Interlis.Compiler.Test.ToolComparison;
 /// </summary>
 public class RepositoryModelsComparisonTest
 {
-    private static CompilerComparison comparison = default!;
+    private static CompilerComparison? comparison;
 
     [Before(Class)]
     public static void Initialize()
@@ -17,9 +17,12 @@ public class RepositoryModelsComparisonTest
     }
 
     [After(Class)]
-    public static void Cleanup()
+    public static async Task Cleanup()
     {
-        comparison?.Dispose();
+        if (comparison is not null)
+        {
+            await comparison.DisposeAsync();
+        }
     }
 
     public static async IAsyncEnumerable<TestDataRow<RepositoryModelTestCase>> GetRepositoryModelCases()
@@ -47,7 +50,7 @@ public class RepositoryModelsComparisonTest
             Assert.Fail(data.SetupError);
         }
 
-        await comparison.CompareCompilersAsync(data.TargetContent!, data.Dependencies);
+        await comparison!.CompareCompilersAsync(data.TargetContent!, data.Dependencies);
     }
 
     /// <summary>Writes the repository metadata of the given <paramref name="data"/> to the test output, so a failing model can be traced back to its repository file.</summary>
