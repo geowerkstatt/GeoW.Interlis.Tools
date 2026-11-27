@@ -9,8 +9,14 @@
 /// </summary>
 public class NumericType : TypeDef
 {
-    public double? Min { get; set; }
-    public double? Max { get; set; }
+    /// <summary>
+    /// The minimum / maximum bound, kept exactly (RefHB 3.2.4-3 limits no digits). The Stellenzahl is in
+    /// <see cref="DecimalType.Precision"/> / <see cref="FloatType.MantissaLength"/>.
+    /// </summary>
+    public ExactNumber? Min { get; set; }
+
+    /// <inheritdoc cref="Min"/>
+    public ExactNumber? Max { get; set; }
 
     public bool Circular { get; set; }
     public Reference<UnitDef>? Unit { get; set; }

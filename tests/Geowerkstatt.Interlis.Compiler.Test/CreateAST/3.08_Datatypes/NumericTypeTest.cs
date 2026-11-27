@@ -46,7 +46,7 @@ public class NumericTypeTest
             "Numeric range with uppercase E scaling",
             "0.10E-2 .. 0.20E-1",
             RefHB: "3.2.4-3",
-            Expected: new FloatType { MantissaLength = 2, Min = 0.001, Max = 0.02, SourceRange = new RangePosition(0, 0, 0, 18) }));
+            Expected: new FloatType { MantissaLength = 2, Min = ExactNumber.Parse("0.001"), Max = ExactNumber.Parse("0.02"), SourceRange = new RangePosition(0, 0, 0, 18) }));
 
         yield return Rule(new(
             "Circular numeric",
@@ -61,7 +61,7 @@ public class NumericTypeTest
             Expected: new DecimalType
             {
                 Min = 0,
-                Max = 359.99,
+                Max = ExactNumber.Parse("359.99"),
                 Precision = -2,
                 Circular = true,
                 Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
@@ -71,7 +71,7 @@ public class NumericTypeTest
         yield return Rule(new(
             "Numeric with minimum greater than maximum",
             "999 .. 000",
-            ExpectedErrors: ["Compile error at 1:0-1:3 Number minimum <999> must be smaller than maximum <0>."],
+            ExpectedErrors: ["Compile error at 1:0-1:3 Number minimum <999> must be smaller than maximum <000>."],
             RefHB: "3.8.5-1",
             Expected: new DecimalType { Min = 0, Max = 999, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 10) }));
 
@@ -84,7 +84,7 @@ public class NumericTypeTest
                 larger. Only EQUAL scalings are deliberately tolerated — they express an unambiguous fixed grid, the
                 ordering is a canonical-form rule, it is undefined for a zero minimum, and ili2c does not enforce it.
                 """,
-            ExpectedErrors: ["Compile error at 1:0-1:6 Number minimum <1000000000> must be smaller than maximum <1000000>."],
+            ExpectedErrors: ["Compile error at 1:0-1:6 Number minimum <0.1E10> must be smaller than maximum <0.1E7>."],
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 1, Min = 1000000, Max = 1000000000, SourceRange = new RangePosition(0, 0, 0, 15) }));
 
@@ -105,13 +105,13 @@ public class NumericTypeTest
             "Exponential numeric",
             "0.10e-2 .. 0.20e-1",
             RefHB: "3.8.5-3",
-            Expected: new FloatType { MantissaLength = 2, Min = 0.001, Max = 0.02, SourceRange = new RangePosition(0, 0, 0, 18) }));
+            Expected: new FloatType { MantissaLength = 2, Min = ExactNumber.Parse("0.001"), Max = ExactNumber.Parse("0.02"), SourceRange = new RangePosition(0, 0, 0, 18) }));
 
         yield return Rule(new(
             "Numeric with precision",
             "-1.50 .. 10.00",
             RefHB: "3.8.5-3",
-            Expected: new DecimalType { Min = -1.5, Max = 10, Precision = -2, SourceRange = new RangePosition(0, 0, 0, 14) }));
+            Expected: new DecimalType { Min = ExactNumber.Parse("-1.5"), Max = 10, Precision = -2, SourceRange = new RangePosition(0, 0, 0, 14) }));
 
         yield return Rule(new(
             "Numeric with different precision",
@@ -125,7 +125,7 @@ public class NumericTypeTest
             "0.100e-2 .. 1.000",
             ExpectedErrors: ["Compile error at 1:0-1:8 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
             RefHB: "3.8.5-3",
-            Expected: new FloatType { MantissaLength = 3, Min = 0.001, Max = 1, SourceRange = new RangePosition(0, 0, 0, 17) },
+            Expected: new FloatType { MantissaLength = 3, Min = ExactNumber.Parse("0.001"), Max = 1, SourceRange = new RangePosition(0, 0, 0, 17) },
             Ili2cDivergenceReason: "ili2c accepts a range mixing mantissa and decimal notation (it compares only the digit counts); RefHB 3.8.5-3 requires both bounds in mantissa notation for float ranges, so we reject the mix."));
 
         yield return Rule(new(
@@ -137,7 +137,7 @@ public class NumericTypeTest
                 """,
             ExpectedErrors: ["Compile error at 1:0-1:5 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
             RefHB: "3.8.5-3",
-            Expected: new DecimalType { Min = 0.001, Max = 1, Precision = -3, SourceRange = new RangePosition(0, 0, 0, 16) },
+            Expected: new DecimalType { Min = ExactNumber.Parse("0.001"), Max = 1, Precision = -3, SourceRange = new RangePosition(0, 0, 0, 16) },
             Ili2cDivergenceReason: "ili2c accepts a range mixing mantissa and decimal notation (it compares only the digit counts); RefHB 3.8.5-3 requires both bounds in mantissa notation for float ranges, so we reject the mix."));
 
         yield return Rule(new(
@@ -155,37 +155,147 @@ public class NumericTypeTest
             Expected: new DecimalType { Min = 0, Max = 100, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 10) }));
 
         yield return Rule(new(
-            "Numeric inappropriate for double",
-            "0.00000 .. 100000000000000.00000",
-            ExpectedErrors: ["Compile error at 1:0-1:7 The given range <0 .. 100000000000000> with a precision of <1E-05> cannot be represented by a double precision floating point number."],
+            "Numeric range with fifteen decimals",
+            "0.000000000000000 .. 60.000000000000000",
+            Description: """
+                A WGS84 latitude range as published in cantonal models (RefHB 3.8.5-3: the Stellenzahl of both bounds
+                matches). The 15 decimals are recorded as the precision. The double spacing at 60 is wider than the
+                step 0.000000000000001.
+                """,
+            ExpectedInfo: ["Compile info at 1:0-1:17 The range <0.000000000000000 .. 60.000000000000000> cannot be represented exactly by a double precision floating point number."],
             RefHB: "3.8.5-3",
-            Expected: new DecimalType { Min = 0, Max = 100000000000000, Precision = -5, SourceRange = new RangePosition(0, 0, 0, 32) },
-            Ili2cDivergenceReason: "we reject ranges not representable as a double, ili2c accepts them"));
+            Expected: new DecimalType { Min = 0, Max = 60, Precision = -15, SourceRange = new RangePosition(0, 0, 0, 39) }));
 
         yield return Rule(new(
-            "Numeric appropriate for double",
+            "Numeric range beyond double precision is kept exactly",
+            "0.000000000000000 .. 9999999999999999.999999999999999",
+            Description: """
+                31 significant digits: the nearest double of the maximum is 1E16, but the bound is kept exactly as
+                written, so a range extension can still be compared with it (RefHB 3.8.5-4).
+                """,
+            ExpectedInfo: ["Compile info at 1:0-1:17 The range <0.000000000000000 .. 9999999999999999.999999999999999> cannot be represented exactly by a double precision floating point number."],
+            RefHB: "3.8.5-1",
+            Expected: new DecimalType { Min = 0, Max = ExactNumber.Parse("9999999999999999.999999999999999"), Precision = -15, SourceRange = new RangePosition(0, 0, 0, 53) }));
+
+        yield return Rule(new(
+            "Integer range below 2^52 is resolved by double",
+            "0 .. 4503599627370495",
+            Description: """
+                Below 2^52 the gap between neighbouring doubles is less than the step 1.
+                """,
+            RefHB: "3.2.4-3",
+            Expected: new DecimalType { Min = 0, Max = 4503599627370495, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 21) }));
+
+        yield return Rule(new(
+            "Integer range up to 2^53 is noted",
+            "0 .. 9007199254740992",
+            Description: """
+                Every integer up to 2^53 is a double of its own, but the check estimates the gap between doubles as
+                |x|·2^-52, which reaches the step 1 from 2^52 on. It errs on the side of the info.
+                """,
+            ExpectedInfo: ["Compile info at 1:0-1:1 The range <0 .. 9007199254740992> cannot be represented exactly by a double precision floating point number."],
+            RefHB: "3.2.4-3",
+            Expected: new DecimalType { Min = 0, Max = 9007199254740992, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 21) }));
+
+        yield return Rule(new(
+            "Numeric range with sixteen significant digits",
             "0.0 .. 100000000000000.0",
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0, Max = 100000000000000, Precision = -1, SourceRange = new RangePosition(0, 0, 0, 24) }));
 
         yield return Rule(new(
-            "Exponential numeric inappropriate for double",
-            "0.10000000000000000E1 .. 0.20000000000000000E3",
+            "Exponential numeric with sixteen mantissa digits is noted",
+            "0.1000000000000000E1 .. 0.2000000000000000E2",
             Description: """
-                In mantissa notation the step is relative to each bound's own magnitude, so representability depends on
-                the mantissa digit count alone (not on the scaling): 17 significant digits exceed a double's ~16
-                decimal digits at every magnitude.
+                Both bounds are resolved, but just below 10 the gap between doubles exceeds the step 0.000000000000001:
+                9.999999999999991 and 9.999999999999992 are the same double.
                 """,
-            ExpectedErrors: ["Compile error at 1:0-1:21 The given range <1 .. 200> with a precision of <1E-17> cannot be represented by a double precision floating point number."],
+            ExpectedInfo: ["Compile info at 1:0-1:20 The range <0.1000000000000000E1 .. 0.2000000000000000E2> cannot be represented exactly by a double precision floating point number."],
             RefHB: "3.8.5-3",
-            Expected: new FloatType { MantissaLength = 17, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 46) },
-            Ili2cDivergenceReason: "we reject ranges not representable as a double, ili2c accepts them"));
+            Expected: new FloatType { MantissaLength = 16, Min = 1, Max = 20, SourceRange = new RangePosition(0, 0, 0, 44) }));
 
         yield return Rule(new(
-            "Exponential numeric appropriate for double",
+            "Exponential numeric with fifteen mantissa digits",
             "0.100000000000000E1 .. 0.200000000000000E3",
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 15, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 42) }));
+
+        yield return Rule(new(
+            "Float range with zero minimum mantissa",
+            "0.0E5 .. 0.9E5",
+            Description: """
+                A mantissa of zeros is a legal Float (RefHB 3.2.4-3: '0.' (* '0' *) Scaling) and a value of 0, not an
+                underflow.
+                """,
+            RefHB: "3.2.4-3",
+            Expected: new FloatType { MantissaLength = 1, Min = 0, Max = 90000, SourceRange = new RangePosition(0, 0, 0, 14) }));
+
+        yield return Rule(new(
+            "Float range beyond double magnitude is noted",
+            "0.1E400 .. 0.9E400",
+            Description: """
+                The language does not bound the scaling (RefHB 3.2.4-3), so the range is valid. The bounds overflow a
+                double to infinity and stay exact.
+                """,
+            ExpectedInfo:
+            [
+                "Compile info at 1:0-1:7 The number '0.1E400' is outside the magnitude a double precision floating point number can hold.",
+                "Compile info at 1:11-1:18 The number '0.9E400' is outside the magnitude a double precision floating point number can hold.",
+            ],
+            RefHB: "3.2.4-3",
+            Expected: new FloatType { MantissaLength = 1, Min = ExactNumber.Parse("0.1E400"), Max = ExactNumber.Parse("0.9E400"), SourceRange = new RangePosition(0, 0, 0, 18) }));
+
+        yield return Rule(new(
+            "Float range below double magnitude is noted",
+            "0.1E-400 .. 0.9E-400",
+            Description: """
+                The counterpart of the overflow: a non-zero mantissa underflows to 0, so as doubles the range would be
+                0 .. 0. The bounds stay exact.
+                """,
+            ExpectedInfo:
+            [
+                "Compile info at 1:0-1:8 The number '0.1E-400' is outside the magnitude a double precision floating point number can hold.",
+                "Compile info at 1:12-1:20 The number '0.9E-400' is outside the magnitude a double precision floating point number can hold.",
+            ],
+            RefHB: "3.2.4-3",
+            Expected: new FloatType { MantissaLength = 1, Min = ExactNumber.Parse("0.1E-400"), Max = ExactNumber.Parse("0.9E-400"), SourceRange = new RangePosition(0, 0, 0, 20) }));
+
+        yield return Rule(new(
+            "Float range with subnormal bounds is noted",
+            "0.1E-310 .. 0.9E-310",
+            Description: """
+                Below 2^-1022 doubles lose precision: neighbouring ones stay 2^-1074 apart, so the mantissa digits are
+                no longer resolved, even with a single digit.
+                """,
+            ExpectedInfo: ["Compile info at 1:0-1:8 The range <0.1E-310 .. 0.9E-310> cannot be represented exactly by a double precision floating point number."],
+            RefHB: "3.2.4-3",
+            Expected: new FloatType { MantissaLength = 1, Min = ExactNumber.Parse("0.1E-310"), Max = ExactNumber.Parse("0.9E-310"), SourceRange = new RangePosition(0, 0, 0, 20) }));
+
+        yield return Rule(new(
+            "Float range with an exponent beyond int is rejected",
+            "0.1E99999999999 .. 0.9E99999999999",
+            Description: """
+                The only limit left on a number: the exponent must fit an int, the scale of an ExactNumber. ili2c, which
+                holds bounds as BigDecimal, has the same limit.
+                """,
+            ExpectedErrors:
+            [
+                "Compile error at 1:0-1:15 The number '0.1E99999999999' has an exponent beyond what the compiler can represent.",
+                "Compile error at 1:19-1:34 The number '0.9E99999999999' has an exponent beyond what the compiler can represent.",
+            ],
+            RefHB: "3.2.4-3",
+            Expected: new NumericType { SourceRange = new RangePosition(0, 0, 0, 34) }));
+
+        yield return Rule(new(
+            "Float range with one exponent beyond int has no bounds",
+            "0.1E5 .. 0.1E99999999999",
+            Description: """
+                The unreadable maximum counts as missing, as in a range still being typed: the type keeps no bounds,
+                so neither a second error about the order of the bounds nor a false range follows.
+                """,
+            ExpectedErrors: ["Compile error at 1:9-1:24 The number '0.1E99999999999' has an exponent beyond what the compiler can represent."],
+            RefHB: "3.2.4-3",
+            Expected: new NumericType { SourceRange = new RangePosition(0, 0, 0, 24) }));
 
         yield return Rule(new(
             "Float range with differing mantissa digit counts is rejected",
@@ -217,7 +327,7 @@ public class NumericTypeTest
             Expected: new DecimalType
             {
                 Min = 0,
-                Max = 359.99,
+                Max = ExactNumber.Parse("359.99"),
                 Precision = -2,
                 Circular = true,
                 Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
@@ -232,7 +342,7 @@ public class NumericTypeTest
             Expected: new DecimalType
             {
                 Min = 0,
-                Max = 359.99,
+                Max = ExactNumber.Parse("359.99"),
                 Precision = -2,
                 Circular = true,
                 Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },

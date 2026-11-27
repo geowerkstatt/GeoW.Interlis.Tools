@@ -170,7 +170,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         {
             var interlisParser = new Interlis24Parser(new CommonTokenStream(new ListTokenSource(metaCommentTokens), Interlis24Lexer.META_COMMENT));
             interlisParser.RemoveErrorListeners();
-            interlisParser.AddErrorListener(new ILoggerParserErrorListener(loggerFactory));
+            interlisParser.AddErrorListener(new MetaCommentErrorListener(this));
 
             var metaAttributes = interlisParser.metaComments().metaComment().SelectMany(c => c.metaAttribute()).ToList();
             var namedMetaAttributes = metaAttributes.Where(a => IsValidToken(a.name)).ToList();
@@ -203,6 +203,19 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         }
 
         return new Dictionary<string, string>();
+    }
+
+    /// <summary>
+    /// Reports the syntax errors of meta comments as information. A meta attribute is formulated inside a line comment
+    /// (eCH-0117 3-1), so a malformed one, e.g. a string value continued on the next '!!@' line, leaves the model
+    /// valid INTERLIS (RefHB 3.2.8.1-1).
+    /// </summary>
+    private sealed class MetaCommentErrorListener(Interlis24Visitor visitor) : IAntlrErrorListener<IToken>
+    {
+        public void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
+        {
+            visitor.ReportInformation(offendingSymbol, $"Malformed meta attribute: {msg}");
+        }
     }
 
     /// <summary>
@@ -241,7 +254,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override InterlisEnvironment VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
     {
-        double? version = (context.numeric()?.Accept(this) as Tuple<double, int>)?.Item1;
+        double? version = (context.numeric()?.Accept(this) as Tuple<ExactNumber, int>)?.Item1.Double;
 
         var interlisFile = new InterlisEnvironment
         {
@@ -1101,9 +1114,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         NumericType numericTypeDef;
 
+        // Both bounds are visited, so each unreadable literal is reported.
         if (context.min is { exception: null } && context.max is { exception: null }
-            && Visit(context.min) is Tuple<double, int>(var minValue, var minPrecision)
-            && Visit(context.max) is Tuple<double, int>(var maxValue, var maxPrecision))
+            && (Visit(context.min), Visit(context.max)) is (Tuple<ExactNumber, int>(var minValue, var minPrecision), Tuple<ExactNumber, int>(var maxValue, var maxPrecision)))
         {
 
             // RefHB 3.8.5-3: the Stellenzahl (digit count) of the minimum and the maximum must match. In mantissa
@@ -1125,20 +1138,17 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
             if (minValue > maxValue)
             {
-                ReportError(context.Start, $"Number minimum <{minValue}> must be smaller than maximum <{maxValue}>");
+                ReportError(context.Start, $"Number minimum <{context.min.GetText()}> must be smaller than maximum <{context.max.GetText()}>");
                 (minValue, maxValue) = (maxValue, minValue);
             }
 
-            // Check if it might be ok to represent the values as a double: each bound must be distinguishable from
-            // its double neighbours at the range's precision. In mantissa notation the step scales with the bound's
-            // own magnitude (the Stellenzahl counts significant digits at the bound's scaling); in decimal notation
-            // it is the uniform 10^precision.
-            double StepAt(double value) => minIsMantissa && value != 0
-                ? Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(value))) + 1 + minPrecision)
-                : Math.Pow(10, minPrecision);
-            if ((maxValue - Math.BitDecrement(maxValue)) >= StepAt(maxValue) || (Math.BitIncrement(minValue) - minValue) >= StepAt(minValue))
+            // RefHB 3.2.4-3 and 3.8.5-1 limit neither the digits nor the magnitude of a bound, so a range finer or
+            // larger than a double resolves (0.000000000000000 .. 60.000000000000000, 0 .. 9999999999999999) is valid.
+            // Comparing doubles is exact only while the double spacing stays below the step; otherwise consumers need
+            // the slower exact comparison. A bound without a double already got an info at its literal.
+            if (HasDouble(minValue) && HasDouble(maxValue) && !IsResolvedByDouble(minValue, maxValue, minPrecision, minIsMantissa))
             {
-                ReportError(context.Start, $"The given range <{minValue} .. {maxValue}> with a precision of <{Math.Pow(10, minPrecision)}> cannot be represented by a double precision floating point number");
+                ReportInformation(context.Start, $"The range <{context.min.GetText()} .. {context.max.GetText()}> cannot be represented exactly by a double precision floating point number");
             }
 
             // The minimum bound decides the notation of the range (a mixed range is already reported above).
@@ -1269,7 +1279,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new TypeRef { Extends = CreateReference<DomainDef>(ImpliedPath("INTERLIS", domainName)) };
     }
 
-    public override Tuple<double, int> VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
     {
         var number = context.EXP_NUMBER().Symbol.Text;
         var decPointIndex = number.IndexOf('.');
@@ -1279,30 +1289,75 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // measure decimal notation uses (RefHB 3.8.5-3/-4 compare the Stellenzahl); the magnitude (scaling) is
         // carried by the value itself.
         var decimalPrecision = expIndex - decPointIndex - 1;
-        var value = double.Parse(number);
-
-        return Tuple.Create(value, -decimalPrecision);
+        return ParseNumber(context.EXP_NUMBER().Symbol) is { } value ? Tuple.Create(value, -decimalPrecision) : null;
     }
 
-    public override Tuple<double, int> VisitDecimalNumber([NotNull] Interlis24Parser.DecimalNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitDecimalNumber([NotNull] Interlis24Parser.DecimalNumberContext context)
     {
         var number = context.DECIMAL_NUMBER().Symbol.Text;
         var decPointIndex = number.IndexOf('.');
 
-        var value = double.Parse(number);
         var precision = decPointIndex - number.Length + 1;
-
-        return Tuple.Create(value, precision);
+        return ParseNumber(context.DECIMAL_NUMBER().Symbol) is { } value ? Tuple.Create(value, precision) : null;
     }
 
-    public override Tuple<double, int> VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
     {
-        return Tuple.Create(double.Parse(context.SIGNED_NUMBER().Symbol.Text), 0);
+        return ParseNumber(context.SIGNED_NUMBER().Symbol) is { } value ? Tuple.Create(value, 0) : null;
     }
 
-    public override Tuple<double, int> VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
     {
-        return Tuple.Create(double.Parse(context.POS_NUMBER().Symbol.Text), 0);
+        return ParseNumber(context.POS_NUMBER().Symbol) is { } value ? Tuple.Create(value, 0) : null;
+    }
+
+    /// <summary>
+    /// Parses a numeric literal exactly (RefHB 3.2.4-3). A literal beyond the magnitude of a double (<c>0.1E400</c>,
+    /// <c>0.1E-400</c>) is valid but has no nearest double, so consumers need exact arithmetic: info. An exponent
+    /// beyond <see cref="int"/> is an error, since <see cref="ExactNumber"/> cannot hold it; then the result is
+    /// <see langword="null"/>, which the callers treat as a missing number.
+    /// </summary>
+    private ExactNumber? ParseNumber(IToken literal)
+    {
+        if (!ExactNumber.TryParse(literal.Text, out var value))
+        {
+            ReportError(literal, $"The number '{literal.Text}' has an exponent beyond what the compiler can represent");
+            return null;
+        }
+
+        if (!HasDouble(value))
+        {
+            ReportInformation(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
+        }
+
+        return value;
+    }
+
+    /// <summary>Whether <paramref name="value"/> has a nearest double: neither infinite nor a non-zero value underflowed to 0.</summary>
+    private static bool HasDouble(ExactNumber value)
+        => double.IsFinite(value.Double) && (value.Double != 0 || value.Unscaled.IsZero);
+
+    /// <summary>
+    /// Whether every value of the range <paramref name="min"/> .. <paramref name="max"/> is a distinct double, judged
+    /// slightly too strictly. Neighbouring doubles at x are at most max(|x|·2^-52, ε) apart, and that gap must stay
+    /// below the step. In decimal notation the step is 10^<paramref name="precision"/>, so the bound of the largest
+    /// magnitude decides. In mantissa notation the step is more than |x|·10^<paramref name="precision"/>, so |x|
+    /// cancels: up to 15 digits pass and 16 fail, even where their values happen to be distinct. Only a subnormal
+    /// bound, where the gap stops shrinking with |x|, also fails. Values strictly inside a range across 0 that are
+    /// subnormal are not considered.
+    /// </summary>
+    private static bool IsResolvedByDouble(ExactNumber min, ExactNumber max, int precision, bool mantissa)
+    {
+        const double maxRelativeGap = 1.0 / (1L << 52);
+        var step = Math.Pow(10, precision);
+
+        if (mantissa)
+        {
+            return maxRelativeGap < step && !double.IsSubnormal(min.Double) && !double.IsSubnormal(max.Double);
+        }
+
+        var largest = Math.Max(Math.Abs(min.Double), Math.Abs(max.Double));
+        return Math.Max(largest * maxRelativeGap, double.Epsilon) < step;
     }
 
     public override BooleanType VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)
@@ -1607,7 +1662,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return null;
         }
 
-        var percentage = context.percentage != null && Visit(context.percentage) is Tuple<double, int> percentageValue ? percentageValue.Item1 : 0.0;
+        var percentage = context.percentage != null && Visit(context.percentage) is Tuple<ExactNumber, int> percentageValue ? percentageValue.Item1.Double : 0.0;
         return new PlausibilityConstraint
         {
             Name = context.name?.Text ?? "",
@@ -1800,8 +1855,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // The presence of 'WITHOUT OVERLAPS' is meaningful on its own (RefHB 3.8.12.2-22); the '> numeric'
         // tolerance is optional, and the number can still be missing right after '>' while typing.
         WithoutOverlapsDef? withoutOverlaps = context.WITHOUT() == null ? null
-            : context.numeric() != null && Visit(context.numeric()) is Tuple<double, int> overlapValue
-                ? new WithoutOverlapsDef.Explicit { Tolerance = overlapValue.Item1 }
+            : context.numeric() != null && Visit(context.numeric()) is Tuple<ExactNumber, int> overlapValue
+                ? new WithoutOverlapsDef.Explicit { Tolerance = overlapValue.Item1.Double }
                 : new WithoutOverlapsDef.Implicit();
 
         if (context.POLYLINE() != null || context.MULTIPOLYLINE() != null)
@@ -2294,7 +2349,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         if (context.LNBASE() != null) return new NumericConstant.MathematicalConstant { Kind = NumericConstant.PredefinedConstant.LnBase };
 
         // The number can still be unwritten while typing (e.g. after a '*' in a derived unit or an arithmetic factor).
-        var value = context.numeric() != null && Visit(context.numeric()) is Tuple<double, int> number ? number.Item1 : 0.0;
+        var value = context.numeric() != null && Visit(context.numeric()) is Tuple<ExactNumber, int> number ? number.Item1.Double : 0.0;
         return new NumericConstant.Number { Value = value };
     }
 

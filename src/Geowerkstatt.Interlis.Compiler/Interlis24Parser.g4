@@ -603,7 +603,7 @@ metaComments
     ;
 
 metaComment
-    : META_COMMENT_OPEN metaAttribute (SEMICOLON metaAttribute)* SEMICOLON? META_COMMENT_CLOSE
+    : META_COMMENT_OPEN (metaAttribute (SEMICOLON metaAttribute)* SEMICOLON?)? META_COMMENT_CLOSE
     ;
 
 metaAttribute
