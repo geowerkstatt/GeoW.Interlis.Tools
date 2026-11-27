@@ -1142,18 +1142,11 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 (minValue, maxValue) = (maxValue, minValue);
             }
 
-            // Check if it might be ok to represent the values as a double: each bound must be distinguishable from
-            // its double neighbours at the range's precision. In mantissa notation the step scales with the bound's
-            // own magnitude (the Stellenzahl counts significant digits at the bound's scaling); in decimal notation
-            // it is the uniform 10^precision.
-            double StepAt(double value) => minIsMantissa && value != 0
-                ? Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(value))) + 1 + minPrecision)
-                : Math.Pow(10, minPrecision);
-            if ((maxValue - Math.BitDecrement(maxValue)) >= StepAt(maxValue) || (Math.BitIncrement(minValue) - minValue) >= StepAt(minValue))
-            {
-                ReportError(context.Start, $"The given range <{minValue} .. {maxValue}> with a precision of <{Math.Pow(10, minPrecision)}> cannot be represented by a double precision floating point number");
-            }
-
+            // The language bounds neither the digit count nor the magnitude of a bound (RefHB 3.2.4-3: PosNumber =
+            // (* Digit *); RefHB 3.8.5-1 only asks for the bounds including their Stellenzahl), so a range finer or
+            // larger than a double can resolve (0.000000000000000 .. 60.000000000000000, 0 .. 9999999999999999) is
+            // valid. The Stellenzahl is recorded exactly (Precision / MantissaLength); the bound values are kept at
+            // double precision, which is all the consumers (range comparisons, display) need.
             // The minimum bound decides the notation of the range (a mixed range is already reported above).
             numericTypeDef = minIsMantissa
                 ? new FloatType { MantissaLength = -minPrecision, SourceRange = context.ToRange() }

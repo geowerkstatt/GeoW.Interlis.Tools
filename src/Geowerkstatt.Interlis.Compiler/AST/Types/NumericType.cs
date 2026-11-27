@@ -9,7 +9,14 @@
 /// </summary>
 public class NumericType : TypeDef
 {
+    /// <summary>
+    /// The value of the minimum / maximum bound at double precision. The language puts no limit on the digits of a
+    /// bound (RefHB 3.2.4-3), so a bound with more than about 15 significant digits is approximated here; the exact
+    /// Stellenzahl of the range lives in <see cref="DecimalType.Precision"/> / <see cref="FloatType.MantissaLength"/>.
+    /// </summary>
     public double? Min { get; set; }
+
+    /// <inheritdoc cref="Min"/>
     public double? Max { get; set; }
 
     public bool Circular { get; set; }

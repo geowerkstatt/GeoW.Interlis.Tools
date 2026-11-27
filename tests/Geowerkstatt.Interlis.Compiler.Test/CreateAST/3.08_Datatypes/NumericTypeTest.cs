@@ -155,34 +155,61 @@ public class NumericTypeTest
             Expected: new DecimalType { Min = 0, Max = 100, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 10) }));
 
         yield return Rule(new(
-            "Numeric inappropriate for double",
+            "Numeric range finer than double resolution",
             "0.00000 .. 100000000000000.00000",
-            ExpectedErrors: ["Compile error at 1:0-1:7 The given range <0 .. 100000000000000> with a precision of <1E-05> cannot be represented by a double precision floating point number."],
-            RefHB: "3.8.5-3",
-            Expected: new DecimalType { Min = 0, Max = 100000000000000, Precision = -5, SourceRange = new RangePosition(0, 0, 0, 32) },
-            Ili2cDivergenceReason: "we reject ranges not representable as a double, ili2c accepts them"));
+            Description: """
+                20 digits: the grid step 0.00001 is below what a double resolves at 1E14. The language puts no limit on
+                the digits of a bound (RefHB 3.2.4-3, PosNumber = (* Digit *)) and only asks for minimum, maximum and
+                their Stellenzahl (RefHB 3.8.5-1), so the range is valid; the Stellenzahl is recorded exactly.
+                """,
+            RefHB: "3.8.5-1",
+            Expected: new DecimalType { Min = 0, Max = 100000000000000, Precision = -5, SourceRange = new RangePosition(0, 0, 0, 32) }));
 
         yield return Rule(new(
-            "Numeric appropriate for double",
+            "Numeric range with fifteen decimals",
+            "0.000000000000000 .. 60.000000000000000",
+            Description: """
+                A WGS84 latitude range as published in cantonal models (RefHB 3.8.5-3: the Stellenzahl of both bounds
+                matches). The 15 decimals are recorded as the precision; the bounds are kept at double precision.
+                """,
+            RefHB: "3.8.5-3",
+            Expected: new DecimalType { Min = 0, Max = 60, Precision = -15, SourceRange = new RangePosition(0, 0, 0, 39) }));
+
+        yield return Rule(new(
+            "Numeric range with seventeen-digit integer bounds",
+            "0 .. 10000000000000000",
+            RefHB: "3.2.4-3",
+            Expected: new DecimalType { Min = 0, Max = 10000000000000000, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 22) }));
+
+        yield return Rule(new(
+            "Numeric range beyond double precision keeps its Stellenzahl",
+            "0.000000000000000 .. 9999999999999999.999999999999999",
+            Description: """
+                31 significant digits: the maximum is not representable as a double and is approximated by the nearest
+                one (1E16); the precision of the range (15 decimals) stays exact, as the Stellenzahl, not the bound
+                value, is what the language compares (RefHB 3.8.5-3/-4).
+                """,
+            RefHB: "3.8.5-1",
+            Expected: new DecimalType { Min = 0, Max = 10000000000000000, Precision = -15, SourceRange = new RangePosition(0, 0, 0, 53) }));
+
+        yield return Rule(new(
+            "Numeric range with sixteen significant digits",
             "0.0 .. 100000000000000.0",
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0, Max = 100000000000000, Precision = -1, SourceRange = new RangePosition(0, 0, 0, 24) }));
 
         yield return Rule(new(
-            "Exponential numeric inappropriate for double",
+            "Exponential numeric with seventeen mantissa digits",
             "0.10000000000000000E1 .. 0.20000000000000000E3",
             Description: """
-                In mantissa notation the step is relative to each bound's own magnitude, so representability depends on
-                the mantissa digit count alone (not on the scaling): 17 significant digits exceed a double's ~16
-                decimal digits at every magnitude.
+                17 significant digits exceed what a double resolves at any magnitude; the language does not bound the
+                mantissa length (RefHB 3.2.4-3), so the range is valid and the mantissa length is recorded exactly.
                 """,
-            ExpectedErrors: ["Compile error at 1:0-1:21 The given range <1 .. 200> with a precision of <1E-17> cannot be represented by a double precision floating point number."],
             RefHB: "3.8.5-3",
-            Expected: new FloatType { MantissaLength = 17, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 46) },
-            Ili2cDivergenceReason: "we reject ranges not representable as a double, ili2c accepts them"));
+            Expected: new FloatType { MantissaLength = 17, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 46) }));
 
         yield return Rule(new(
-            "Exponential numeric appropriate for double",
+            "Exponential numeric with fifteen mantissa digits",
             "0.100000000000000E1 .. 0.200000000000000E3",
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 15, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 42) }));
