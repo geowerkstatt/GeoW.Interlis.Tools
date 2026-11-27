@@ -328,10 +328,20 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
                 continue;
             }
 
+            // A repeated import is redundant, not invalid: RefHB 3.5.1-9 allows any number of IMPORTS, and an import
+            // only permits use, which UNQUALIFIED widens (3.5.1-15). So the model counts once, UNQUALIFIED if any of
+            // its imports is (as in ili2c). Each written name still gets its own reference for navigation and rename.
             var importModelName = import.name.Text;
-            if (!modelDef.Imports.TryAdd(importModelName, (import.UNQUALIFIED() != null, CreateReference<ModelDef>([Segment(import.name)], resolution: ReferenceResolution.Environment))))
+            var isUnqualified = import.UNQUALIFIED() != null;
+            var importReference = CreateReference<ModelDef>([Segment(import.name)], resolution: ReferenceResolution.Environment);
+            if (modelDef.Imports.TryGetValue(importModelName, out var existingImport))
             {
-                ReportError(import.name, $"Duplicate import {importModelName}");
+                ReportInformation(import.name, $"Duplicate import of model '{importModelName}', it is imported once and UNQUALIFIED if any of its imports is");
+                modelDef.Imports[importModelName] = (existingImport.IsUnqualifiedAllowed || isUnqualified, existingImport.ModelDef);
+            }
+            else
+            {
+                modelDef.Imports.Add(importModelName, (isUnqualified, importReference));
             }
         }
 
