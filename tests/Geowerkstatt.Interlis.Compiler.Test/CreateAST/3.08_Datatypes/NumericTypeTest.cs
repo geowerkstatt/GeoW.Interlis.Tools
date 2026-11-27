@@ -46,7 +46,7 @@ public class NumericTypeTest
             "Numeric range with uppercase E scaling",
             "0.10E-2 .. 0.20E-1",
             RefHB: "3.2.4-3",
-            Expected: new FloatType { MantissaLength = 2, Min = 0.001, Max = 0.02, SourceRange = new RangePosition(0, 0, 0, 18) }));
+            Expected: new FloatType { MantissaLength = 2, Min = ExactNumber.Parse("0.001"), Max = ExactNumber.Parse("0.02"), SourceRange = new RangePosition(0, 0, 0, 18) }));
 
         yield return Rule(new(
             "Circular numeric",
@@ -61,7 +61,7 @@ public class NumericTypeTest
             Expected: new DecimalType
             {
                 Min = 0,
-                Max = 359.99,
+                Max = ExactNumber.Parse("359.99"),
                 Precision = -2,
                 Circular = true,
                 Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
@@ -71,7 +71,7 @@ public class NumericTypeTest
         yield return Rule(new(
             "Numeric with minimum greater than maximum",
             "999 .. 000",
-            ExpectedErrors: ["Compile error at 1:0-1:3 Number minimum <999> must be smaller than maximum <0>."],
+            ExpectedErrors: ["Compile error at 1:0-1:3 Number minimum <999> must be smaller than maximum <000>."],
             RefHB: "3.8.5-1",
             Expected: new DecimalType { Min = 0, Max = 999, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 10) }));
 
@@ -84,7 +84,7 @@ public class NumericTypeTest
                 larger. Only EQUAL scalings are deliberately tolerated — they express an unambiguous fixed grid, the
                 ordering is a canonical-form rule, it is undefined for a zero minimum, and ili2c does not enforce it.
                 """,
-            ExpectedErrors: ["Compile error at 1:0-1:6 Number minimum <1000000000> must be smaller than maximum <1000000>."],
+            ExpectedErrors: ["Compile error at 1:0-1:6 Number minimum <0.1E10> must be smaller than maximum <0.1E7>."],
             RefHB: "3.8.5-3",
             Expected: new FloatType { MantissaLength = 1, Min = 1000000, Max = 1000000000, SourceRange = new RangePosition(0, 0, 0, 15) }));
 
@@ -105,13 +105,13 @@ public class NumericTypeTest
             "Exponential numeric",
             "0.10e-2 .. 0.20e-1",
             RefHB: "3.8.5-3",
-            Expected: new FloatType { MantissaLength = 2, Min = 0.001, Max = 0.02, SourceRange = new RangePosition(0, 0, 0, 18) }));
+            Expected: new FloatType { MantissaLength = 2, Min = ExactNumber.Parse("0.001"), Max = ExactNumber.Parse("0.02"), SourceRange = new RangePosition(0, 0, 0, 18) }));
 
         yield return Rule(new(
             "Numeric with precision",
             "-1.50 .. 10.00",
             RefHB: "3.8.5-3",
-            Expected: new DecimalType { Min = -1.5, Max = 10, Precision = -2, SourceRange = new RangePosition(0, 0, 0, 14) }));
+            Expected: new DecimalType { Min = ExactNumber.Parse("-1.5"), Max = 10, Precision = -2, SourceRange = new RangePosition(0, 0, 0, 14) }));
 
         yield return Rule(new(
             "Numeric with different precision",
@@ -125,7 +125,7 @@ public class NumericTypeTest
             "0.100e-2 .. 1.000",
             ExpectedErrors: ["Compile error at 1:0-1:8 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
             RefHB: "3.8.5-3",
-            Expected: new FloatType { MantissaLength = 3, Min = 0.001, Max = 1, SourceRange = new RangePosition(0, 0, 0, 17) },
+            Expected: new FloatType { MantissaLength = 3, Min = ExactNumber.Parse("0.001"), Max = 1, SourceRange = new RangePosition(0, 0, 0, 17) },
             Ili2cDivergenceReason: "ili2c accepts a range mixing mantissa and decimal notation (it compares only the digit counts); RefHB 3.8.5-3 requires both bounds in mantissa notation for float ranges, so we reject the mix."));
 
         yield return Rule(new(
@@ -137,7 +137,7 @@ public class NumericTypeTest
                 """,
             ExpectedErrors: ["Compile error at 1:0-1:5 Number minimum and maximum must both use mantissa (exponential) notation or both use decimal notation."],
             RefHB: "3.8.5-3",
-            Expected: new DecimalType { Min = 0.001, Max = 1, Precision = -3, SourceRange = new RangePosition(0, 0, 0, 16) },
+            Expected: new DecimalType { Min = ExactNumber.Parse("0.001"), Max = 1, Precision = -3, SourceRange = new RangePosition(0, 0, 0, 16) },
             Ili2cDivergenceReason: "ili2c accepts a range mixing mantissa and decimal notation (it compares only the digit counts); RefHB 3.8.5-3 requires both bounds in mantissa notation for float ranges, so we reject the mix."));
 
         yield return Rule(new(
@@ -170,7 +170,7 @@ public class NumericTypeTest
             "0.000000000000000 .. 60.000000000000000",
             Description: """
                 A WGS84 latitude range as published in cantonal models (RefHB 3.8.5-3: the Stellenzahl of both bounds
-                matches). The 15 decimals are recorded as the precision; the bounds are kept at double precision.
+                matches). The 15 decimals are recorded as the precision.
                 """,
             RefHB: "3.8.5-3",
             Expected: new DecimalType { Min = 0, Max = 60, Precision = -15, SourceRange = new RangePosition(0, 0, 0, 39) }));
@@ -182,15 +182,14 @@ public class NumericTypeTest
             Expected: new DecimalType { Min = 0, Max = 10000000000000000, Precision = 0, SourceRange = new RangePosition(0, 0, 0, 22) }));
 
         yield return Rule(new(
-            "Numeric range beyond double precision keeps its Stellenzahl",
+            "Numeric range beyond double precision is kept exactly",
             "0.000000000000000 .. 9999999999999999.999999999999999",
             Description: """
-                31 significant digits: the maximum is not representable as a double and is approximated by the nearest
-                one (1E16); the precision of the range (15 decimals) stays exact, as the Stellenzahl, not the bound
-                value, is what the language compares (RefHB 3.8.5-3/-4).
+                31 significant digits: the nearest double of the maximum is 1E16, but the bound is kept exactly as
+                written, so a range extension can still be compared with it (RefHB 3.8.5-4).
                 """,
             RefHB: "3.8.5-1",
-            Expected: new DecimalType { Min = 0, Max = 10000000000000000, Precision = -15, SourceRange = new RangePosition(0, 0, 0, 53) }));
+            Expected: new DecimalType { Min = 0, Max = ExactNumber.Parse("9999999999999999.999999999999999"), Precision = -15, SourceRange = new RangePosition(0, 0, 0, 53) }));
 
         yield return Rule(new(
             "Numeric range with sixteen significant digits",
@@ -228,8 +227,8 @@ public class NumericTypeTest
             "Float range beyond double magnitude is rejected",
             "0.1E400 .. 0.9E400",
             Description: """
-                The language does not bound the scaling (RefHB 3.2.4-3), but the AST holds bound values as doubles and
-                a value that overflows to infinity is not held by that representation at all, so it is reported at the
+                The language does not bound the scaling (RefHB 3.2.4-3), but every number also carries its nearest
+                double for arithmetic, and a value that overflows it to infinity has none, so it is reported at the
                 literal.
                 """,
             ExpectedErrors:
@@ -287,7 +286,7 @@ public class NumericTypeTest
             Expected: new DecimalType
             {
                 Min = 0,
-                Max = 359.99,
+                Max = ExactNumber.Parse("359.99"),
                 Precision = -2,
                 Circular = true,
                 Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },
@@ -302,7 +301,7 @@ public class NumericTypeTest
             Expected: new DecimalType
             {
                 Min = 0,
-                Max = 359.99,
+                Max = ExactNumber.Parse("359.99"),
                 Precision = -2,
                 Circular = true,
                 Unit = new Reference<UnitDef> { Path = { new("INTERLIS"), new("m") } },

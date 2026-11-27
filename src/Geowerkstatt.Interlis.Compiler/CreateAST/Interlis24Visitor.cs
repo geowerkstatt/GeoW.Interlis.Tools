@@ -254,7 +254,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override InterlisEnvironment VisitInterlis([NotNull] Interlis24Parser.InterlisContext context)
     {
-        double? version = (context.numeric()?.Accept(this) as Tuple<double, int>)?.Item1;
+        double? version = (context.numeric()?.Accept(this) as Tuple<ExactNumber, int>)?.Item1.Double;
 
         var interlisFile = new InterlisEnvironment
         {
@@ -1114,9 +1114,9 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     {
         NumericType numericTypeDef;
 
+        // Both bounds are visited, so each unreadable literal is reported.
         if (context.min is { exception: null } && context.max is { exception: null }
-            && Visit(context.min) is Tuple<double, int>(var minValue, var minPrecision)
-            && Visit(context.max) is Tuple<double, int>(var maxValue, var maxPrecision))
+            && (Visit(context.min), Visit(context.max)) is (Tuple<ExactNumber, int>(var minValue, var minPrecision), Tuple<ExactNumber, int>(var maxValue, var maxPrecision)))
         {
 
             // RefHB 3.8.5-3: the Stellenzahl (digit count) of the minimum and the maximum must match. In mantissa
@@ -1138,15 +1138,12 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
             if (minValue > maxValue)
             {
-                ReportError(context.Start, $"Number minimum <{minValue}> must be smaller than maximum <{maxValue}>");
+                ReportError(context.Start, $"Number minimum <{context.min.GetText()}> must be smaller than maximum <{context.max.GetText()}>");
                 (minValue, maxValue) = (maxValue, minValue);
             }
 
-            // The language bounds neither the digit count nor the magnitude of a bound (RefHB 3.2.4-3: PosNumber =
-            // (* Digit *); RefHB 3.8.5-1 only asks for the bounds including their Stellenzahl), so a range finer or
-            // larger than a double can resolve (0.000000000000000 .. 60.000000000000000, 0 .. 9999999999999999) is
-            // valid. The Stellenzahl is recorded exactly (Precision / MantissaLength); the bound values are kept at
-            // double precision, which is all the consumers (range comparisons, display) need.
+            // RefHB 3.2.4-3 and 3.8.5-1 limit neither the digits nor the magnitude of a bound, so a range finer or
+            // larger than a double resolves (0.000000000000000 .. 60.000000000000000, 0 .. 9999999999999999) is valid.
             // The minimum bound decides the notation of the range (a mixed range is already reported above).
             numericTypeDef = minIsMantissa
                 ? new FloatType { MantissaLength = -minPrecision, SourceRange = context.ToRange() }
@@ -1275,7 +1272,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         return new TypeRef { Extends = CreateReference<DomainDef>(ImpliedPath("INTERLIS", domainName)) };
     }
 
-    public override Tuple<double, int> VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitExpNumber([NotNull] Interlis24Parser.ExpNumberContext context)
     {
         var number = context.EXP_NUMBER().Symbol.Text;
         var decPointIndex = number.IndexOf('.');
@@ -1285,43 +1282,44 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // measure decimal notation uses (RefHB 3.8.5-3/-4 compare the Stellenzahl); the magnitude (scaling) is
         // carried by the value itself.
         var decimalPrecision = expIndex - decPointIndex - 1;
-        var value = ParseNumber(context.EXP_NUMBER().Symbol);
-
-        return Tuple.Create(value, -decimalPrecision);
+        return ParseNumber(context.EXP_NUMBER().Symbol) is { } value ? Tuple.Create(value, -decimalPrecision) : null;
     }
 
-    public override Tuple<double, int> VisitDecimalNumber([NotNull] Interlis24Parser.DecimalNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitDecimalNumber([NotNull] Interlis24Parser.DecimalNumberContext context)
     {
         var number = context.DECIMAL_NUMBER().Symbol.Text;
         var decPointIndex = number.IndexOf('.');
 
-        var value = ParseNumber(context.DECIMAL_NUMBER().Symbol);
         var precision = decPointIndex - number.Length + 1;
-
-        return Tuple.Create(value, precision);
+        return ParseNumber(context.DECIMAL_NUMBER().Symbol) is { } value ? Tuple.Create(value, precision) : null;
     }
 
-    public override Tuple<double, int> VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
     {
-        return Tuple.Create(ParseNumber(context.SIGNED_NUMBER().Symbol), 0);
+        return ParseNumber(context.SIGNED_NUMBER().Symbol) is { } value ? Tuple.Create(value, 0) : null;
     }
 
-    public override Tuple<double, int> VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
+    public override Tuple<ExactNumber, int>? VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
     {
-        return Tuple.Create(ParseNumber(context.POS_NUMBER().Symbol), 0);
+        return ParseNumber(context.POS_NUMBER().Symbol) is { } value ? Tuple.Create(value, 0) : null;
     }
 
     /// <summary>
-    /// Parses a numeric literal. The language bounds neither the digits nor the scaling of a number (RefHB 3.2.4-3),
-    /// but the AST holds values as doubles: a literal whose magnitude overflows to infinity or underflows a non-zero
-    /// mantissa to zero (<c>0.1E400</c>, <c>0.1E-400</c>) has no value in that representation and is reported. The
-    /// Stellenzahl the callers derive from the literal text is not affected.
+    /// Parses a numeric literal exactly. The language bounds neither the digits nor the scaling of a number
+    /// (RefHB 3.2.4-3), but each number also carries its nearest double for arithmetic: a literal whose magnitude
+    /// overflows it to infinity or underflows a non-zero mantissa to zero (<c>0.1E400</c>, <c>0.1E-400</c>) has no
+    /// such value and is reported. The Stellenzahl the callers derive from the literal text is not affected.
+    /// <see langword="null"/> for a literal <see cref="ExactNumber"/> cannot hold, which the callers treat as missing.
     /// </summary>
-    private double ParseNumber(IToken literal)
+    private ExactNumber? ParseNumber(IToken literal)
     {
-        var value = double.Parse(literal.Text);
-        var mantissa = literal.Text.Split(['e', 'E'])[0];
-        if (double.IsInfinity(value) || (value == 0 && mantissa.Any(c => c is >= '1' and <= '9')))
+        if (!ExactNumber.TryParse(literal.Text, out var value))
+        {
+            ReportError(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
+            return null;
+        }
+
+        if (double.IsInfinity(value.Double) || (value.Double == 0 && !value.Unscaled.IsZero))
         {
             ReportError(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
         }
@@ -1631,7 +1629,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
             return null;
         }
 
-        var percentage = context.percentage != null && Visit(context.percentage) is Tuple<double, int> percentageValue ? percentageValue.Item1 : 0.0;
+        var percentage = context.percentage != null && Visit(context.percentage) is Tuple<ExactNumber, int> percentageValue ? percentageValue.Item1.Double : 0.0;
         return new PlausibilityConstraint
         {
             Name = context.name?.Text ?? "",
@@ -1824,8 +1822,8 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // The presence of 'WITHOUT OVERLAPS' is meaningful on its own (RefHB 3.8.12.2-22); the '> numeric'
         // tolerance is optional, and the number can still be missing right after '>' while typing.
         WithoutOverlapsDef? withoutOverlaps = context.WITHOUT() == null ? null
-            : context.numeric() != null && Visit(context.numeric()) is Tuple<double, int> overlapValue
-                ? new WithoutOverlapsDef.Explicit { Tolerance = overlapValue.Item1 }
+            : context.numeric() != null && Visit(context.numeric()) is Tuple<ExactNumber, int> overlapValue
+                ? new WithoutOverlapsDef.Explicit { Tolerance = overlapValue.Item1.Double }
                 : new WithoutOverlapsDef.Implicit();
 
         if (context.POLYLINE() != null || context.MULTIPOLYLINE() != null)
@@ -2318,7 +2316,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         if (context.LNBASE() != null) return new NumericConstant.MathematicalConstant { Kind = NumericConstant.PredefinedConstant.LnBase };
 
         // The number can still be unwritten while typing (e.g. after a '*' in a derived unit or an arithmetic factor).
-        var value = context.numeric() != null && Visit(context.numeric()) is Tuple<double, int> number ? number.Item1 : 0.0;
+        var value = context.numeric() != null && Visit(context.numeric()) is Tuple<ExactNumber, int> number ? number.Item1.Double : 0.0;
         return new NumericConstant.Number { Value = value };
     }
 

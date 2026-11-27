@@ -173,7 +173,7 @@ public class CoordTypeTest
                         new DecimalType
                         {
                             Min = 0,
-                            Max = 359.99999,
+                            Max = ExactNumber.Parse("359.99999"),
                             Precision = -5,
                             Circular = true,
                             Unit = new Reference<UnitDef> { Path = { new("Units"), new("Angle_Degree") } },
@@ -221,7 +221,7 @@ public class CoordTypeTest
                 {
                     Axis =
                     {
-                        new DecimalType { Min = 0, Max = 359.99999, Precision = -5, Circular = true, SourceRange = new RangePosition(0, 13, 0, 42) },
+                        new DecimalType { Min = 0, Max = ExactNumber.Parse("359.99999"), Precision = -5, Circular = true, SourceRange = new RangePosition(0, 13, 0, 42) },
                     },
                     Cardinality = new Cardinality { Min = 0, Max = 1 },
                     SourceRange = new RangePosition(0, 7, 0, 42),
