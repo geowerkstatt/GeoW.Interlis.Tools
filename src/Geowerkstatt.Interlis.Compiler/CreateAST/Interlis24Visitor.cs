@@ -1144,6 +1144,13 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
             // RefHB 3.2.4-3 and 3.8.5-1 limit neither the digits nor the magnitude of a bound, so a range finer or
             // larger than a double resolves (0.000000000000000 .. 60.000000000000000, 0 .. 9999999999999999) is valid.
+            // Comparing doubles is exact only while the double spacing stays below the step; otherwise consumers need
+            // the slower exact comparison. A bound without a double already got an info at its literal.
+            if (HasDouble(minValue) && HasDouble(maxValue) && !IsResolvedByDouble(minValue, maxValue, minPrecision, minIsMantissa))
+            {
+                ReportInformation(context.Start, $"The range <{context.min.GetText()} .. {context.max.GetText()}> cannot be represented exactly by a double precision floating point number");
+            }
+
             // The minimum bound decides the notation of the range (a mixed range is already reported above).
             numericTypeDef = minIsMantissa
                 ? new FloatType { MantissaLength = -minPrecision, SourceRange = context.ToRange() }
@@ -1305,26 +1312,52 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
     }
 
     /// <summary>
-    /// Parses a numeric literal exactly. The language bounds neither the digits nor the scaling of a number
-    /// (RefHB 3.2.4-3), but each number also carries its nearest double for arithmetic: a literal whose magnitude
-    /// overflows it to infinity or underflows a non-zero mantissa to zero (<c>0.1E400</c>, <c>0.1E-400</c>) has no
-    /// such value and is reported. The Stellenzahl the callers derive from the literal text is not affected.
-    /// <see langword="null"/> for a literal <see cref="ExactNumber"/> cannot hold, which the callers treat as missing.
+    /// Parses a numeric literal exactly (RefHB 3.2.4-3). A literal beyond the magnitude of a double (<c>0.1E400</c>,
+    /// <c>0.1E-400</c>) is valid but has no nearest double, so consumers need exact arithmetic: info. An exponent
+    /// beyond <see cref="int"/> is an error, since <see cref="ExactNumber"/> cannot hold it; then the result is
+    /// <see langword="null"/>, which the callers treat as a missing number.
     /// </summary>
     private ExactNumber? ParseNumber(IToken literal)
     {
         if (!ExactNumber.TryParse(literal.Text, out var value))
         {
-            ReportError(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
+            ReportError(literal, $"The number '{literal.Text}' has an exponent beyond what the compiler can represent");
             return null;
         }
 
-        if (double.IsInfinity(value.Double) || (value.Double == 0 && !value.Unscaled.IsZero))
+        if (!HasDouble(value))
         {
-            ReportError(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
+            ReportInformation(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
         }
 
         return value;
+    }
+
+    /// <summary>Whether <paramref name="value"/> has a nearest double: neither infinite nor a non-zero value underflowed to 0.</summary>
+    private static bool HasDouble(ExactNumber value)
+        => double.IsFinite(value.Double) && (value.Double != 0 || value.Unscaled.IsZero);
+
+    /// <summary>
+    /// Whether every value of the range <paramref name="min"/> .. <paramref name="max"/> is a distinct double, judged
+    /// slightly too strictly. Neighbouring doubles at x are at most max(|x|·2^-52, ε) apart, and that gap must stay
+    /// below the step. In decimal notation the step is 10^<paramref name="precision"/>, so the bound of the largest
+    /// magnitude decides. In mantissa notation the step is more than |x|·10^<paramref name="precision"/>, so |x|
+    /// cancels: up to 15 digits pass and 16 fail, even where their values happen to be distinct. Only a subnormal
+    /// bound, where the gap stops shrinking with |x|, also fails. Values strictly inside a range across 0 that are
+    /// subnormal are not considered.
+    /// </summary>
+    private static bool IsResolvedByDouble(ExactNumber min, ExactNumber max, int precision, bool mantissa)
+    {
+        const double maxRelativeGap = 1.0 / (1L << 52);
+        var step = Math.Pow(10, precision);
+
+        if (mantissa)
+        {
+            return maxRelativeGap < step && !double.IsSubnormal(min.Double) && !double.IsSubnormal(max.Double);
+        }
+
+        var largest = Math.Max(Math.Abs(min.Double), Math.Abs(max.Double));
+        return Math.Max(largest * maxRelativeGap, double.Epsilon) < step;
     }
 
     public override BooleanType VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)

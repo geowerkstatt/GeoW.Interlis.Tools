@@ -333,6 +333,11 @@ public class DomainTest
                 exactly, so the widening by one is still found (RefHB 3.8.5-4).
                 """,
             ExpectedErrors: ["Type check error in 'Model.wide' at 5:8-5:52: the value range must not be wider than the inherited range."],
+            ExpectedInfo:
+            [
+                "Compile info at 4:17-4:18 The range <0 .. 9007199254740992> cannot be represented exactly by a double precision floating point number.",
+                "Compile info at 5:30-5:31 The range <0 .. 9007199254740993> cannot be represented exactly by a double precision floating point number.",
+            ],
             RefHB: "3.8.5-4",
             AssertOutput: false));
 
