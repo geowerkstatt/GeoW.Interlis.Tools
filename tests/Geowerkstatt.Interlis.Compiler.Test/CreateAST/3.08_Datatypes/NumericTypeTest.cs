@@ -215,6 +215,49 @@ public class NumericTypeTest
             Expected: new FloatType { MantissaLength = 15, Min = 1, Max = 200, SourceRange = new RangePosition(0, 0, 0, 42) }));
 
         yield return Rule(new(
+            "Float range with zero minimum mantissa",
+            "0.0E5 .. 0.9E5",
+            Description: """
+                A mantissa of zeros is a legal Float (RefHB 3.2.4-3: '0.' (* '0' *) Scaling) and a value of 0, not an
+                underflow.
+                """,
+            RefHB: "3.2.4-3",
+            Expected: new FloatType { MantissaLength = 1, Min = 0, Max = 90000, SourceRange = new RangePosition(0, 0, 0, 14) }));
+
+        yield return Rule(new(
+            "Float range beyond double magnitude is rejected",
+            "0.1E400 .. 0.9E400",
+            Description: """
+                The language does not bound the scaling (RefHB 3.2.4-3), but the AST holds bound values as doubles and
+                a value that overflows to infinity is not held by that representation at all, so it is reported at the
+                literal.
+                """,
+            ExpectedErrors:
+            [
+                "Compile error at 1:0-1:7 The number '0.1E400' is outside the magnitude a double precision floating point number can hold.",
+                "Compile error at 1:11-1:18 The number '0.9E400' is outside the magnitude a double precision floating point number can hold.",
+            ],
+            RefHB: "3.2.4-3",
+            AssertOutput: false,
+            Ili2cDivergenceReason: "ili2c holds bounds as arbitrary-precision decimals and accepts any scaling; we reject a bound that overflows a double"));
+
+        yield return Rule(new(
+            "Float range below double magnitude is rejected",
+            "0.1E-400 .. 0.9E-400",
+            Description: """
+                The counterpart of the overflow: a non-zero mantissa that underflows to 0 would silently turn the range
+                into 0 .. 0.
+                """,
+            ExpectedErrors:
+            [
+                "Compile error at 1:0-1:8 The number '0.1E-400' is outside the magnitude a double precision floating point number can hold.",
+                "Compile error at 1:12-1:20 The number '0.9E-400' is outside the magnitude a double precision floating point number can hold.",
+            ],
+            RefHB: "3.2.4-3",
+            AssertOutput: false,
+            Ili2cDivergenceReason: "ili2c holds bounds as arbitrary-precision decimals and accepts any scaling; we reject a bound that underflows a double"));
+
+        yield return Rule(new(
             "Float range with differing mantissa digit counts is rejected",
             "0.1E7 .. 0.1000E10",
             Description: """

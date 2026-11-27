@@ -1285,7 +1285,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         // measure decimal notation uses (RefHB 3.8.5-3/-4 compare the Stellenzahl); the magnitude (scaling) is
         // carried by the value itself.
         var decimalPrecision = expIndex - decPointIndex - 1;
-        var value = double.Parse(number);
+        var value = ParseNumber(context.EXP_NUMBER().Symbol);
 
         return Tuple.Create(value, -decimalPrecision);
     }
@@ -1295,7 +1295,7 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
         var number = context.DECIMAL_NUMBER().Symbol.Text;
         var decPointIndex = number.IndexOf('.');
 
-        var value = double.Parse(number);
+        var value = ParseNumber(context.DECIMAL_NUMBER().Symbol);
         var precision = decPointIndex - number.Length + 1;
 
         return Tuple.Create(value, precision);
@@ -1303,12 +1303,30 @@ public sealed class Interlis24Visitor : LoggingInterlis24ParserBaseVisitor<objec
 
     public override Tuple<double, int> VisitSignedNumber([NotNull] Interlis24Parser.SignedNumberContext context)
     {
-        return Tuple.Create(double.Parse(context.SIGNED_NUMBER().Symbol.Text), 0);
+        return Tuple.Create(ParseNumber(context.SIGNED_NUMBER().Symbol), 0);
     }
 
     public override Tuple<double, int> VisitPosNumber([NotNull] Interlis24Parser.PosNumberContext context)
     {
-        return Tuple.Create(double.Parse(context.POS_NUMBER().Symbol.Text), 0);
+        return Tuple.Create(ParseNumber(context.POS_NUMBER().Symbol), 0);
+    }
+
+    /// <summary>
+    /// Parses a numeric literal. The language bounds neither the digits nor the scaling of a number (RefHB 3.2.4-3),
+    /// but the AST holds values as doubles: a literal whose magnitude overflows to infinity or underflows a non-zero
+    /// mantissa to zero (<c>0.1E400</c>, <c>0.1E-400</c>) has no value in that representation and is reported. The
+    /// Stellenzahl the callers derive from the literal text is not affected.
+    /// </summary>
+    private double ParseNumber(IToken literal)
+    {
+        var value = double.Parse(literal.Text);
+        var mantissa = literal.Text.Split(['e', 'E'])[0];
+        if (double.IsInfinity(value) || (value == 0 && mantissa.Any(c => c is >= '1' and <= '9')))
+        {
+            ReportError(literal, $"The number '{literal.Text}' is outside the magnitude a double precision floating point number can hold");
+        }
+
+        return value;
     }
 
     public override BooleanType VisitBooleanType([NotNull] Interlis24Parser.BooleanTypeContext context)
